@@ -5,7 +5,7 @@
 !
 ! This software is a computer program whose purpose is to solve
 ! the two-dimensional anisotropic elastic wave equation
-! using a finite-difference method with Convolution Perfectly Matched
+! using a finite-difference method with Convolutional Perfectly Matched
 ! Layer (C-PML) conditions.
 !
 ! This software is governed by the CeCILL license under French law and
@@ -40,7 +40,7 @@
   program seismic_CPML_2D_aniso
 
 ! 2D elastic finite-difference code in velocity and stress formulation
-! with Convolution-PML (C-PML) absorbing conditions for an anisotropic medium
+! with Convolutional-PML (C-PML) absorbing conditions for an anisotropic medium
 
 ! Dimitri Komatitsch, University of Pau, France, April 2007.
 ! Anisotropic implementation by Roland Martin and Dimitri Komatitsch, University of Pau, France, April 2007.

@@ -4,7 +4,7 @@
 !
 ! This software is a computer program whose purpose is to solve
 ! the three-dimensional isotropic elastic wave equation
-! using a finite-difference method with Convolution Perfectly Matched
+! using a finite-difference method with Convolutional Perfectly Matched
 ! Layer (C-PML) conditions.
 !
 ! This software is governed by the CeCILL license under French law and
@@ -39,7 +39,7 @@
   program seismic_CPML_3D_iso_MPI_OpenMP
 
 ! 3D elastic finite-difference code in velocity and stress formulation
-! with Convolution-PML (C-PML) absorbing conditions.
+! with Convolutional-PML (C-PML) absorbing conditions.
 
 ! Dimitri Komatitsch, University of Pau, France, April 2007.
 
