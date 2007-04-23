@@ -1,5 +1,5 @@
 !
-! Copyright Universite de Pau et des Pays de l'Adour, France.
+! Copyright Universite de Pau et des Pays de l'Adour and CNRS, France.
 ! Contributor: Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
 !
 ! This software is a computer program whose purpose is to solve

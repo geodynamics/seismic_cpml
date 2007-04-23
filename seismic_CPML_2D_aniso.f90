@@ -1,5 +1,5 @@
 !
-! Copyright Universite de Pau et des Pays de l'Adour, France.
+! Copyright Universite de Pau et des Pays de l'Adour and CNRS, France.
 ! Contributors: Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
 !               and Roland Martin, roland DOT martin aT univ-pau DOT fr
 !
