@@ -24,18 +24,18 @@ O = obj
 #OPEN_MP = -openmp
 
 # IBM xlf
-F90 = xlf_r
-MPIF90 = mpxlf_r
-FLAGS = -O3 -qfree=f90 -qhalt=w -qsave
-MEDIUM_MEMORY =
-OPEN_MP = -qsmp=omp
+#F90 = xlf_r
+#MPIF90 = mpxlf_r
+#FLAGS = -O3 -qfree=f90 -qhalt=w -qsave
+#MEDIUM_MEMORY =
+#OPEN_MP = -qsmp=omp
 
 # GNU gfortran
-#F90 = gfortran
-#MPIF90 = mpif90
-#FLAGS = -std=gnu -fimplicit-none -frange-check -O2 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow
-#MEDIUM_MEMORY = -mcmodel=medium
-#OPEN_MP = -fopenmp
+F90 = gfortran
+MPIF90 = mpif90
+FLAGS = -std=gnu -fimplicit-none -frange-check -O2 -Wunused-labels -Waliasing -Wampersand -Wsurprising -Wline-truncation -Wunderflow
+MEDIUM_MEMORY = -mcmodel=medium
+OPEN_MP = -fopenmp
 
 default: clean seismic_CPML_2D_iso seismic_CPML_2D_aniso seismic_PML_Collino_2D_iso seismic_PML_Collino_3D_iso_OpenMP seismic_CPML_3D_iso_MPI_OpenMP
 
