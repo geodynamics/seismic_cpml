@@ -93,9 +93,9 @@
   integer, parameter :: NY = 641
   integer, parameter :: NZ = 640 ! even number in order to cut along Z axis
 
-! for MPI
+! number of processes used in the MPI run
+! and local number of points (for simplicity we cut the mesh along Z only)
   integer, parameter :: NPROC = 160
-! local number of points (for simplicity we cut the mesh along Z only)
   integer, parameter :: NZ_LOCAL = NZ / NPROC
 
 ! size of a grid cell
