@@ -1031,7 +1031,7 @@
 
   endif
 
-! implement Dirichlet boundary conditions on the four edges of the grid
+! implement Dirichlet boundary conditions on the six edges of the grid
 
 !$OMP PARALLEL WORKSHARE
 ! xmin
