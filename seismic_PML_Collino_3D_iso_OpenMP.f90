@@ -134,7 +134,7 @@
   double precision, parameter :: zfin =  zsource           ! last receiver y in meters
 
 ! display information on the screen from time to time
-  integer, parameter :: IT_DISPLAY = 25
+  integer, parameter :: IT_DISPLAY = 100
 
 ! value of PI
   double precision, parameter :: PI = 3.141592653589793238462643d0
