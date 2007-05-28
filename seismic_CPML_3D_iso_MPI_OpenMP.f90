@@ -95,7 +95,7 @@
 
 ! number of processes used in the MPI run
 ! and local number of points (for simplicity we cut the mesh along Z only)
-  integer, parameter :: NPROC = 160
+  integer, parameter :: NPROC = 64
   integer, parameter :: NZ_LOCAL = NZ / NPROC
 
 ! size of a grid cell
@@ -344,6 +344,9 @@
 
 ! check that we can cut along Z in an exact number of slices
   if(mod(NZ,nb_procs) /= 0) stop 'NZ must be a multiple of nb_procs'
+
+! check that a slice is at least as thick as a PML layer
+  if(NZ_LOCAL < NPOINTS_PML) stop 'NZ_LOCAL must be greater than NPOINTS_PML'
 
 ! offset of this slice when we cut along Z
   offset_k = rank * NZ_LOCAL

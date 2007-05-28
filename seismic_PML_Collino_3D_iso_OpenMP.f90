@@ -86,7 +86,7 @@
 ! total number of grid points in each direction of the grid
   integer, parameter :: NX = 101
   integer, parameter :: NY = 641
-  integer, parameter :: NZ = 641
+  integer, parameter :: NZ = 640
 
 ! size of a grid cell
   double precision, parameter :: h = 10.d0
