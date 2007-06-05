@@ -20,7 +20,7 @@ O = obj
 #F90 = ifort
 #MPIF90 = mpif90
 #FLAGS = -O3 -implicitnone -warn stderrors -warn truncated_source -warn argument_checking -warn unused -warn declarations -std95 -assume byterecl -check nobounds
-#MEDIUM_MEMORY = -mcmodel=medium
+#MEDIUM_MEMORY = -mcmodel=medium -i-dynamic
 #OPEN_MP = -openmp
 
 # IBM xlf
