@@ -36,7 +36,7 @@
 ! The full text of the license is available at the end of this program
 ! and in file "LICENSE.txt".
 
-  program seismic_CPML_2D_iso
+  program seismic_CPML_2D_iso_second
 
 ! 2D elastic finite-difference code in velocity and stress formulation
 ! with Convolutional-PML (C-PML) absorbing conditions for an isotropic medium
@@ -779,7 +779,7 @@
   print *,'End of the simulation'
   print *
 
-  end program seismic_CPML_2D_iso
+  end program seismic_CPML_2D_iso_second
 
 !----
 !----  save the seismograms in ASCII text format
