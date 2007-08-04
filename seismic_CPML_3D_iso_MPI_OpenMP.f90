@@ -58,7 +58,10 @@
 !        at grazing incidence for the seismic wave equation},
 ! journal = {Geophysics},
 ! year = {2007},
-! note = {in press.}}
+! volume = {72},
+! number = {5},
+! note = {in press.},
+! doi = {10.1190/1.2757586}}
 !
 ! @ARTICLE{RoGe00,
 ! author = {J. A. Roden and S. D. Gedney},
