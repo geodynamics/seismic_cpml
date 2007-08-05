@@ -1,6 +1,7 @@
 !
 ! Copyright Universite de Pau et des Pays de l'Adour and CNRS, France.
-! Contributor: Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
+! Contributors: Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
+!               and Roland Martin, roland DOT martin aT univ-pau DOT fr
 !
 ! This software is a computer program whose purpose is to solve
 ! the two-dimensional isotropic elastic wave equation
@@ -41,7 +42,8 @@
 ! 2D elastic finite-difference code in velocity and stress formulation
 ! with Convolutional-PML (C-PML) absorbing conditions for an isotropic medium
 
-! Dimitri Komatitsch, University of Pau, France, August 2007.
+! Dimitri Komatitsch, University of Pau, France, April 2007.
+! Fourth-order implementation by Dimitri Komatitsch and Roland Martin, University of Pau, France, August 2007.
 
 ! The staggered-grid formulation of Madariaga (1976) and Virieux (1986) is used:
 !
