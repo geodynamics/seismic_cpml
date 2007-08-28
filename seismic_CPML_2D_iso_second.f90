@@ -78,7 +78,7 @@
 ! year = {2007},
 ! volume = {72},
 ! number = {5},
-! note = {in press.},
+! pages = {SM155-SM167},
 ! doi = {10.1190/1.2757586}}
 !
 ! @ARTICLE{RoGe00,
