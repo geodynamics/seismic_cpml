@@ -31,11 +31,8 @@
 ! data to be ensured and, more generally, to use and operate it in the
 ! same conditions as regards security.
 !
-! The fact that you are presently reading this means that you have had
-! knowledge of the CeCILL license and that you accept its terms.
-!
 ! The full text of the license is available at the end of this program
-! and in file "LICENSE.txt".
+! and in file "LICENSE".
 
   program seismic_PML_Collino_3D_iso
 
