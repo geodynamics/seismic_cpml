@@ -1,5 +1,5 @@
 !
-! Copyright Universite de Pau et des Pays de l'Adour and CNRS, France.
+! Copyright Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France.
 ! Contributors: Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
 !               and Roland Martin, roland DOT martin aT univ-pau DOT fr
 !
@@ -39,6 +39,7 @@
 ! 2D elastic finite-difference code in velocity and stress formulation
 ! with Convolutional-PML (C-PML) absorbing conditions for an anisotropic medium
 
+! Version 1.0
 ! Dimitri Komatitsch, University of Pau, France, April 2007.
 ! Anisotropic implementation by Roland Martin and Dimitri Komatitsch, University of Pau, France, April 2007.
 

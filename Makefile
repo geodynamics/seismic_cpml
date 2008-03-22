@@ -1,7 +1,9 @@
 #
 # Makefile
 #
-# Dimitri Komatitsch, University of Pau, April 2007
+# Version 1.0
+# Dimitri Komatitsch
+# Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France, April 2007
 # 
 SHELL=/bin/sh
 
