@@ -455,7 +455,7 @@
 
 ! origin of the PML layer (position of right edge minus thickness, in meters)
   yoriginbottom = thickness_PML_y
-  yorigintop = NY*DELTAY - thickness_PML_y
+  yorigintop = (NY-1)*DELTAY - thickness_PML_y
 
   do j = 1,NY
 
@@ -594,7 +594,7 @@
       memory_dvx_dy(i,j) = b_y_half(j) * memory_dvx_dy(i,j) + a_y_half(j) * value_dvx_dy
 
       value_dvy_dx = value_dvy_dx / K_x(i) + memory_dvy_dx(i,j)
-      value_dvx_dy = value_dvx_dy / K_y(j) + memory_dvx_dy(i,j)
+      value_dvx_dy = value_dvx_dy / K_y_half(j) + memory_dvx_dy(i,j)
 
       sigmaxy(i,j) = sigmaxy(i,j) + c33 * (value_dvy_dx + value_dvx_dy) * DELTAT
 

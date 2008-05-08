@@ -218,11 +218,11 @@
 
 ! origin of the PML layer (position of right edge minus thickness, in meters)
   xoriginleft = delta
-  xoriginright = NX*h - delta
+  xoriginright = (NX-1)*h - delta
 
   do i=1,NX
 
-  xval = h*dble(i)
+  xval = h*dble(i-1)
 
   if(xval < xoriginleft) then
     dx_over_two(i) = d0 * ((xoriginleft-xval)/delta)**2
@@ -244,11 +244,11 @@
 
 ! origin of the PML layer (position of right edge minus thickness, in meters)
   xoriginleft = delta
-  xoriginright = NY*h - delta
+  xoriginright = (NY-1)*h - delta
 
   do j=1,NY
 
-  xval = h*dble(j)
+  xval = h*dble(j-1)
 
   if(xval < xoriginleft) then
     dy_over_two(j) = d0 * ((xoriginleft-xval)/delta)**2
@@ -270,11 +270,11 @@
 
 ! origin of the PML layer (position of right edge minus thickness, in meters)
   xoriginleft = delta
-  xoriginright = NZ*h - delta
+  xoriginright = (NZ-1)*h - delta
 
   do k=1,NZ
 
-  xval = h*dble(k)
+  xval = h*dble(k-1)
 
   if(xval < xoriginleft) then
     dz_over_two(k) = d0 * ((xoriginleft-xval)/delta)**2
@@ -765,9 +765,9 @@ do k = 1,NZ-1
 !$OMP SHARED(vx_1,vx_2,vx_3,vy_1,vy_2,vy_3,vz_1,vz_2,vz_3,sigmaxx_1,sigmaxx_2, &
 !$OMP sigmaxx_3,sigmayy_1,sigmayy_2,sigmayy_3,sigmazz_1,sigmazz_2,sigmazz_3, &
 !$OMP sigmaxy_1,sigmaxy_2,sigmaxz_1,sigmaxz_3,sigmayz_2,sigmayz_3) REDUCTION(+:total_energy_kinetic,total_energy_potential)
-  do k = NPOINTS_PML, NZ-NPOINTS_PML+1
-    do j = NPOINTS_PML, NY-NPOINTS_PML+1
-      do i = NPOINTS_PML, NX-NPOINTS_PML+1
+  do k = NPOINTS_PML+1, NZ-NPOINTS_PML
+    do j = NPOINTS_PML+1, NY-NPOINTS_PML
+      do i = NPOINTS_PML+1, NX-NPOINTS_PML
 
 ! compute kinetic energy first, defined as 1/2 rho ||v||^2
 ! in principle we should use rho_half_x_half_y instead of rho for vy

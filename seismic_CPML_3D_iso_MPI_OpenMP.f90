@@ -484,7 +484,7 @@
 
 ! origin of the PML layer (position of right edge minus thickness, in meters)
   yoriginbottom = thickness_PML_y
-  yorigintop = NY*DELTAY - thickness_PML_y
+  yorigintop = (NY-1)*DELTAY - thickness_PML_y
 
   do j = 1,NY
 
@@ -555,7 +555,7 @@
 
 ! origin of the PML layer (position of right edge minus thickness, in meters)
   zoriginbottom = thickness_PML_z
-  zorigintop = NZ*DELTAZ - thickness_PML_z
+  zorigintop = (NZ-1)*DELTAZ - thickness_PML_z
 
   do k = 1,NZ
 
@@ -1087,15 +1087,15 @@
 
   kmin = 1
   kmax = NZ_LOCAL
-  if(rank == 0) kmin = NPOINTS_PML
-  if(rank == nb_procs-1) kmax = NZ_LOCAL-NPOINTS_PML+1
+  if(rank == 0) kmin = NPOINTS_PML+1
+  if(rank == nb_procs-1) kmax = NZ_LOCAL-NPOINTS_PML
 
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,epsilon_xx,epsilon_yy,epsilon_zz,epsilon_xy,epsilon_xz,epsilon_yz) &
 !$OMP SHARED(kmin,kmax,vx,vy,vz,sigmaxx,sigmayy,sigmazz, &
 !$OMP sigmaxy,sigmaxz,sigmayz) REDUCTION(+:total_energy_kinetic,total_energy_potential)
   do k = kmin,kmax
-    do j = NPOINTS_PML, NY-NPOINTS_PML+1
-      do i = NPOINTS_PML, NX-NPOINTS_PML+1
+    do j = NPOINTS_PML+1, NY-NPOINTS_PML
+      do i = NPOINTS_PML+1, NX-NPOINTS_PML
 
 ! compute kinetic energy first, defined as 1/2 rho ||v||^2
 ! in principle we should use rho_half_x_half_y instead of rho for vy

@@ -217,11 +217,11 @@
 
 ! origin of the PML layer (position of right edge minus thickness, in meters)
   xoriginleft = delta
-  xoriginright = NX*h - delta
+  xoriginright = (NX-1)*h - delta
 
   do i=1,NX
 
-  xval = h*dble(i)
+  xval = h*dble(i-1)
 
   if(xval < xoriginleft) then
     dx_over_two(i) = d0 * ((xoriginleft-xval)/delta)**2
@@ -243,11 +243,11 @@
 
 ! origin of the PML layer (position of right edge minus thickness, in meters)
   xoriginleft = delta
-  xoriginright = NY*h - delta
+  xoriginright = (NY-1)*h - delta
 
   do j=1,NY
 
-  xval = h*dble(j)
+  xval = h*dble(j-1)
 
   if(xval < xoriginleft) then
     dy_over_two(j) = d0 * ((xoriginleft-xval)/delta)**2
@@ -502,17 +502,17 @@
 ! in order to interpolate density at the right location in the staggered grid cell
 ! but in a homogeneous medium we can safely ignore it
   total_energy_kinetic(it) = 0.5d0 * sum(rho*( &
-      (vx_1(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1) + &
-       vx_2(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1))**2 +  &
-      (vy_1(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1) + &
-       vy_2(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1))**2))
+      (vx_1(NPOINTS_PML+1:NX-NPOINTS_PML,NPOINTS_PML+1:NY-NPOINTS_PML) + &
+       vx_2(NPOINTS_PML+1:NX-NPOINTS_PML,NPOINTS_PML+1:NY-NPOINTS_PML))**2 +  &
+      (vy_1(NPOINTS_PML+1:NX-NPOINTS_PML,NPOINTS_PML+1:NY-NPOINTS_PML) + &
+       vy_2(NPOINTS_PML+1:NX-NPOINTS_PML,NPOINTS_PML+1:NY-NPOINTS_PML))**2))
 
 ! add potential energy, defined as 1/2 epsilon_ij sigma_ij
 ! in principle we should interpolate the medium parameters at the right location
 ! in the staggered grid cell but in a homogeneous medium we can safely ignore it
   total_energy_potential(it) = ZERO
-  do j = NPOINTS_PML, NY-NPOINTS_PML+1
-    do i = NPOINTS_PML, NX-NPOINTS_PML+1
+  do j = NPOINTS_PML+1, NY-NPOINTS_PML
+    do i = NPOINTS_PML+1, NX-NPOINTS_PML
 
 ! compute total field from split components
       sigmaxx_total = sigmaxx_1(i,j) + sigmaxx_2(i,j)

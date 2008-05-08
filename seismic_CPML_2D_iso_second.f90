@@ -366,7 +366,7 @@
 
 ! origin of the PML layer (position of right edge minus thickness, in meters)
   yoriginbottom = thickness_PML_y
-  yorigintop = NY*DELTAY - thickness_PML_y
+  yorigintop = (NY-1)*DELTAY - thickness_PML_y
 
   do j = 1,NY
 
@@ -561,7 +561,7 @@
       memory_dvx_dy(i,j) = b_y_half(j) * memory_dvx_dy(i,j) + a_y_half(j) * value_dvx_dy
 
       value_dvy_dx = value_dvy_dx / K_x(i) + memory_dvy_dx(i,j)
-      value_dvx_dy = value_dvx_dy / K_y(j) + memory_dvx_dy(i,j)
+      value_dvx_dy = value_dvx_dy / K_y_half(j) + memory_dvx_dy(i,j)
 
       sigmaxy(i,j) = sigmaxy(i,j) + mu_half_y * (value_dvy_dx + value_dvx_dy) * DELTAT
 
@@ -661,16 +661,16 @@
 ! in order to interpolate density at the right location in the staggered grid cell
 ! but in a homogeneous medium we can safely ignore it
   total_energy_kinetic(it) = 0.5d0 * sum( &
-      rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)*( &
-       vx(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)**2 +  &
-       vy(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)**2))
+      rho(NPOINTS_PML+1:NX-NPOINTS_PML,NPOINTS_PML+1:NY-NPOINTS_PML)*( &
+       vx(NPOINTS_PML+1:NX-NPOINTS_PML,NPOINTS_PML+1:NY-NPOINTS_PML)**2 +  &
+       vy(NPOINTS_PML+1:NX-NPOINTS_PML,NPOINTS_PML+1:NY-NPOINTS_PML)**2))
 
 ! add potential energy, defined as 1/2 epsilon_ij sigma_ij
 ! in principle we should interpolate the medium parameters at the right location
 ! in the staggered grid cell but in a homogeneous medium we can safely ignore it
   total_energy_potential(it) = ZERO
-  do j = NPOINTS_PML, NY-NPOINTS_PML+1
-    do i = NPOINTS_PML, NX-NPOINTS_PML+1
+  do j = NPOINTS_PML+1, NY-NPOINTS_PML
+    do i = NPOINTS_PML+1, NX-NPOINTS_PML
       epsilon_xx = ((lambda(i,j) + 2.d0*mu(i,j)) * sigmaxx(i,j) - lambda(i,j) * &
         sigmayy(i,j)) / (4.d0 * mu(i,j) * (lambda(i,j) + mu(i,j)))
       epsilon_yy = ((lambda(i,j) + 2.d0*mu(i,j)) * sigmayy(i,j) - lambda(i,j) * &
