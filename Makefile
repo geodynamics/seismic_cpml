@@ -21,8 +21,8 @@ O = obj
 # Intel
 #F90 = ifort
 #MPIF90 = mpif90
-#FLAGS = -O3 -xP -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -i-dynamic -fpe0 -no-ftz -check nobounds -e95 -std95
-#MEDIUM_MEMORY = -mcmodel=medium -i-dynamic
+#FLAGS = -O3 -xP -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -fpe0 -no-ftz -check nobounds -e95 -std95
+#MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -openmp -openmp-report1
 
 # IBM xlf
