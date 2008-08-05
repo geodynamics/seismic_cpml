@@ -21,7 +21,7 @@ O = obj
 # Intel (leave option -ftz, which is *critical* for performance)
 #F90 = ifort
 #MPIF90 = mpif90
-#FLAGS = -O3 -xP -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -fpe3 -ftz -check nobounds -e95 -std95
+#FLAGS = -O3 -xP -diag-disable vec -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -fpe3 -ftz -check nobounds -e95 -std95
 #MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -openmp -openmp-report1
 
