@@ -74,18 +74,39 @@
 
 ! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000)
 !
-! If you use this code for your own research, please cite:
+! If you use this code for your own research, please cite some (or all) of these articles:
 !
 ! @ARTICLE{KoMa07,
 ! author = {Dimitri Komatitsch and Roland Martin},
 ! title = {An unsplit convolutional {P}erfectly {M}atched {L}ayer improved
-!        at grazing incidence for the seismic wave equation},
+!          at grazing incidence for the seismic wave equation},
 ! journal = {Geophysics},
 ! year = {2007},
 ! volume = {72},
 ! number = {5},
 ! pages = {SM155-SM167},
 ! doi = {10.1190/1.2757586}}
+!
+! @ARTICLE{MaKoEz08,
+! author = {Roland Martin and Dimitri Komatitsch and Abdelaaziz Ezziani},
+! title = {An unsplit convolutional perfectly matched layer improved at grazing
+!          incidence for seismic wave equation in poroelastic media},
+! journal = {Geophysics},
+! year = {2008},
+! volume = {73},
+! pages = {T51-T61},
+! number = {4},
+! doi = {10.1190/1.2939484}}
+!
+! @ARTICLE{MaKoGe08,
+! author = {Roland Martin and Dimitri Komatitsch and Stephen D. Gedney},
+! title = {A variational formulation of a stabilized unsplit convolutional perfectly
+!          matched layer for the isotropic or anisotropic seismic wave equation},
+! journal = {Computer Modeling in Engineering and Sciences},
+! year = {2008},
+! volume = {37},
+! pages = {274-304},
+! number = {3}}
 !
 ! @ARTICLE{RoGe00,
 ! author = {J. A. Roden and S. D. Gedney},
