@@ -40,8 +40,7 @@
 ! with Convolutional-PML (C-PML) absorbing conditions using 2 mechanisms of attenuation
 ! with 6 equations per mechanism.
 
-! Version 1.0
-! Roland Martin, University of Pau, France, August 2009.
+! Roland Martin, University of Pau, France, October 2009.
 ! based on the elastic code of Komatitsch and Martin, 2007.
 
 ! The fourth-order staggered-grid formulation of Madariaga (1976) and Virieux (1986) is used.
