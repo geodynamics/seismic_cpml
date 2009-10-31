@@ -67,9 +67,20 @@
 !                  sigma_yy
 !
 
-! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000)
+! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000).
 ! If you use this code for your own research, please cite some (or all) of these
 ! articles:
+!
+! @ARTICLE{MaKoEz08,
+! author = {Roland Martin and Dimitri Komatitsch and Abdela\^aziz Ezziani},
+! title = {An unsplit convolutional perfectly matched layer improved at grazing
+! incidence for seismic wave equation in poroelastic media},
+! journal = {Geophysics},
+! year = {2008},
+! volume = {73},
+! pages = {T51-T61},
+! number = {4},
+! doi = {10.1190/1.2939484}}
 !
 ! @ARTICLE{KoMa07,
 ! author = {Dimitri Komatitsch and Roland Martin},
@@ -82,35 +93,28 @@
 ! pages = {SM155-SM167},
 ! doi = {10.1190/1.2757586}}
 !
-! @ARTICLE{MaKoEz08,
-! author = {Roland Martin and Dimitri Komatitsch and Abdelaaziz Ezziani},
-! title = {An unsplit convolutional perfectly matched layer improved at grazing
-!          incidence for seismic wave equation in poroelastic media},
-! journal = {Geophysics},
-! year = {2008},
-! volume = {73},
-!
 ! @ARTICLE{MaKo09,
 ! author = {Roland Martin and Dimitri Komatitsch},
-! title = {An unsplit convolutional {P}erfectly {M}atched {L}ayer technique
-! improved at grazing incidence for the viscoelastic wave equation},
-! journal = {geophysical journal international},
+! title = {An unsplit convolutional perfectly matched layer technique improved
+! at grazing incidence for the viscoelastic wave equation},
+! journal = {Geophysical Journal International},
 ! year = {2009},
 ! volume = {179},
-! number = {},
 ! pages = {333-344},
-! doi = {doi: 10.1111/j.1365-246X.2009.04278.x}}
+! number = {1},
+! doi = {10.1111/j.1365-246X.2009.04278.x}}
 !
 ! @ARTICLE{MaKoGe08,
 ! author = {Roland Martin and Dimitri Komatitsch and Stephen D. Gedney},
-! title = {A variational formulation of a stabilized unsplit convolutional
-! perfectly matched layer for the isotropic or anisotropic seismic wave
-!          equation},
+! title = {A variational formulation of a stabilized unsplit convolutional perfectly
+! matched layer for the isotropic or anisotropic seismic wave equation},
 ! journal = {Computer Modeling in Engineering and Sciences},
 ! year = {2008},
 ! volume = {37},
 ! pages = {274-304},
 ! number = {3}}
+!
+! The original CPML technique for Maxwell's equations is described in:
 !
 ! @ARTICLE{RoGe00,
 ! author = {J. A. Roden and S. D. Gedney},
@@ -122,7 +126,7 @@
 ! number = {5},
 ! pages = {334-339},
 ! doi = {10.1002/1098-2760(20001205)27:5<334::AID-MOP14>3.0.CO;2-A}}
-!
+
 ! To display the results as color images in the selected 2D cut plane, use:
 !
 !   " display image*.gif " or " gimp image*.gif "
