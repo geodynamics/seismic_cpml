@@ -71,7 +71,7 @@
 ! to see the changes that have been made to switch from the second-order operator
 ! to the fourth-order operator:
 !
-!   diff seismic_CPML_2D_iso_second.f90 seismic_CPML_2D_iso_fourth.f90
+! diff seismic_CPML_2D_isotropic_second_order.f90 seismic_CPML_2D_isotropic_fourth_order.f90
 
 ! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000)
 !
