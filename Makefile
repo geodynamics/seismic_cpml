@@ -1,7 +1,7 @@
 #
-# Makefile for SEISMIC_CPML Version 1.1.0
+# Makefile for SEISMIC_CPML Version 1.1.0, October 2009
 # Dimitri Komatitsch
-# Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France, October 2009
+# Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France
 # 
 SHELL=/bin/sh
 
@@ -19,7 +19,7 @@ O = obj
 # Intel (leave option -ftz, which is *critical* for performance)
 #F90 = ifort
 #MPIF90 = mpif90
-#FLAGS = -O3 -xP -vec-report0 -e03 -std03 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -fpe3 -ftz
+#FLAGS = -O3 -xP -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -fpe3 -ftz
 #MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -openmp -openmp-report1
 
@@ -32,19 +32,17 @@ O = obj
 
 # GNU gfortran
 F90 = gfortran
-#MPIF90 = mpif90
-###### DK DK change size 3D also
-MPIF90 = /opt/mpich2_gfortran/bin/mpif90
+MPIF90 = mpif90
 FLAGS = -std=f2003 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -fno-trapping-math
-#MEDIUM_MEMORY = -mcmodel=medium
+MEDIUM_MEMORY = -mcmodel=medium
 OPEN_MP = -fopenmp
 
-default: clean seismic_CPML_2D_isotropic_second_order seismic_CPML_2D_isotropic_fourth_order seismic_CPML_2D_anisotropic seismic_PML_Collino_2D_isotropic seismic_PML_Collino_3D_isotropic_OpenMP seismic_CPML_3D_isotropic_MPI_OpenMP seismic_CPML_2D_poroelastic_fourth_order seismic_CPML_3D_viscoelastic_MPI_OpenMP
+default: clean seismic_CPML_2D_isotropic_second_order seismic_CPML_2D_isotropic_fourth_order seismic_CPML_2D_anisotropic seismic_PML_Collino_2D_isotropic seismic_PML_Collino_3D_isotropic_OpenMP seismic_CPML_3D_isotropic_MPI_OpenMP seismic_CPML_2D_poroelastic_fourth_order seismic_CPML_3D_viscoelastic_MPI
 
 all: default
 
 clean:
-	/bin/rm -f *.o xseismic_CPML_2D_isotropic_second_order xseismic_CPML_2D_isotropic_fourth_order xseismic_CPML_2D_anisotropic xseismic_PML_Collino_2D_isotropic xseismic_CPML_3D_isotropic_MPI_OpenMP xseismic_PML_Collino_3D_isotropic_OpenMP xseismic_CPML_2D_poroelastic_fourth_order xseismic_CPML_3D_viscoelastic_MPI_OpenMP
+	/bin/rm -f *.o xseismic_CPML_2D_isotropic_second_order xseismic_CPML_2D_isotropic_fourth_order xseismic_CPML_2D_anisotropic xseismic_PML_Collino_2D_isotropic xseismic_CPML_3D_isotropic_MPI_OpenMP xseismic_PML_Collino_3D_isotropic_OpenMP xseismic_CPML_2D_poroelastic_fourth_order xseismic_CPML_3D_viscoelastic_MPI
 
 seismic_CPML_2D_poroelastic_fourth_order:
 	$(F90) $(FLAGS) -o xseismic_CPML_2D_poroelastic_fourth_order seismic_CPML_2D_poroelastic_fourth_order.f90
@@ -67,6 +65,6 @@ seismic_PML_Collino_3D_isotropic_OpenMP:
 seismic_CPML_3D_isotropic_MPI_OpenMP:
 	$(MPIF90) $(FLAGS) $(MEDIUM_MEMORY) $(OPEN_MP) -o xseismic_CPML_3D_isotropic_MPI_OpenMP seismic_CPML_3D_isotropic_MPI_OpenMP.f90
 
-seismic_CPML_3D_viscoelastic_MPI_OpenMP:
-	$(MPIF90) $(FLAGS) $(MEDIUM_MEMORY) $(OPEN_MP) -o xseismic_CPML_3D_viscoelastic_MPI_OpenMP seismic_CPML_3D_viscoelastic_MPI_OpenMP.f90
+seismic_CPML_3D_viscoelastic_MPI:
+	$(MPIF90) $(FLAGS) $(MEDIUM_MEMORY) $(OPEN_MP) -o xseismic_CPML_3D_viscoelastic_MPI seismic_CPML_3D_viscoelastic_MPI.f90
 

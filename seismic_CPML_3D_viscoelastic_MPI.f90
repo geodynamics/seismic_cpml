@@ -1,4 +1,6 @@
 !
+! SEISMIC_CPML Version 1.1.0, October 2009.
+!
 ! Copyright Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France.
 ! Contributors: Roland Martin, roland DOT martin aT univ-pau DOT fr
 !           and Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
@@ -47,8 +49,7 @@
 
 ! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000).
 !
-! Parallel implementation based on both MPI and OpenMP.
-! Type for instance "setenv OMP_NUM_THREADS 4" before running in OpenMP if you want 4 tasks.
+! Parallel implementation based on MPI.
 !
 ! If you use this code for your own research, please cite:
 !
@@ -242,7 +243,7 @@
   double precision a,t,force_x,force_y,source_term
 
 ! for receivers
-  double precision xspacerec,yspacerec,distval,dist
+  double precision distval,dist
   integer, dimension(NREC) :: ix_rec,iy_rec
   double precision, dimension(NREC) :: xrec,yrec
 
@@ -252,12 +253,11 @@
 ! max amplitude for color snapshots
   double precision max_amplitudeVx
   double precision max_amplitudeVy
-  double precision max_amplitudeVz
 
 ! for evolution of total energy in the medium
   double precision :: epsilon_xx,epsilon_yy,epsilon_zz,epsilon_xy,epsilon_xz,epsilon_yz
   double precision, dimension(NSTEP) :: total_energy,total_energy_kinetic,total_energy_potential
-  double precision :: local_energy,local_energy_kinetic,local_energy_potential
+  double precision :: local_energy_kinetic,local_energy_potential
 
   integer :: irec
 
@@ -269,15 +269,13 @@
   double precision, parameter :: DELTAT_over_rho = DELTAT/rho
   double precision :: mul_relaxed,lambdal_relaxed,lambdalplus2mul_relaxed
   double precision :: mul_unrelaxed,lambdal_unrelaxed,lambdalplus2mul_unrelaxed
-  double precision :: Un,Sn,Snp1,Unp1,Mu_nu1,Mu_nu2
+  double precision :: Un,Sn,Unp1,Mu_nu1,Mu_nu2
   double precision :: phi_nu1_mech1,phi_nu1_mech2
   double precision :: phi_nu2_mech1,phi_nu2_mech2
   double precision :: tauinv,inv_tau_sigma_nu1_mech1,inv_tau_sigma_nu1_mech2
   double precision :: taumin,taumax, tau1, tau2, tau3, tau4
   double precision :: inv_tau_sigma_nu2_mech1,inv_tau_sigma_nu2_mech2
-  double precision :: tauinvsquare,tauinvUn,tauinvcube
-  double precision :: deltatsquare,deltatcube,deltatfourth
-  double precision :: twelvedeltat,fourdeltatsquare
+  double precision :: tauinvUn
   double precision :: tau_epsilon_nu1_mech1, tau_sigma_nu1_mech1
   double precision::  tau_epsilon_nu2_mech1, tau_sigma_nu2_mech1
   double precision::  tau_epsilon_nu1_mech2, tau_sigma_nu1_mech2
@@ -884,18 +882,6 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
          receiver_right_shift,message_tag,vz(:,:,-1:0),number_of_values, &
          MPI_DOUBLE_PRECISION,sender_right_shift,message_tag,MPI_COMM_WORLD,message_status,code)
 
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(kglobal,i,j,k,value_dvx_dx,value_dvx_dy, &
-!$OMP duxdx,duxdy,duxdz,duydx,duydy,duydz,duzdx,duzdy,duzdz,div, &
-!$OMP value_dvx_dz,value_dvy_dx,value_dvy_dy,value_dvy_dz,value_dvz_dx,value_dvz_dy, &
-!$OMP value_dvz_dz,value_dsigmaxx_dx,value_dsigmayy_dy,value_dsigmazz_dz, &
-!$OMP value_dsigmaxy_dx,value_dsigmaxy_dy,value_dsigmaxz_dx,value_dsigmaxz_dz, &
-!$OMP value_dsigmayz_dy,value_dsigmayz_dz) SHARED(vx,vy,vz,sigmaxx,sigmayy,sigmazz, &
-!$OMP sigmaxy,sigmaxz,sigmayz,memory_dvx_dx,memory_dvx_dy,memory_dvx_dz, &
-!$OMP memory_dvy_dx,memory_dvy_dy,memory_dvy_dz,memory_dvz_dx,memory_dvz_dy, &
-!$OMP memory_dvz_dz,memory_dsigmaxx_dx,memory_dsigmayy_dy,memory_dsigmazz_dz, &
-!$OMP memory_dsigmaxy_dx,memory_dsigmaxy_dy,memory_dsigmaxz_dx,memory_dsigmaxz_dz, &
-!$OMP memory_dsigmayz_dy,memory_dsigmayz_dz,a_x,b_x,K_x,a_x_half,b_x_half,K_x_half, &
-!$OMP a_y,b_y,K_y,a_y_half,b_y_half,K_y_half,a_z,b_z,K_z,a_z_half,b_z_half,K_z_half,k2begin,offset_k)
   do k=k2begin,NZ_LOCAL
    kglobal = k + offset_k
    do j=2,NY
@@ -1016,20 +1002,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
      enddo
     enddo
   enddo
-!$OMP END PARALLEL DO
 
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(kglobal,i,j,k,value_dvx_dx,value_dvx_dy, &
-!$OMP value_dvx_dz,value_dvy_dx,value_dvy_dy,value_dvy_dz,value_dvz_dx,value_dvz_dy, &
-!$OMP duxdx,duxdy,duxdz,duydx,duydy,duydz,duzdx,duzdy,duzdz,div, &
-!$OMP value_dvz_dz,value_dsigmaxx_dx,value_dsigmayy_dy,value_dsigmazz_dz, &
-!$OMP value_dsigmaxy_dx,value_dsigmaxy_dy,value_dsigmaxz_dx,value_dsigmaxz_dz, &
-!$OMP value_dsigmayz_dy,value_dsigmayz_dz) SHARED(vx,vy,vz,sigmaxx,sigmayy,sigmazz, &
-!$OMP sigmaxy,sigmaxz,sigmayz,memory_dvx_dx,memory_dvx_dy,memory_dvx_dz, &
-!$OMP memory_dvy_dx,memory_dvy_dy,memory_dvy_dz,memory_dvz_dx,memory_dvz_dy, &
-!$OMP memory_dvz_dz,memory_dsigmaxx_dx,memory_dsigmayy_dy,memory_dsigmazz_dz, &
-!$OMP memory_dsigmaxy_dx,memory_dsigmaxy_dy,memory_dsigmaxz_dx,memory_dsigmaxz_dz, &
-!$OMP memory_dsigmayz_dy,memory_dsigmayz_dz,a_x,b_x,K_x,a_x_half,b_x_half,K_x_half, &
-!$OMP a_y,b_y,K_y,a_y_half,b_y_half,K_y_half,a_z,b_z,K_z,a_z_half,b_z_half,K_z_half)
   do k=1,NZ_LOCAL
    do j=1,NY-1
      do i=2,NX
@@ -1061,9 +1034,6 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
   e12_mech2(i,j,k) = Unp1
 
-
-!! DK DK UGLY PML
-
       sigmaxy(i,j,k) = sigmaxy(i,j,k)+deltat*mul_relaxed * (e12_mech1(i,j,k) + e12_mech2(i,j,k))
 
     sigmaxy(i,j,k) = sigmaxy(i,j,k) + &
@@ -1075,20 +1045,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
       enddo
     enddo
   enddo
-!$OMP END PARALLEL DO
 
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(kglobal,i,j,k,value_dvx_dx,value_dvx_dy, &
-!$OMP value_dvx_dz,value_dvy_dx,value_dvy_dy,value_dvy_dz,value_dvz_dx,value_dvz_dy, &
-!$OMP duxdx,duxdy,duxdz,duydx,duydy,duydz,duzdx,duzdy,duzdz,div, &
-!$OMP value_dvz_dz,value_dsigmaxx_dx,value_dsigmayy_dy,value_dsigmazz_dz, &
-!$OMP value_dsigmaxy_dx,value_dsigmaxy_dy,value_dsigmaxz_dx,value_dsigmaxz_dz, &
-!$OMP value_dsigmayz_dy,value_dsigmayz_dz) SHARED(vx,vy,vz,sigmaxx,sigmayy,sigmazz, &
-!$OMP sigmaxy,sigmaxz,sigmayz,memory_dvx_dx,memory_dvx_dy,memory_dvx_dz, &
-!$OMP memory_dvy_dx,memory_dvy_dy,memory_dvy_dz,memory_dvz_dx,memory_dvz_dy, &
-!$OMP memory_dvz_dz,memory_dsigmaxx_dx,memory_dsigmayy_dy,memory_dsigmazz_dz, &
-!$OMP memory_dsigmaxy_dx,memory_dsigmaxy_dy,memory_dsigmaxz_dx,memory_dsigmaxz_dz, &
-!$OMP memory_dsigmayz_dy,memory_dsigmayz_dz,a_x,b_x,K_x,a_x_half,b_x_half,K_x_half, &
-!$OMP a_y,b_y,K_y,a_y_half,b_y_half,K_y_half,a_z,b_z,K_z,a_z_half,b_z_half,K_z_half,kminus1end,offset_k)
   do k=1,kminus1end
    kglobal = k + offset_k
    do j=1,NY
@@ -1172,7 +1129,6 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
       enddo
     enddo
   enddo
-!$OMP END PARALLEL DO
 
 !------------------
 ! compute velocity
@@ -1193,18 +1149,6 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
          receiver_right_shift,message_tag,sigmaxz(:,:,-1:0),number_of_values, &
          MPI_DOUBLE_PRECISION,sender_right_shift,message_tag,MPI_COMM_WORLD,message_status,code)
 
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(kglobal,i,j,k,value_dvx_dx,value_dvx_dy, &
-!$OMP value_dvx_dz,value_dvy_dx,value_dvy_dy,value_dvy_dz,value_dvz_dx,value_dvz_dy, &
-!$OMP duxdx,duxdy,duxdz,duydx,duydy,duydz,duzdx,duzdy,duzdz,div, &
-!$OMP value_dvz_dz,value_dsigmaxx_dx,value_dsigmayy_dy,value_dsigmazz_dz, &
-!$OMP value_dsigmaxy_dx,value_dsigmaxy_dy,value_dsigmaxz_dx,value_dsigmaxz_dz, &
-!$OMP value_dsigmayz_dy,value_dsigmayz_dz) SHARED(vx,vy,vz,sigmaxx,sigmayy,sigmazz, &
-!$OMP sigmaxy,sigmaxz,sigmayz,memory_dvx_dx,memory_dvx_dy,memory_dvx_dz, &
-!$OMP memory_dvy_dx,memory_dvy_dy,memory_dvy_dz,memory_dvz_dx,memory_dvz_dy, &
-!$OMP memory_dvz_dz,memory_dsigmaxx_dx,memory_dsigmayy_dy,memory_dsigmazz_dz, &
-!$OMP memory_dsigmaxy_dx,memory_dsigmaxy_dy,memory_dsigmaxz_dx,memory_dsigmaxz_dz, &
-!$OMP memory_dsigmayz_dy,memory_dsigmayz_dz,a_x,b_x,K_x,a_x_half,b_x_half,K_x_half, &
-!$OMP a_y,b_y,K_y,a_y_half,b_y_half,K_y_half,a_z,b_z,K_z,a_z_half,b_z_half,K_z_half,k2begin,offset_k)
   do k=k2begin,NZ_LOCAL
    kglobal = k + offset_k
    do j=2,NY
@@ -1247,19 +1191,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
       enddo
     enddo
   enddo
-!$OMP END PARALLEL DO
 
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(kglobal,i,j,k,value_dvx_dx,value_dvx_dy, &
-!$OMP value_dvx_dz,value_dvy_dx,value_dvy_dy,value_dvy_dz,value_dvz_dx,value_dvz_dy, &
-!$OMP value_dvz_dz,value_dsigmaxx_dx,value_dsigmayy_dy,value_dsigmazz_dz, &
-!$OMP value_dsigmaxy_dx,value_dsigmaxy_dy,value_dsigmaxz_dx,value_dsigmaxz_dz, &
-!$OMP value_dsigmayz_dy,value_dsigmayz_dz) SHARED(vx,vy,vz,sigmaxx,sigmayy,sigmazz, &
-!$OMP sigmaxy,sigmaxz,sigmayz,memory_dvx_dx,memory_dvx_dy,memory_dvx_dz, &
-!$OMP memory_dvy_dx,memory_dvy_dy,memory_dvy_dz,memory_dvz_dx,memory_dvz_dy, &
-!$OMP memory_dvz_dz,memory_dsigmaxx_dx,memory_dsigmayy_dy,memory_dsigmazz_dz, &
-!$OMP memory_dsigmaxy_dx,memory_dsigmaxy_dy,memory_dsigmaxz_dx,memory_dsigmaxz_dz, &
-!$OMP memory_dsigmayz_dy,memory_dsigmayz_dz,a_x,b_x,K_x,a_x_half,b_x_half,K_x_half, &
-!$OMP a_y,b_y,K_y,a_y_half,b_y_half,K_y_half,a_z,b_z,K_z,a_z_half,b_z_half,K_z_half,kminus1end,offset_k)
   do k=1,kminus1end
    kglobal = k + offset_k
    do j=2,NY
@@ -1282,7 +1214,6 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
       enddo
     enddo
   enddo
-!$OMP END PARALLEL DO
 
   if(rank == rank_cut_plane) then
 
@@ -1313,7 +1244,6 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 
 ! implement Dirichlet boundary conditions on the six edges of the grid
 
-!$OMP PARALLEL WORKSHARE
 ! xmin
   vx(0:1,:,:) = ZERO
   vy(0:1,:,:) = ZERO
@@ -1333,7 +1263,6 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   vx(:,NY:NY+1,:) = ZERO
   vy(:,NY:NY+1,:) = ZERO
   vz(:,NY:NY+1,:) = ZERO
-!$OMP END PARALLEL WORKSHARE
 
 ! zmin
   if(rank == 0) then
@@ -1366,9 +1295,6 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   if(rank == 0) kmin = NPOINTS_PML
   if(rank == nb_procs-1) kmax = NZ_LOCAL-NPOINTS_PML+1
 
-!$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(i,j,k,epsilon_xx,epsilon_yy,epsilon_zz,epsilon_xy,epsilon_xz,epsilon_yz) &
-!$OMP SHARED(kmin,kmax,vx,vy,vz,sigmaxx,sigmayy,sigmazz, &
-!$OMP sigmaxy,sigmaxz,sigmayz) REDUCTION(+:local_energy_kinetic,local_energy_potential)
   do k = kmin,kmax
     do j = NPOINTS_PML, NY-NPOINTS_PML+1
       do i = NPOINTS_PML, NX-NPOINTS_PML+1
@@ -1403,7 +1329,6 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
       enddo
     enddo
   enddo
-!$OMP END PARALLEL DO
 
   call MPI_REDUCE(local_energy_kinetic + local_energy_potential,total_energy(it),1, &
                           MPI_DOUBLE_PRECISION,MPI_SUM,rank_cut_plane,MPI_COMM_WORLD,code)
@@ -1633,7 +1558,8 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 
   integer :: ix,iy,irec
 
-  character(len=100) :: file_name,system_command
+  character(len=150) :: file_name
+! character(len=150) :: system_command
 
   integer :: R, G, B
 

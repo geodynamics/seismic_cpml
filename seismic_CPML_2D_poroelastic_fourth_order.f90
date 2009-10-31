@@ -1,4 +1,6 @@
 !
+! SEISMIC_CPML Version 1.1.0, October 2009.
+!
 ! Copyright Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France.
 ! Contributors: Roland Martin, roland DOT martin aT univ-pau DOT fr
 !           and Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
@@ -289,8 +291,8 @@
   double precision, parameter :: ALPHA_MAX_PML = 2.d0*PI*(f0/2.d0)   ! from festa and Vilotte
 
 ! 2D arrays for the memory variables
-  double precision, dimension(0:NX+1,0:NY+1) :: gamma11,gamma12,gamma22
-  double precision, dimension(0:NX+1,0:NY+1) :: gamma12_1,gamma12_2
+  double precision, dimension(0:NX+1,0:NY+1) :: gamma11,gamma22
+  double precision, dimension(0:NX+1,0:NY+1) :: gamma12_1
   double precision, dimension(0:NX+1,0:NY+1) :: xi_1,xi_2
 
   double precision, dimension(0:NX+1,0:NY+1) :: &
@@ -302,17 +304,15 @@
 ! 1D arrays for the damping profiles
   double precision, dimension(NX) :: d_x,K_x,alpha_prime_x,a_x,b_x,d_x_half_x,K_x_half_x,alpha_prime_x_half_x,a_x_half_x,b_x_half_x
   double precision, dimension(NY) :: d_y,K_y,alpha_prime_y,a_y,b_y,d_y_half_y,K_y_half_y,alpha_prime_y_half_y,a_y_half_y,b_y_half_y
-  double precision, dimension(NY) :: d_y_new,K_y_new,alpha_prime_y_new,a_y_new,b_y_new,d_y_half_y_new,K_y_half_y_new, &
-    alpha_prime_y_half_y_new,a_y_half_y_new,b_y_half_y_new
 
   double precision thickness_PML_x,thickness_PML_y,xoriginleft,xoriginright,yoriginbottom,yorigintop
   double precision Rcoef,d0_x,d0_y,xval,yval,abscissa_in_PML,abscissa_normalized
-  double precision value_dx_vx1,value_dx_vx2,value_dx_vy,value_dx_sigmaxx,value_dx_sigmayy,value_dx_sigmaxy
-  double precision value_dy_vy1,value_dy_vy2,value_dy_vx,value_dy_sigmaxx,value_dy_sigmayy,value_dy_sigmaxy
-  double precision value_dx_sigma2vx,value_dx_sigma2vxf,value_dy_sigma2vy,value_dy_sigma2vyf
+  double precision value_dx_vx1,value_dx_vx2,value_dx_vy,value_dx_sigmaxx,value_dx_sigmaxy
+  double precision value_dy_vy1,value_dy_vy2,value_dy_vx,value_dy_sigmaxx,value_dy_sigmaxy
+  double precision value_dx_sigma2vxf,value_dy_sigma2vyf
 
 ! for the source
-  double precision a,t,force_x,force_y,source_term
+  double precision a,t,source_term
 
 ! for receivers
   double precision xspacerec,yspacerec,distval,dist
@@ -322,7 +322,7 @@
 ! for seismograms
   double precision, dimension(NSTEP,NREC) :: sisvx,sisvy,sisp
 
-  integer i,j,it,it2,irec
+  integer i,j,it,irec
 
   double precision Courant_number_bottom,Courant_number_top,velocnorm_all,max_amplitude
   double precision Dispersion_number_bottom,Dispersion_number_top
@@ -975,14 +975,14 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
 
 ! save temporary partial seismograms to monitor the behavior of the simulation
 ! while it is running
-  call write_seismograms(sisvx,sisvy,sisp,NSTEP,NREC,DELTAT,t0/2.d0)
+  call write_seismograms(sisvx,sisvy,sisp,NSTEP,NREC,DELTAT,t0)
 
   endif
 
   enddo   ! end of time loop
 
 ! save seismograms
-  call write_seismograms(sisvx,sisvy,sisp,NSTEP,NREC,DELTAT,t0/2.d0)
+  call write_seismograms(sisvx,sisvy,sisp,NSTEP,NREC,DELTAT,t0)
 
 ! save total energy
   open(unit=20,file='energy.dat',status='unknown')
@@ -1075,8 +1075,7 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
     write(file_name,"('Vx_file_',i3.3,'.dat')") irec
     open(unit=11,file=file_name,status='unknown')
     do it=1,nt
-!     write(11,*) sngl(dble(it-1)*DELTAT - t0),' ',sngl(sisvx(it,irec))
-      write(11,*) sngl(dble(it-1)*DELTAT ),' ',sngl(sisvx(it,irec))
+      write(11,*) sngl(dble(it-1)*DELTAT - t0),' ',sngl(sisvx(it,irec))
     enddo
     close(11)
   enddo
@@ -1086,8 +1085,7 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
     write(file_name,"('Vy_file_',i3.3,'.dat')") irec
     open(unit=11,file=file_name,status='unknown')
     do it=1,nt
-!     write(11,*) sngl(dble(it-1)*DELTAT - t0),' ',sngl(sisvy(it,irec))
-      write(11,*) sngl(dble(it-1)*DELTAT ),' ',sngl(sisvy(it,irec))
+      write(11,*) sngl(dble(it-1)*DELTAT - t0),' ',sngl(sisvy(it,irec))
     enddo
     close(11)
   enddo
@@ -1097,8 +1095,7 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
     write(file_name,"('Pf_file_',i3.3,'.dat')") irec
     open(unit=11,file=file_name,status='unknown')
     do it=1,nt
-!     write(11,*) sngl(dble(it-1)*DELTAT - t0),' ',sngl(sisp(it,irec))
-      write(11,*) sngl(dble(it-1)*DELTAT ),' ',sngl(sisp(it,irec))
+      write(11,*) sngl(dble(it-1)*DELTAT - t0),' ',sngl(sisp(it,irec))
     enddo
     close(11)
   enddo

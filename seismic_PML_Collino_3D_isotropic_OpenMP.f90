@@ -1,4 +1,6 @@
 !
+! SEISMIC_CPML Version 1.1.0, October 2009.
+!
 ! Copyright Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France.
 ! Contributors: Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
 !               and Roland Martin, roland DOT martin aT univ-pau DOT fr
@@ -61,7 +63,6 @@
 !
 ! PML implemented in the three directions (x, y and z).
 !
-! Version 1.0
 ! Dimitri Komatitsch and Roland Martin, University of Pau, France, April 2007.
 !
 ! The second-order staggered-grid formulation of Madariaga (1976) and Virieux (1986) is used.
@@ -84,7 +85,7 @@
 ! total number of grid points in each direction of the grid
   integer, parameter :: NX = 101
   integer, parameter :: NY = 641
-  integer, parameter :: NZ = 64!!!0
+  integer, parameter :: NZ = 640
 
 ! size of a grid cell
   double precision, parameter :: h = 10.d0
