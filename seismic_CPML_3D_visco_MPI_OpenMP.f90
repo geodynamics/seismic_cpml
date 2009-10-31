@@ -1,6 +1,7 @@
 !
 ! Copyright Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France.
-! Contributor: ROland Martin, roland DOT martin aT univ-pau DOT fr
+! Contributors: Roland Martin, roland DOT martin aT univ-pau DOT fr
+!           and Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
 !
 ! This software is a computer program whose purpose is to solve
 ! the three-dimensional isotropic viscoelastic wave equation
@@ -33,14 +34,15 @@
 ! The full text of the license is available at the end of this program
 ! and in file "LICENSE".
 
-  program seismic_Visco_CPML_3D_MPI_OpenMP
+  program seismic_visco_CPML_3D_MPI_OpenMP
 
 ! 3D fourth order viscoelastic finite-difference code in velocity and stress formulation
 ! with Convolutional-PML (C-PML) absorbing conditions using 2 mechanisms of attenuation
 ! with 6 equations per mechanism.
 
 ! Version 1.0
-! Roland Martin, University of Pau, France, April 2007.
+! Roland Martin, University of Pau, France, August 2009.
+! based on the elastic code of Komatitsch and Martin, 2007.
 
 ! The fourth-order staggered-grid formulation of Madariaga (1976) and Virieux (1986) is used.
 
@@ -91,13 +93,13 @@
   include 'mpif.h'
 
 ! total number of grid points in each direction of the grid
-  integer, parameter :: NX = 210 
-  integer, parameter :: NY = 800 
+  integer, parameter :: NX = 210
+  integer, parameter :: NY = 800
   integer, parameter :: NZ = 220 ! even number in order to cut along Z axis
 
 ! number of processes used in the MPI run
 ! and local number of points (for simplicity we cut the mesh along Z only)
-  integer, parameter :: NPROC = 20 
+  integer, parameter :: NPROC = 20
   integer, parameter :: NZ_LOCAL = NZ / NPROC
 
 ! size of a grid cell
@@ -145,7 +147,7 @@
   double precision, parameter :: ANGLE_FORCE = 0.d0
 
 ! receivers
-  integer, parameter :: NREC = 3 
+  integer, parameter :: NREC = 3
   double precision, parameter :: xdeb = xsource - 100.d0 ! first receiver x in meters
   double precision, parameter :: ydeb = 2300.d0 ! first receiver y in meters
   double precision, parameter :: xfin = xsource ! last receiver x in meters
@@ -232,10 +234,10 @@
 ! change dimension of Z axis to add two planes for MPI
   double precision, dimension(0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: vx,vy,vz,sigmaxx,sigmayy,sigmazz,sigmaxy,sigmaxz,sigmayz
   double precision, dimension(0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: sigmaxx_R,sigmayy_R,sigmazz_R,sigmaxy_R,sigmaxz_R,sigmayz_R
-  double precision, dimension(0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: e1_mech1,e1_mech2,e11_mech1,e11_mech2,e22_mech1,e22_mech2 
-  double precision, dimension(0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: e12_mech1,e12_mech2,e13_mech1,e13_mech2,e23_mech1,e23_mech2 
+  double precision, dimension(0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: e1_mech1,e1_mech2,e11_mech1,e11_mech2,e22_mech1,e22_mech2
+  double precision, dimension(0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: e12_mech1,e12_mech2,e13_mech1,e13_mech2,e23_mech1,e23_mech2
 
-  integer, parameter :: number_of_arrays = 9 + 2*9 + 12 
+  integer, parameter :: number_of_arrays = 9 + 2*9 + 12
 
 ! for the source
   double precision a,t,force_x,force_y,source_term
@@ -252,7 +254,7 @@
   double precision max_amplitudeVx
   double precision max_amplitudeVy
   double precision max_amplitudeVz
- 
+
 ! for evolution of total energy in the medium
   double precision :: epsilon_xx,epsilon_yy,epsilon_zz,epsilon_xy,epsilon_xz,epsilon_yz
   double precision, dimension(NSTEP) :: total_energy,total_energy_kinetic,total_energy_potential
@@ -884,7 +886,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
          MPI_DOUBLE_PRECISION,sender_right_shift,message_tag,MPI_COMM_WORLD,message_status,code)
 
 !$OMP PARALLEL DO DEFAULT(NONE) PRIVATE(kglobal,i,j,k,value_dvx_dx,value_dvx_dy, &
-!$OMP duxdx,duxdy,duxdz,duydx,duydy,duydz,duzdx,duzdy,duzdz,div, & 
+!$OMP duxdx,duxdy,duxdz,duydx,duydy,duydz,duzdx,duzdy,duzdz,div, &
 !$OMP value_dvx_dz,value_dvy_dx,value_dvy_dy,value_dvy_dz,value_dvz_dx,value_dvz_dy, &
 !$OMP value_dvz_dz,value_dsigmaxx_dx,value_dsigmayy_dy,value_dsigmazz_dz, &
 !$OMP value_dsigmaxy_dx,value_dsigmaxy_dy,value_dsigmaxz_dx,value_dsigmaxz_dz, &
@@ -899,9 +901,9 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
    kglobal = k + offset_k
    do j=2,NY
      do i=1,NX-1
-      
-      mul_relaxed = mu 
-      lambdal_relaxed = lambda 
+
+      mul_relaxed = mu
+      lambdal_relaxed = lambda
       lambdalplus2mul_relaxed = lambdal_relaxed + TWO*mul_relaxed
       lambdal_unrelaxed = (lambdal_relaxed + 2.d0/DIM*mul_relaxed) * Mu_nu1 - 2.d0/DIM*mul_relaxed * Mu_nu2
       mul_unrelaxed = mul_relaxed * Mu_nu2
@@ -918,7 +920,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
       duxdx = value_dvx_dx / K_x_half(i) + memory_dvx_dx(i,j,k)
       duydy = value_dvy_dy / K_y(j) + memory_dvy_dy(i,j,k)
       duzdz = value_dvz_dz / K_z(kglobal) + memory_dvz_dz(i,j,k)
-  
+
       div=duxdx+duydy+duzdz
 
 !evolution e1_mech1
@@ -991,7 +993,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
          (lambdal_unrelaxed * (duxdx) + &
           lambdalplus2mul_unrelaxed* (duydy) +&
           lambdal_unrelaxed* (duzdz)) * DELTAT
-      
+
       sigmazz(i,j,k) = sigmazz(i,j,k) + &
          (lambdal_unrelaxed * (duxdx) + &
           lambdal_unrelaxed* (duydy) + &
@@ -1006,7 +1008,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
          (lambdal_relaxed * (duxdx) + &
           lambdalplus2mul_relaxed* (duydy) +&
           lambdal_relaxed* (duzdz)) * DELTAT
-      
+
       sigmazz_R(i,j,k) = sigmazz_R(i,j,k) + &
          (lambdal_relaxed * (duxdx) + &
           lambdal_relaxed* (duydy) + &
@@ -1032,7 +1034,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   do k=1,NZ_LOCAL
    do j=1,NY-1
      do i=2,NX
-      mul_relaxed = mu 
+      mul_relaxed = mu
       mul_unrelaxed = mul_relaxed * Mu_nu2
 
       value_dvy_dx = (27.d0*vy(i,j,k)-27.d0*vy(i-1,j,k)-vy(i+1,j,k)+vy(i-2,j,k)) * ONE_OVER_DELTAX/24.d0
@@ -1092,7 +1094,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
    kglobal = k + offset_k
    do j=1,NY
      do i=2,NX
-      mul_relaxed = mu 
+      mul_relaxed = mu
       mul_unrelaxed = mul_relaxed * Mu_nu2
 
       value_dvz_dx = (27.d0*vz(i,j,k)-27.d0*vz(i-1,j,k)-vz(i+1,j,k)+vz(i-2,j,k)) * ONE_OVER_DELTAX/24.d0
@@ -1132,7 +1134,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 
    do j=1,NY-1
      do i=1,NX
-      mul_relaxed = mu 
+      mul_relaxed = mu
       mul_unrelaxed = mul_relaxed * Mu_nu2
 
       value_dvz_dy = (27.d0*vz(i,j+1,k)-27.d0*vz(i,j,k)-vz(i,j+2,k)+vz(i,j-1,k)) * ONE_OVER_DELTAY/24.d0
@@ -1460,14 +1462,14 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
     write(IOUT,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
     close(IOUT)
 
-! save energy 
+! save energy
     open(unit=21,file='energy.dat',status='unknown')
       do it2=1,NSTEP
      write(21,*) sngl(dble(it2-1)*DELTAT),total_energy_kinetic(it2),&
      total_energy_potential(it2),total_energy(it2)
       enddo
      close(21)
-    
+
 ! save seismograms
     print *,'saving seismograms'
     print *
@@ -1559,7 +1561,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 ! close MPI program
   call MPI_FINALIZE(code)
 
-  end program seismic_Visco_CPML_3D_MPI_OpenMP
+  end program seismic_visco_CPML_3D_MPI_OpenMP
 
 !----
 !----  save the seismograms in ASCII text format
