@@ -1256,7 +1256,7 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
   close(27)
 
 ! call the system to convert image to JPEG
-  call system(system_command)
+! call system(system_command)
 
   end subroutine create_2D_image
 
