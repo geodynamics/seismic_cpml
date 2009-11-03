@@ -1493,7 +1493,7 @@
   close(27)
 
 ! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
-  call system(system_command)
+! call system(system_command)
 
   end subroutine create_2D_image
 

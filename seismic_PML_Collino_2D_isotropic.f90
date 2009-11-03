@@ -313,7 +313,7 @@
   if(Courant_number > 1.d0/sqrt(2.d0)) stop 'time step is too large, simulation will be unstable'
 
 ! suppress old files (can be commented out if "call system" is missing in your compiler)
-  call system('rm -f Vx_*.dat Vy_*.dat image*.pnm image*.gif')
+! call system('rm -f Vx_*.dat Vy_*.dat image*.pnm image*.gif')
 
 ! initialize arrays
   vx_1(:,:) = 0.d0
@@ -797,7 +797,7 @@
   close(27)
 
 ! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
-  call system(system_command)
+! call system(system_command)
 
   end subroutine create_2D_image
 
