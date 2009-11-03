@@ -1,5 +1,5 @@
 #
-# Makefile for SEISMIC_CPML Version 1.1.0, October 2009
+# Makefile for SEISMIC_CPML Version 1.1.1, November 2009.
 # Dimitri Komatitsch
 # Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France
 # 

@@ -1,5 +1,5 @@
 !
-! SEISMIC_CPML Version 1.1.0, October 2009.
+! SEISMIC_CPML Version 1.1.1, November 2009.
 !
 ! Copyright Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France.
 ! Contributors: Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
