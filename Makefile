@@ -37,12 +37,12 @@ FLAGS = -std=f2003 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -
 MEDIUM_MEMORY = -mcmodel=medium
 OPEN_MP = -fopenmp
 
-default: clean seismic_CPML_2D_isotropic_second_order seismic_CPML_2D_isotropic_fourth_order seismic_CPML_2D_anisotropic seismic_PML_Collino_2D_isotropic seismic_PML_Collino_3D_isotropic_OpenMP seismic_CPML_3D_isotropic_MPI_OpenMP seismic_CPML_2D_poroelastic_fourth_order seismic_CPML_3D_viscoelastic_MPI
+default: clean seismic_CPML_2D_isotropic_second_order seismic_CPML_2D_isotropic_fourth_order seismic_CPML_2D_anisotropic seismic_PML_Collino_2D_isotropic seismic_PML_Collino_3D_isotropic_OpenMP seismic_CPML_3D_isotropic_MPI_OpenMP seismic_CPML_2D_poroelastic_fourth_order seismic_CPML_3D_viscoelastic_MPI seismic_PML_Collino_2D_anisotropic_fourth
 
 all: default
 
 clean:
-	/bin/rm -f *.o xseismic_CPML_2D_isotropic_second_order xseismic_CPML_2D_isotropic_fourth_order xseismic_CPML_2D_anisotropic xseismic_PML_Collino_2D_isotropic xseismic_CPML_3D_isotropic_MPI_OpenMP xseismic_PML_Collino_3D_isotropic_OpenMP xseismic_CPML_2D_poroelastic_fourth_order xseismic_CPML_3D_viscoelastic_MPI
+	/bin/rm -f *.o xseismic_CPML_2D_isotropic_second_order xseismic_CPML_2D_isotropic_fourth_order xseismic_CPML_2D_anisotropic xseismic_PML_Collino_2D_isotropic xseismic_CPML_3D_isotropic_MPI_OpenMP xseismic_PML_Collino_3D_isotropic_OpenMP xseismic_CPML_2D_poroelastic_fourth_order xseismic_CPML_3D_viscoelastic_MPI xseismic_PML_Collino_2D_anisotropic_fourth
 
 seismic_CPML_2D_poroelastic_fourth_order:
 	$(F90) $(FLAGS) -o xseismic_CPML_2D_poroelastic_fourth_order seismic_CPML_2D_poroelastic_fourth_order.f90
@@ -58,6 +58,9 @@ seismic_CPML_2D_anisotropic:
 
 seismic_PML_Collino_2D_isotropic:
 	$(F90) $(FLAGS) -o xseismic_PML_Collino_2D_isotropic seismic_PML_Collino_2D_isotropic.f90
+
+seismic_PML_Collino_2D_anisotropic_fourth:
+	$(F90) $(FLAGS) -o xseismic_PML_Collino_2D_anisotropic_fourth seismic_PML_Collino_2D_anisotropic_fourth.f90
 
 seismic_PML_Collino_3D_isotropic_OpenMP:
 	$(F90) $(FLAGS) $(MEDIUM_MEMORY) $(OPEN_MP) -o xseismic_PML_Collino_3D_isotropic_OpenMP seismic_PML_Collino_3D_isotropic_OpenMP.f90

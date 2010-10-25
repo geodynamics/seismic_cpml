@@ -3,10 +3,10 @@
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
 	<TITLE>The SEISMIC_CPML software package</TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.0  (Linux)">
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.1  (Linux)">
 	<META NAME="CREATED" CONTENT="0;0">
 	<META NAME="CHANGEDBY" CONTENT="Dimitri Komatitsch">
-	<META NAME="CHANGED" CONTENT="20091103;22190500">
+	<META NAME="CHANGED" CONTENT="20101026;464200">
 	<STYLE TYPE="text/css">
 	<!--
 		P { color: #000000; font-family: "Times New Roman"; font-size: 12pt }
@@ -20,11 +20,12 @@
 Komatitsch</A></P>
 <P ALIGN=CENTER><A NAME="_x0000_i1025"></A><IMG SRC="http://www.univ-pau.fr/~dkomati1/seismic_cpml.gif" NAME="graphics1" ALIGN=BOTTOM WIDTH=158 HEIGHT=30 BORDER=0></P>
 <P>&nbsp;</P>
-<P ALIGN=CENTER><A NAME="download_map"></A><IMG SRC="http://www.geodynamics.org/~buildbot/maps/Seismic_CPML.gif" NAME="download_map2" ALIGN=BOTTOM BORDER=0></P>
-<P><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><center><u><b>Current SEISMIC_CPML download map since its first release</b></u></center></FONT></FONT></FONT></P>
+<P ALIGN=CENTER><A NAME="download_map"></A><IMG SRC="http://www.geodynamics.org/~buildbot/maps/Seismic_CPML.gif" NAME="download_map2" ALIGN=BOTTOM WIDTH=445 HEIGHT=223 BORDER=0></P>
+<P ALIGN=CENTER><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><U><B>Current
+SEISMIC_CPML download map since its first release</B></U></FONT></FONT></FONT></P>
 <P>&nbsp;</P>
 <P><FONT COLOR="#ff0000"><FONT SIZE=3 STYLE="font-size: 13pt">SEISMIC_CPML
-is a set of eight open-source Fortran90 programs</FONT></FONT> <FONT SIZE=3 STYLE="font-size: 13pt">to
+is a set of nine open-source Fortran90 programs</FONT></FONT> <FONT SIZE=3 STYLE="font-size: 13pt">to
 solve the two-dimensional or three-dimensional isotropic or
 anisotropic elastic, viscoelastic or poroelastic wave equation using
 a finite-difference method with Convolutional Perfectly Matched Layer
@@ -33,8 +34,7 @@ from University of Pau, France. </FONT>
 </P>
 <P STYLE="margin-bottom: 0in"><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">You
 can get the full source code of the programs at the official Web
-site:
-</FONT></FONT></FONT><A HREF="http://www.geodynamics.org/cig/software"><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>http://www.geodynamics.org/cig/software</B></FONT></FONT></FONT></A></P>
+site: </FONT></FONT></FONT><A HREF="http://www.geodynamics.org/cig/software"><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>http://www.geodynamics.org/cig/software</B></FONT></FONT></FONT></A></P>
 <P><FONT SIZE=3 STYLE="font-size: 13pt">The unsplit <B>Convolutional
 Perfectly Matched Layer (C-PML) for the 3D elastic wave equation</B>
 was introduced and is described in detail in: </FONT>
@@ -135,7 +135,7 @@ Arbitrary Media},<BR>journal = {Microwave and Optical Technology
 Letters},<BR>year = {2000},<BR>volume = {27},<BR>number = {5},<BR>pages
 = {334-339},<BR>doi =
 {10.1002/1098-2760(20001205)27:5&lt;334::AID-MOP14&gt;3.0.CO;2-A}}<BR></FONT></FONT><A HREF="http://www.geodynamics.org/cig/software"><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=1 STYLE="font-size: 6pt"><B><BR><BR></B></FONT></FONT></FONT></A><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-weight: normal">The
-package is composed of the following eight programs:</SPAN></FONT></P>
+package is composed of the following nine programs:</SPAN></FONT></P>
 <P STYLE="margin-bottom: 0in"><BR>
 </P>
 <P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_CPML_2D_isotropic_second_order.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
@@ -159,6 +159,9 @@ finite-difference spatial operator.</FONT></FONT></FONT></P>
 <P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_PML_Collino_2D_isotropic.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
 2D classical split PML program for an isotropic medium using a
 second-order finite-difference spatial operator, for comparison.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_PML_Collino_2D_anisotropic_fourth.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-weight: normal">:
+2D classical split PML program for an anisotropic medium using a
+fourth-order finite-difference spatial operator, for comparison.</SPAN></FONT></FONT></FONT></P>
 <P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_CPML_3D_isotropic_MPI_OpenMP.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
 3D C-PML program for an isotropic medium using a second-order
 finite-difference spatial operator. Parallel implementation based on
