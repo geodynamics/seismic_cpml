@@ -19,7 +19,7 @@ O = obj
 # Intel (leave option -ftz, which is *critical* for performance)
 #F90 = ifort
 #MPIF90 = mpif90
-#FLAGS = -O3 -xP -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -fpe3 -ftz
+#FLAGS = -O3 -xP -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -fpe0 -ftz
 #MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -openmp -openmp-report1
 
@@ -27,13 +27,13 @@ O = obj
 #F90 = xlf_r
 #MPIF90 = mpxlf_r
 #FLAGS = -O3 -qfree=f90 -qhalt=w -qsave
-#MEDIUM_MEMORY =
+#MEDIUM_MEMORY = -q64
 #OPEN_MP = -qsmp=omp
 
 # GNU gfortran
 F90 = gfortran
 MPIF90 = mpif90
-FLAGS = -std=f2003 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow -fno-trapping-math
+FLAGS = -std=f2003 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow
 MEDIUM_MEMORY = -mcmodel=medium
 OPEN_MP = -fopenmp
 
