@@ -6,7 +6,7 @@
 	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.1  (Linux)">
 	<META NAME="CREATED" CONTENT="0;0">
 	<META NAME="CHANGEDBY" CONTENT="Dimitri Komatitsch">
-	<META NAME="CHANGED" CONTENT="20101104;2065300">
+	<META NAME="CHANGED" CONTENT="20101219;534200">
 	<STYLE TYPE="text/css">
 	<!--
 		P { color: #000000; font-family: "Times New Roman"; font-size: 12pt }
@@ -25,7 +25,7 @@ Komatitsch</A></P>
 SEISMIC_CPML download map since its first release</B></U></FONT></FONT></FONT></P>
 <P>&nbsp;</P>
 <P><FONT COLOR="#ff0000"><FONT SIZE=3 STYLE="font-size: 13pt">SEISMIC_CPML
-is a set of nine open-source Fortran90 programs</FONT></FONT> <FONT SIZE=3 STYLE="font-size: 13pt">to
+is a set of ten open-source Fortran90 programs</FONT></FONT> <FONT SIZE=3 STYLE="font-size: 13pt">to
 solve the two-dimensional or three-dimensional isotropic or
 anisotropic elastic, viscoelastic or poroelastic wave equation using
 a finite-difference method with Convolutional Perfectly Matched Layer
@@ -84,6 +84,18 @@ equation, </FONT><FONT SIZE=3 STYLE="font-size: 13pt"><I>Computer
 Modeling in Engineering and Sciences</I></FONT><FONT SIZE=3 STYLE="font-size: 13pt">,
 vol. 37(3), p. 274-304 (2008). </FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-weight: normal"><A HREF="http://www.univ-pau.fr/~dkomati1/published_papers/CMES_cpml_2008.pdf">PDF
 reprint</A> <A HREF="http://www.univ-pau.fr/~dkomati1/bibtex_komatitsch.bib">BibTeX</A></SPAN></FONT></FONT></SPAN></FONT></P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt">An extension to higher-order
+time schemes, called ADE-PML (Auxiliary Differential Equation - PML)
+is developed in:</FONT></P>
+<P><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=4><SPAN LANG="fr-FR"><B>Roland
+Martin, Dimitri Komatitsch, Stephen D. Gedney and Émilien Bruthiaux</B></SPAN></FONT></FONT></SPAN></FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=4><SPAN LANG="fr-FR"><SPAN STYLE="font-weight: normal">,
+A high-order time and space formulation of the unsplit perfectly
+matched layer for the seismic wave equation using Auxiliary
+Differential Equations (ADE-PML), </SPAN></SPAN></FONT></FONT></SPAN></FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=4><SPAN LANG="fr-FR"><I><SPAN STYLE="font-weight: normal">Computer
+Modeling in Engineering and Sciences</SPAN></I></SPAN></FONT></FONT></SPAN></FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=4><SPAN LANG="fr-FR"><SPAN STYLE="font-weight: normal">,
+vol. 56(1), p. 17-42 (2010).</SPAN></SPAN></FONT></FONT></SPAN></FONT><FONT SIZE=3 STYLE="font-size: 13pt">
+<A HREF="http://www.univ-pau.fr/~dkomati1/published_papers/CMES_ADE_PML_2010.pdf">PDF
+reprint</A> <A HREF="http://www.univ-pau.fr/~dkomati1/bibtex_komatitsch.bib">BibTeX</A></FONT></P>
 <P><FONT SIZE=3 STYLE="font-size: 13pt">Note that in the case of an
 anisotropic medium the modification made is not strictly speaking
 perfectly matched any more, i.e., not a PML, but rather </FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">a
@@ -93,6 +105,12 @@ of the Seismological Society of America</I></FONT></FONT></FONT><FONT COLOR="#00
 vol. 98(4), p. 1811-1836 (2008). H</FONT></FONT></FONT><FONT SIZE=3 STYLE="font-size: 13pt">owever,
 it works well in practice even if it is not perfectly matched any
 more from a mathematical point of view.</FONT></P>
+<P><FONT COLOR="#ff0000"><B><FONT SIZE=3 STYLE="font-size: 13pt">IMPORTANT:
+all of our codes are written in Fortran; if you have written or if
+you write a C or C++ version of some of these codes and want to make
+them open source (GNU GPL v2 or CeCILL, as you prefer) and part of
+the package, please do not hesitate to send them to us, we will add
+them to our tar file and will acknowledge you as the author.</FONT></B></FONT></P>
 <P><FONT SIZE=3 STYLE="font-size: 13pt">This software is governed by
 the <A HREF="http://www.cecill.info/licences/Licence_CeCILL_V2-en.html">CeCILL
 license (version 2)</A> (a French license very similar to GNU GPL
@@ -126,7 +144,27 @@ variational formulation of a stabilized unsplit convolutional
 perfectly matched layer for the isotropic or anisotropic seismic wave
 equation},<BR>journal = {Computer Modeling in Engineering and
 Sciences},<BR>year = {2008},<BR>volume = {37},<BR>pages =
-{274-304},<BR>number = {3}}<BR><BR></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">Roden
+{274-304},<BR>number = {3}}</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">@ARTICLE{MaKoGeBr10,</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in">  <FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">author
+= {Roland Martin and Dimitri Komatitsch and Stephen D. Gedney and
+Emilien Bruthiaux},</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in">  <FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">title
+= {A high-order time and space formulation of the unsplit perfectly
+matched layer for the seismic wave equation using {Auxiliary
+Differential Equations (ADE-PML)}},</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in">  <FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">journal
+= {Computer Modeling in Engineering and Sciences},</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in">  <FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">year
+= {2010},</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in">  <FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">volume
+= {56},</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in">  <FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">pages
+= {17-42},</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in">  <FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">number
+= {1}}<BR><BR></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">Roden
 and Gedney's original article for Maxwell's equations
 is:</FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=1 STYLE="font-size: 6pt"><BR><BR><BR></FONT></FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">@ARTICLE{RoGe00,<BR>author
 = {J. A. Roden and S. D. Gedney},<BR>title = {Convolution {PML}
@@ -135,7 +173,7 @@ Arbitrary Media},<BR>journal = {Microwave and Optical Technology
 Letters},<BR>year = {2000},<BR>volume = {27},<BR>number = {5},<BR>pages
 = {334-339},<BR>doi =
 {10.1002/1098-2760(20001205)27:5&lt;334::AID-MOP14&gt;3.0.CO;2-A}}<BR></FONT></FONT><A HREF="http://www.geodynamics.org/cig/software"><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=1 STYLE="font-size: 6pt"><B><BR><BR></B></FONT></FONT></FONT></A><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-weight: normal">The
-package is composed of the following nine programs:</SPAN></FONT></P>
+package is composed of the following ten programs:</SPAN></FONT></P>
 <P STYLE="margin-bottom: 0in"><BR>
 </P>
 <P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_CPML_2D_isotropic_second_order.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
@@ -156,6 +194,10 @@ code works well in practice.</FONT></FONT></FONT></P>
 <P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_CPML_2D_poroelastic_fourth_order.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
 2D C-PML program for a poroelastic medium using a fourth-order
 finite-difference spatial operator.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_ADEPML_2D_RK4_eighth_order.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+2D ADE-PML program for an isotropic elastic medium using an
+eighth-order finite-difference spatial operator and fourth-order
+Runge-Kutta implicit, semi implicit or explicit time scheme.</FONT></FONT></FONT></P>
 <P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_PML_Collino_2D_isotropic.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
 2D classical split PML program for an isotropic medium using a
 second-order finite-difference spatial operator, for comparison.</FONT></FONT></FONT></P>
