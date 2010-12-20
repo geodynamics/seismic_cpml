@@ -47,7 +47,7 @@
 ! Application of the PML Absorbing Layer Model to the Linear
 ! Elastodynamic Problem in Anisotropic Heteregeneous Media
 ! INRIA Research Report RR-3471, August 1998
-! http://www.inria.fr/publications
+! http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
 !
 ! and
 !
@@ -208,10 +208,10 @@
 ! thickness of the layer in meters
   delta = NPOINTS_PML * h
 
-! reflection coefficient (INRIA report section 6.1)
+! reflection coefficient (INRIA report section 6.1) http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   Rcoef = 0.001d0
 
-! compute d0 from INRIA report section 6.1
+! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   d0 = 3.d0 * cp * log(1.d0/Rcoef) / (2.d0 * delta)
 
   print *,'d0 = ',d0
@@ -1022,6 +1022,7 @@ do k = 1,NZ-1
   double precision :: normalized_value,max_amplitude
 
 ! open image file and create system command to convert image to more convenient format
+! use the "convert" command from ImageMagick http://www.imagemagick.org
   if(field_number == 1) then
     write(file_name,"('image',i6.6,'_Vx.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vx.pnm image',i6.6,'_Vx.gif ; rm image',i6.6,'_Vx.pnm')") it,it,it

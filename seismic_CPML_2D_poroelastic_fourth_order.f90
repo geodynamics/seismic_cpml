@@ -391,13 +391,13 @@
   thickness_PML_x = NPOINTS_PML * DELTAX
   thickness_PML_y = NPOINTS_PML * DELTAY
 
-! reflection coefficient (INRIA report section 6.1)
+! reflection coefficient (INRIA report section 6.1) http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   Rcoef = 0.001d0
 
 ! check that NPOWER is okay
   if(NPOWER < 1) stop 'NPOWER must be greater than 1'
 
-! compute d0 from INRIA report section 6.1
+! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   if(HETEROGENEOUS_MODEL) then
     d0_x = - (NPOWER + 1) * max(cp_bottom,cp_top) * log(Rcoef) / (2.d0 * thickness_PML_x)
     d0_y = - (NPOWER + 1) * max(cp_bottom,cp_top) * log(Rcoef) / (2.d0 * thickness_PML_y)
@@ -1146,6 +1146,7 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
   integer :: R, G, B
 
 ! open image file and create system command to convert image to more convenient format
+! use the "convert" command from ImageMagick http://www.imagemagick.org
   if(field_number == 1) then
     write(file_name,"('image',i5.5,'_Vx.pnm')") it
     write(system_command,"('convert image',i5.5,'_Vx.pnm image',i5.5,'_Vx.gif ; rm image',i5.5,'_Vx.pnm')") it,it,it

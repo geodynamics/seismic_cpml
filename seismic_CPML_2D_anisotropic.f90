@@ -346,7 +346,7 @@
   print *,'Velocity of qSV along horizontal axis . . =',sqrt(c33/rho)
   print *
 
-! from Becache et al., INRIA report, equation 7 page 5
+! from Becache et al., INRIA report, equation 7 page 5 http://hal.inria.fr/docs/00/07/22/83/PDF/RR-4304.pdf
   if(c11*c22 - c12*c12 <= 0.d0) stop 'problem in definition of orthotropic material'
 
 ! check intrinsic mathematical stability of PML model for an anisotropic material
@@ -379,13 +379,13 @@
   thickness_PML_x = NPOINTS_PML * DELTAX
   thickness_PML_y = NPOINTS_PML * DELTAY
 
-! reflection coefficient (INRIA report section 6.1)
+! reflection coefficient (INRIA report section 6.1) http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   Rcoef = 0.001d0
 
 ! check that NPOWER is okay
   if(NPOWER < 1) stop 'NPOWER must be greater than 1'
 
-! compute d0 from INRIA report section 6.1
+! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   d0_x = - (NPOWER + 1) * quasi_cp_max * log(Rcoef) / (2.d0 * thickness_PML_x)
   d0_y = - (NPOWER + 1) * quasi_cp_max * log(Rcoef) / (2.d0 * thickness_PML_y)
 
@@ -773,6 +773,7 @@
   double precision :: normalized_value,max_amplitude
 
 ! open image file and create system command to convert image to more convenient format
+! use the "convert" command from ImageMagick http://www.imagemagick.org
   if(field_number == 1) then
     write(file_name,"('image',i6.6,'_Vx.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vx.pnm image',i6.6,'_Vx.gif ; rm image',i6.6,'_Vx.pnm')") it,it,it
