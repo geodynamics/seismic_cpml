@@ -862,10 +862,10 @@ do k = 1,NZ-1
     print *
     call write_seismograms(sisvx,sisvy,NSTEP,NREC,DELTAT)
 
-    call create_2D_image(vx_1(:,:,NZ/2) + vx_2(:,:,NZ/2) + vx_3(:,:,NZ/2),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+    call create_color_image(vx_1(:,:,NZ/2) + vx_2(:,:,NZ/2) + vx_3(:,:,NZ/2),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,.true.,.true.,.true.,.true.,1)
 
-    call create_2D_image(vy_1(:,:,NZ/2) + vy_2(:,:,NZ/2) +vy_3(:,:,NZ/2),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+    call create_color_image(vy_1(:,:,NZ/2) + vy_2(:,:,NZ/2) +vy_3(:,:,NZ/2),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,.true.,.true.,.true.,.true.,2)
 
     endif
@@ -989,7 +989,7 @@ do k = 1,NZ-1
 !----  the image is created in PNM format and then converted to GIF
 !----
 
-  subroutine create_2D_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+  subroutine create_color_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
               NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,field_number)
 
   implicit none
@@ -1127,7 +1127,7 @@ do k = 1,NZ-1
 ! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
 ! call system(system_command)
 
-  end subroutine create_2D_image
+  end subroutine create_color_image
 
 !
 ! CeCILL FREE SOFTWARE LICENSE AGREEMENT
