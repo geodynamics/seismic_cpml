@@ -50,20 +50,6 @@
   implicit none
 
 !
-! If you use this code for your own research, please cite some (or all) of these articles:
-!
-! @ARTICLE{KoMa07,
-! author = {Dimitri Komatitsch and Roland Martin},
-! title = {An unsplit convolutional {P}erfectly {M}atched {L}ayer improved
-!          at grazing incidence for the seismic wave equation},
-! journal = {Geophysics},
-! year = {2007},
-! volume = {72},
-! number = {5},
-! pages = {SM155-SM167},
-! doi = {10.1190/1.2757586}}
-
-!
 ! PML implemented in the two directions (x and y directions).
 !
 ! Version 1.0 July, 2010
@@ -106,7 +92,6 @@
 ! total number of grid points in each direction of the grid
   integer, parameter :: NX = 401
   integer, parameter :: NY = 401
-
 
 ! size of a grid cell
   double precision, parameter :: h = 5.d0
@@ -244,7 +229,7 @@
   print *,'Velocity of qSV along horizontal axis . . =',sqrt(c33/rho)
   print *
 
-! from Becache et al., INRIA report, equation 7 page 5
+! from Becache et al., INRIA report, equation 7 page 5 http://hal.inria.fr/docs/00/07/22/83/PDF/RR-4304.pdf
   if(c11*c22 - c12*c12 <= 0.d0) stop 'problem in definition of orthotropic material'
 
 ! check intrinsic mathematical stability of PML model for an anisotropic material
@@ -278,10 +263,10 @@
 ! thickness of the layer in meters
   delta = NPOINTS_PML * h
 
-! reflection coefficient (INRIA report section 6.1)
+! reflection coefficient (INRIA report section 6.1) http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   Rcoef = 0.001d0
 
-! compute d0 from INRIA report section 6.1
+! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   d0 = 3.d0 * quasi_cp_max * log(1.d0/Rcoef) / (2.d0 * delta)
 
   print *,'d0 = ',d0
@@ -625,11 +610,11 @@
       if(velocnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
 
     image_data_2D = vx_1 + vx_2
-    call create_2D_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+    call create_color_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,.true.,.true.,.true.,.true.,1)
 
     image_data_2D = vy_1 + vy_2
-    call create_2D_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+    call create_color_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,.true.,.true.,.true.,.true.,2)
 
     endif
@@ -745,7 +730,7 @@
 !----  the image is created in PNM format and then converted to GIF
 !----
 
-  subroutine create_2D_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+  subroutine create_color_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
               NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,field_number)
 
   implicit none
@@ -778,6 +763,7 @@
   double precision :: normalized_value,max_amplitude
 
 ! open image file and create system command to convert image to more convenient format
+! use the "convert" command from ImageMagick http://www.imagemagick.org
   if(field_number == 1) then
     write(file_name,"('image',i6.6,'_Vx.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vx.pnm image',i6.6,'_Vx.gif ; rm image',i6.6,'_Vx.pnm')") it,it,it
@@ -882,7 +868,7 @@
 ! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
 ! call system(system_command)
 
-  end subroutine create_2D_image
+  end subroutine create_color_image
 
 !
 ! CeCILL FREE SOFTWARE LICENSE AGREEMENT

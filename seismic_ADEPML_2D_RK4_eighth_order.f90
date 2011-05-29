@@ -327,16 +327,16 @@
       value_dsigmaxy_dy
 
 ! 1D arrays for the damping profiles
-  double precision, dimension(-4:NX+4) :: d_x_1,K_x_1,alpha_prime_x_1,g_x_1,ksi_x
-  double precision, dimension(-4:NX+4) :: d_x_half_1,K_x_half_1,alpha_prime_x_half_1,g_x_half_1,ksi_x_half
-  double precision, dimension(-4:NY+4) :: d_y_1,K_y_1,alpha_prime_y_1,g_y_1,ksi_y
-  double precision, dimension(-4:NY+4) :: d_y_half_1,K_y_half_1,alpha_prime_y_half_1,g_y_half_1,ksi_y_half
+  double precision, dimension(-4:NX+4) :: d_x_1,K_x_1,alpha_x_1,g_x_1,ksi_x
+  double precision, dimension(-4:NX+4) :: d_x_half_1,K_x_half_1,alpha_x_half_1,g_x_half_1,ksi_x_half
+  double precision, dimension(-4:NY+4) :: d_y_1,K_y_1,alpha_y_1,g_y_1,ksi_y
+  double precision, dimension(-4:NY+4) :: d_y_half_1,K_y_half_1,alpha_y_half_1,g_y_half_1,ksi_y_half
 
 ! 1D arrays for the damping profiles
-  double precision, dimension(-4:NX+4) :: d_x_2,K_x_2,alpha_prime_x_2,g_x_2
-  double precision, dimension(-4:NX+4) :: d_x_half_2,K_x_half_2,alpha_prime_x_half_2,g_x_half_2
-  double precision, dimension(-4:NY+4) :: d_y_2,K_y_2,alpha_prime_y_2,g_y_2
-  double precision, dimension(-4:NY+4) :: d_y_half_2,K_y_half_2,alpha_prime_y_half_2,g_y_half_2
+  double precision, dimension(-4:NX+4) :: d_x_2,K_x_2,alpha_x_2,g_x_2
+  double precision, dimension(-4:NX+4) :: d_x_half_2,K_x_half_2,alpha_x_half_2,g_x_half_2
+  double precision, dimension(-4:NY+4) :: d_y_2,K_y_2,alpha_y_2,g_y_2
+  double precision, dimension(-4:NY+4) :: d_y_half_2,K_y_half_2,alpha_y_half_2,g_y_half_2
 
 ! coefficients that allow to reset the memory variables at each RK4 substep depend on the substepping and are then of dimension 4,
 ! 1D arrays for the damping profiles
@@ -409,13 +409,13 @@
   thickness_PML_x = NPOINTS_PML * DELTAX
   thickness_PML_y = NPOINTS_PML * DELTAY
 
-! reflection coefficient (INRIA report section 6.1)
+! reflection coefficient (INRIA report section 6.1) http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   Rcoef = 0.00001d0
 
 ! check that NPOWER is okay
   if(NPOWER < 1) stop 'NPOWER must be greater than 1'
 
-! compute d0 from INRIA report section 6.1
+! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   d0_x = - (NPOWER + 1) * cp * log(Rcoef) / (2.d0 * thickness_PML_x)
   d0_y = - (NPOWER + 1) * cp * log(Rcoef) / (2.d0 * thickness_PML_y)
 
@@ -440,8 +440,8 @@
   d_x_half_1(:) = ZERO
   K_x_1(:) = 1.d0
   K_x_half_1(:) = 1.d0
-  alpha_prime_x_1(:) = ZERO
-  alpha_prime_x_half_1(:) = ZERO
+  alpha_x_1(:) = ZERO
+  alpha_x_half_1(:) = ZERO
   a_x_1(:,:) = ZERO
   a_x_half_1(:,:) = ZERO
   g_x_1(:) = 5.d-1
@@ -453,8 +453,8 @@
   d_y_half_1(:) = ZERO
   K_y_1(:) = 1.d0
   K_y_half_1(:) = 1.d0
-  alpha_prime_y_1(:) = ZERO
-  alpha_prime_y_half_1(:) = ZERO
+  alpha_y_1(:) = ZERO
+  alpha_y_half_1(:) = ZERO
   a_y_1(:,:) = ZERO
   a_y_half_1(:,:) = ZERO
   g_y_1(:) = 1.d0
@@ -464,8 +464,8 @@
   d_x_half_2(:) = ZERO
   K_x_2(:) = 1.d0
   K_x_half_2(:) = 1.d0
-  alpha_prime_x_2(:) = ZERO
-  alpha_prime_x_half_2(:) = ZERO
+  alpha_x_2(:) = ZERO
+  alpha_x_half_2(:) = ZERO
   a_x_2(:,:) = ZERO
   a_x_half_2(:,:) = ZERO
   g_x_2(:) = 1.d0
@@ -475,8 +475,8 @@
   d_y_half_2(:) = ZERO
   K_y_2(:) = 1.d0
   K_y_half_2(:) = 1.d0
-  alpha_prime_y_2(:) = ZERO
-  alpha_prime_y_half_2(:) = ZERO
+  alpha_y_2(:) = ZERO
+  alpha_y_half_2(:) = ZERO
   a_y_2(:,:) = ZERO
   a_y_half_2(:,:) = ZERO
   g_y_2(:) = 1.d0
@@ -503,7 +503,7 @@
         d_x_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_prime_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -513,7 +513,7 @@
         d_x_half_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_prime_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -528,7 +528,7 @@
         d_x_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_prime_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -538,7 +538,7 @@
         d_x_half_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_prime_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -548,29 +548,29 @@
     d_x_half_2(i) = 0.d0
 
 ! just in case, for -5 at the end
-    if(alpha_prime_x_1(i) < ZERO) alpha_prime_x_1(i) = ZERO
-    if(alpha_prime_x_half_1(i) < ZERO) alpha_prime_x_half_1(i) = ZERO
+    if(alpha_x_1(i) < ZERO) alpha_x_1(i) = ZERO
+    if(alpha_x_half_1(i) < ZERO) alpha_x_half_1(i) = ZERO
 
 ! just in case, for -5 at the end
-    if(alpha_prime_x_2(i) < ZERO) alpha_prime_x_2(i) = ZERO
-    if(alpha_prime_x_half_2(i) < ZERO) alpha_prime_x_half_2(i) = ZERO
+    if(alpha_x_2(i) < ZERO) alpha_x_2(i) = ZERO
+    if(alpha_x_half_2(i) < ZERO) alpha_x_half_2(i) = ZERO
 
 ! CPML damping parameters for the 4 sub time steps of RK4 algorithm
 do inc=1,4
-    b_x_1(inc,i) =  (1.-epsn*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_prime_x_1(i)))/&
-    (1.+epsn1*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_prime_x_1(i)))
+    b_x_1(inc,i) =  (1.-epsn*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_x_1(i)))/&
+    (1.+epsn1*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_x_1(i)))
     b_x_half_1(inc,i) = (1.-epsn*DELTAT*rk41(inc)*(d_x_half_1(i)/K_x_half_1(i) &
-   + alpha_prime_x_half_1(i)))/(1. +epsn1*DELTAT*rk41(inc)*(d_x_half_1(i)/K_x_half_1(i) &
-    + alpha_prime_x_half_1(i)))
+   + alpha_x_half_1(i)))/(1. +epsn1*DELTAT*rk41(inc)*(d_x_half_1(i)/K_x_half_1(i) &
+    + alpha_x_half_1(i)))
 
 ! this to avoid division by zero outside the PML
 if(abs(d_x_1(i)) > 1.d-6) a_x_1(inc,i) = - DELTAT*rk41(inc)*d_x_1(i) / (K_x_1(i)* K_x_1(i))/&
- (1. +epsn1*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_prime_x_1(i)))
+ (1. +epsn1*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_x_1(i)))
 
  if(abs(d_x_half_1(i)) > 1.d-6) a_x_half_1(inc,i) =-DELTAT*rk41(inc)*d_x_half_1(i)/&
    (K_x_half_1(i)*K_x_half_1(i) )/&
    (1. +epsn1*DELTAT*rk41(inc)*(d_x_half_1(i)/K_x_half_1(i)&
-    + alpha_prime_x_half_1(i)))
+    + alpha_x_half_1(i)))
 
   enddo
 
@@ -597,7 +597,7 @@ enddo
         d_y_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_prime_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -607,7 +607,7 @@ enddo
         d_y_half_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_prime_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -622,7 +622,7 @@ enddo
         d_y_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_prime_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -632,30 +632,30 @@ enddo
         d_y_half_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_prime_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
     endif
 
 ! just in case, for -5 at the end
-    if(alpha_prime_y_1(j) < ZERO) alpha_prime_y_1(j) = ZERO
-    if(alpha_prime_y_half_1(j) < ZERO) alpha_prime_y_half_1(j) = ZERO
+    if(alpha_y_1(j) < ZERO) alpha_y_1(j) = ZERO
+    if(alpha_y_half_1(j) < ZERO) alpha_y_half_1(j) = ZERO
 
 ! CPML damping parameters for the 4 sub time steps of RK4 algorithm
 do inc=1,4
-    b_y_1(inc,j) =  (1.-epsn*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_prime_y_1(j)))/&
-    (1.+epsn1*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_prime_y_1(j)))
+    b_y_1(inc,j) =  (1.-epsn*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_y_1(j)))/&
+    (1.+epsn1*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_y_1(j)))
     b_y_half_1(inc,j) = (1.-epsn*DELTAT*rk41(inc)*(d_y_half_1(j)/K_y_half_1(j) + &
-    alpha_prime_y_half_1(j)))/(1.+epsn1*DELTAT*rk41(inc)*(d_y_half_1(j)/K_y_half_1(j)&
-     + alpha_prime_y_half_1(j)))
+    alpha_y_half_1(j)))/(1.+epsn1*DELTAT*rk41(inc)*(d_y_half_1(j)/K_y_half_1(j)&
+     + alpha_y_half_1(j)))
 
 ! this to avoid division by zero outside the PML
   if(abs(d_y_1(j)) > 1.d-6) a_y_1(inc,j) = - DELTAT*rk41(inc)*d_y_1(j)&
    / (K_y_1(j)* K_y_1(j))/&
-  (1.+epsn1*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_prime_y_1(j)))
+  (1.+epsn1*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_y_1(j)))
  if(abs(d_y_half_1(j)) > 1.d-6) a_y_half_1(inc,j) = -DELTAT*rk41(inc)*d_y_half_1(j) /&
    (K_y_half_1(j) * K_y_half_1(j) )/&
-(1.+epsn1*DELTAT*rk41(inc)*(d_y_half_1(j)/K_y_half_1(j) + alpha_prime_y_half_1(j)))
+(1.+epsn1*DELTAT*rk41(inc)*(d_y_half_1(j)/K_y_half_1(j) + alpha_y_half_1(j)))
   enddo
 
 enddo
@@ -1045,9 +1045,9 @@ enddo
 ! check stability of the code, exit if unstable
     if(velocnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
 
-    call create_2D_image(vx(1:NX,1:NY),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+    call create_color_image(vx(1:NX,1:NY),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,1)
-    call create_2D_image(vy(1:NX,1:NY),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+    call create_color_image(vy(1:NX,1:NY),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,2)
   open(unit=20,file='energy.dat',status='unknown')
   do it2 = 1,NSTEP
@@ -1185,7 +1185,7 @@ enddo
 !----  the image is created in PNM format and then converted to GIF
 !----
 
-  subroutine create_2D_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+  subroutine create_color_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
               NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,field_number)
 
   implicit none
@@ -1218,6 +1218,7 @@ enddo
   double precision :: normalized_value,max_amplitude
 
 ! open image file and create system command to convert image to more convenient format
+! use the "convert" command from ImageMagick http://www.imagemagick.org
   if(field_number == 1) then
     write(file_name,"('image',i6.6,'_Vx.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vx.pnm image',i6.6,'_Vx.gif ; rm image',i6.6,'_Vx.pnm')") it,it,it
@@ -1322,7 +1323,7 @@ enddo
 ! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
 ! call system(system_command)
 
-  end subroutine create_2D_image
+  end subroutine create_color_image
 
 !
 ! CeCILL FREE SOFTWARE LICENSE AGREEMENT

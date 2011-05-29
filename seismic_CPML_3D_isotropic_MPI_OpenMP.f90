@@ -53,17 +53,6 @@
 ! If you use this code for your own research, please cite some (or all) of these
 ! articles:
 !
-! @ARTICLE{KoMa07,
-! author = {Dimitri Komatitsch and Roland Martin},
-! title = {An unsplit convolutional {P}erfectly {M}atched {L}ayer improved
-!          at grazing incidence for the seismic wave equation},
-! journal = {Geophysics},
-! year = {2007},
-! volume = {72},
-! number = {5},
-! pages = {SM155-SM167},
-! doi = {10.1190/1.2757586}}
-!
 ! @ARTICLE{MaKoEz08,
 ! author = {Roland Martin and Dimitri Komatitsch and Abdela\^aziz Ezziani},
 ! title = {An unsplit convolutional perfectly matched layer improved at grazing
@@ -95,6 +84,17 @@
 ! volume = {37},
 ! pages = {274-304},
 ! number = {3}}
+!
+! @ARTICLE{KoMa07,
+! author = {Dimitri Komatitsch and Roland Martin},
+! title = {An unsplit convolutional {P}erfectly {M}atched {L}ayer improved
+!          at grazing incidence for the seismic wave equation},
+! journal = {Geophysics},
+! year = {2007},
+! volume = {72},
+! number = {5},
+! pages = {SM155-SM167},
+! doi = {10.1190/1.2757586}}
 !
 ! The original CPML technique for Maxwell's equations is described in:
 !
@@ -208,7 +208,7 @@
   double precision, parameter :: NPOWER = 2.d0
 
   double precision, parameter :: K_MAX_PML = 1.d0 ! from Gedney page 8.11
-  double precision, parameter :: ALPHA_MAX_PML = 2.d0*PI*(f0/2.d0) ! from festa and Vilotte
+  double precision, parameter :: ALPHA_MAX_PML = 2.d0*PI*(f0/2.d0) ! from Festa and Vilotte
 
 ! arrays for the memory variables
 ! could declare these arrays in PML only to save a lot of memory, but proof of concept only here
@@ -253,9 +253,9 @@
       value_dsigmayz_dz
 
 ! 1D arrays for the damping profiles
-  double precision, dimension(NX) :: d_x,K_x,alpha_prime_x,a_x,b_x,d_x_half,K_x_half,alpha_prime_x_half,a_x_half,b_x_half
-  double precision, dimension(NY) :: d_y,K_y,alpha_prime_y,a_y,b_y,d_y_half,K_y_half,alpha_prime_y_half,a_y_half,b_y_half
-  double precision, dimension(NZ) :: d_z,K_z,alpha_prime_z,a_z,b_z,d_z_half,K_z_half,alpha_prime_z_half,a_z_half,b_z_half
+  double precision, dimension(NX) :: d_x,K_x,alpha_x,a_x,b_x,d_x_half,K_x_half,alpha_x_half,a_x_half,b_x_half
+  double precision, dimension(NY) :: d_y,K_y,alpha_y,a_y,b_y,d_y_half,K_y_half,alpha_y_half,a_y_half,b_y_half
+  double precision, dimension(NZ) :: d_z,K_z,alpha_z,a_z,b_z,d_z_half,K_z_half,alpha_z_half,a_z_half,b_z_half
 
 ! PML
   double precision thickness_PML_x,thickness_PML_y,thickness_PML_z
@@ -396,13 +396,13 @@
   thickness_PML_y = NPOINTS_PML * DELTAY
   thickness_PML_z = NPOINTS_PML * DELTAZ
 
-! reflection coefficient (INRIA report section 6.1)
+! reflection coefficient (INRIA report section 6.1) http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   Rcoef = 0.001d0
 
 ! check that NPOWER is okay
   if(NPOWER < 1) stop 'NPOWER must be greater than 1'
 
-! compute d0 from INRIA report section 6.1
+! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   d0_x = - (NPOWER + 1) * cp * log(Rcoef) / (2.d0 * thickness_PML_x)
   d0_y = - (NPOWER + 1) * cp * log(Rcoef) / (2.d0 * thickness_PML_y)
   d0_z = - (NPOWER + 1) * cp * log(Rcoef) / (2.d0 * thickness_PML_z)
@@ -419,8 +419,8 @@
   d_x_half(:) = ZERO
   K_x(:) = 1.d0
   K_x_half(:) = 1.d0
-  alpha_prime_x(:) = ZERO
-  alpha_prime_x_half(:) = ZERO
+  alpha_x(:) = ZERO
+  alpha_x_half(:) = ZERO
   a_x(:) = ZERO
   a_x_half(:) = ZERO
 
@@ -428,8 +428,8 @@
   d_y_half(:) = ZERO
   K_y(:) = 1.d0
   K_y_half(:) = 1.d0
-  alpha_prime_y(:) = ZERO
-  alpha_prime_y_half(:) = ZERO
+  alpha_y(:) = ZERO
+  alpha_y_half(:) = ZERO
   a_y(:) = ZERO
   a_y_half(:) = ZERO
 
@@ -437,8 +437,8 @@
   d_z_half(:) = ZERO
   K_z(:) = 1.d0
   K_z_half(:) = 1.d0
-  alpha_prime_z(:) = ZERO
-  alpha_prime_z_half(:) = ZERO
+  alpha_z(:) = ZERO
+  alpha_z_half(:) = ZERO
   a_z(:) = ZERO
   a_z_half(:) = ZERO
 
@@ -463,7 +463,7 @@
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -473,7 +473,7 @@
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -488,7 +488,7 @@
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -498,22 +498,22 @@
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
 
 ! just in case, for -5 at the end
-    if(alpha_prime_x(i) < ZERO) alpha_prime_x(i) = ZERO
-    if(alpha_prime_x_half(i) < ZERO) alpha_prime_x_half(i) = ZERO
+    if(alpha_x(i) < ZERO) alpha_x(i) = ZERO
+    if(alpha_x_half(i) < ZERO) alpha_x_half(i) = ZERO
 
-    b_x(i) = exp(- (d_x(i) / K_x(i) + alpha_prime_x(i)) * DELTAT)
-    b_x_half(i) = exp(- (d_x_half(i) / K_x_half(i) + alpha_prime_x_half(i)) * DELTAT)
+    b_x(i) = exp(- (d_x(i) / K_x(i) + alpha_x(i)) * DELTAT)
+    b_x_half(i) = exp(- (d_x_half(i) / K_x_half(i) + alpha_x_half(i)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_x(i)) > 1.d-6) a_x(i) = d_x(i) * (b_x(i) - 1.d0) / (K_x(i) * (d_x(i) + K_x(i) * alpha_prime_x(i)))
+    if(abs(d_x(i)) > 1.d-6) a_x(i) = d_x(i) * (b_x(i) - 1.d0) / (K_x(i) * (d_x(i) + K_x(i) * alpha_x(i)))
     if(abs(d_x_half(i)) > 1.d-6) a_x_half(i) = d_x_half(i) * &
-      (b_x_half(i) - 1.d0) / (K_x_half(i) * (d_x_half(i) + K_x_half(i) * alpha_prime_x_half(i)))
+      (b_x_half(i) - 1.d0) / (K_x_half(i) * (d_x_half(i) + K_x_half(i) * alpha_x_half(i)))
 
   enddo
 
@@ -538,7 +538,7 @@
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -548,7 +548,7 @@
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -563,7 +563,7 @@
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -573,18 +573,18 @@
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
 
-    b_y(j) = exp(- (d_y(j) / K_y(j) + alpha_prime_y(j)) * DELTAT)
-    b_y_half(j) = exp(- (d_y_half(j) / K_y_half(j) + alpha_prime_y_half(j)) * DELTAT)
+    b_y(j) = exp(- (d_y(j) / K_y(j) + alpha_y(j)) * DELTAT)
+    b_y_half(j) = exp(- (d_y_half(j) / K_y_half(j) + alpha_y_half(j)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_y(j)) > 1.d-6) a_y(j) = d_y(j) * (b_y(j) - 1.d0) / (K_y(j) * (d_y(j) + K_y(j) * alpha_prime_y(j)))
+    if(abs(d_y(j)) > 1.d-6) a_y(j) = d_y(j) * (b_y(j) - 1.d0) / (K_y(j) * (d_y(j) + K_y(j) * alpha_y(j)))
     if(abs(d_y_half(j)) > 1.d-6) a_y_half(j) = d_y_half(j) * &
-      (b_y_half(j) - 1.d0) / (K_y_half(j) * (d_y_half(j) + K_y_half(j) * alpha_prime_y_half(j)))
+      (b_y_half(j) - 1.d0) / (K_y_half(j) * (d_y_half(j) + K_y_half(j) * alpha_y_half(j)))
 
   enddo
 
@@ -609,7 +609,7 @@
         d_z(k) = d0_z * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_z(k) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_z(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_z(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -619,7 +619,7 @@
         d_z_half(k) = d0_z * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_z_half(k) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_z_half(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_z_half(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -634,7 +634,7 @@
         d_z(k) = d0_z * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_z(k) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_z(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_z(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -644,18 +644,18 @@
         d_z_half(k) = d0_z * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_z_half(k) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_z_half(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_z_half(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
 
-    b_z(k) = exp(- (d_z(k) / K_z(k) + alpha_prime_z(k)) * DELTAT)
-    b_z_half(k) = exp(- (d_z_half(k) / K_z_half(k) + alpha_prime_z_half(k)) * DELTAT)
+    b_z(k) = exp(- (d_z(k) / K_z(k) + alpha_z(k)) * DELTAT)
+    b_z_half(k) = exp(- (d_z_half(k) / K_z_half(k) + alpha_z_half(k)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_z(k)) > 1.d-6) a_z(k) = d_z(k) * (b_z(k) - 1.d0) / (K_z(k) * (d_z(k) + K_z(k) * alpha_prime_z(k)))
+    if(abs(d_z(k)) > 1.d-6) a_z(k) = d_z(k) * (b_z(k) - 1.d0) / (K_z(k) * (d_z(k) + K_z(k) * alpha_z(k)))
     if(abs(d_z_half(k)) > 1.d-6) a_z_half(k) = d_z_half(k) * &
-      (b_z_half(k) - 1.d0) / (K_z_half(k) * (d_z_half(k) + K_z_half(k) * alpha_prime_z_half(k)))
+      (b_z_half(k) - 1.d0) / (K_z_half(k) * (d_z_half(k) + K_z_half(k) * alpha_z_half(k)))
 
   enddo
 
@@ -1223,9 +1223,9 @@
     print *
     call write_seismograms(sisvx,sisvy,NSTEP,NREC,DELTAT)
 
-    call create_2D_image(vx(:,:,NZ_LOCAL),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+    call create_color_image(vx(:,:,NZ_LOCAL),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,1)
-    call create_2D_image(vy(:,:,NZ_LOCAL),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+    call create_color_image(vy(:,:,NZ_LOCAL),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,2)
 
     endif
@@ -1254,7 +1254,7 @@
   write(20,*) 'set xlabel "Time (s)"'
   write(20,*) 'set ylabel "Total energy"'
   write(20,*)
-  write(20,*) 'set output "collino3D_total_energy_semilog.eps"'
+  write(20,*) 'set output "CPML3D_total_energy_semilog.eps"'
   write(20,*) 'set logscale y'
   write(20,*) 'plot "energy.dat" t ''Total energy'' w l 1'
   write(20,*) 'pause -1 "Hit any key..."'
@@ -1358,7 +1358,7 @@
 !----  the image is created in PNM format and then converted to GIF
 !----
 
-  subroutine create_2D_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+  subroutine create_color_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
               NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,field_number)
 
   implicit none
@@ -1391,6 +1391,7 @@
   double precision :: normalized_value,max_amplitude
 
 ! open image file and create system command to convert image to more convenient format
+! use the "convert" command from ImageMagick http://www.imagemagick.org
   if(field_number == 1) then
     write(file_name,"('image',i6.6,'_Vx.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vx.pnm image',i6.6,'_Vx.gif ; rm image',i6.6,'_Vx.pnm')") it,it,it
@@ -1495,7 +1496,7 @@
 ! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
 ! call system(system_command)
 
-  end subroutine create_2D_image
+  end subroutine create_color_image
 
 !
 ! CeCILL FREE SOFTWARE LICENSE AGREEMENT

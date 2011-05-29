@@ -46,7 +46,7 @@
 ! Application of the PML Absorbing Layer Model to the Linear
 ! Elastodynamic Problem in Anisotropic Heteregeneous Media
 ! INRIA Research Report RR-3471, August 1998
-! http://www.inria.fr/publications
+! http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
 !
 ! and
 !
@@ -207,10 +207,10 @@
 ! thickness of the layer in meters
   delta = NPOINTS_PML * h
 
-! reflection coefficient (INRIA report section 6.1)
+! reflection coefficient (INRIA report section 6.1) http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   Rcoef = 0.001d0
 
-! compute d0 from INRIA report section 6.1
+! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   d0 = 3.d0 * cp * log(1.d0/Rcoef) / (2.d0 * delta)
 
   print *,'d0 = ',d0
@@ -542,11 +542,11 @@
       if(velocnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
 
     image_data_2D = vx_1 + vx_2
-    call create_2D_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+    call create_color_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,.true.,.true.,.true.,.true.,1)
 
     image_data_2D = vy_1 + vy_2
-    call create_2D_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+    call create_color_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,.true.,.true.,.true.,.true.,2)
 
     endif
@@ -662,7 +662,7 @@
 !----  the image is created in PNM format and then converted to GIF
 !----
 
-  subroutine create_2D_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+  subroutine create_color_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
               NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,field_number)
 
   implicit none
@@ -695,6 +695,7 @@
   double precision :: normalized_value,max_amplitude
 
 ! open image file and create system command to convert image to more convenient format
+! use the "convert" command from ImageMagick http://www.imagemagick.org
   if(field_number == 1) then
     write(file_name,"('image',i6.6,'_Vx.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vx.pnm image',i6.6,'_Vx.gif ; rm image',i6.6,'_Vx.pnm')") it,it,it
@@ -799,7 +800,7 @@
 ! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
 ! call system(system_command)
 
-  end subroutine create_2D_image
+  end subroutine create_color_image
 
 !
 ! CeCILL FREE SOFTWARE LICENSE AGREEMENT
