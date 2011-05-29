@@ -212,8 +212,8 @@
   double precision, parameter :: NPOWER = 2.d0
 
   double precision, parameter :: K_MAX_PML = 7.d0 ! from Gedney page 8.11
-!  double precision, parameter :: ALPHA_MAX_PML = 0.d0 ! from festa and Vilotte
-  double precision, parameter :: ALPHA_MAX_PML = 2.d0*PI*(f0/2.d0) ! from festa and Vilotte
+!  double precision, parameter :: ALPHA_MAX_PML = 0.d0 ! from Festa and Vilotte
+  double precision, parameter :: ALPHA_MAX_PML = 2.d0*PI*(f0/2.d0) ! from Festa and Vilotte
 
 ! arrays for the memory variables
 ! could declare these arrays in PML only to save a lot of memory, but proof of concept only here
@@ -259,9 +259,9 @@
 
    double precision :: duxdx,duxdy,duxdz,duydx,duydy,duydz,duzdx,duzdy,duzdz,div
 ! 1D arrays for the damping profiles
-  double precision, dimension(1:NX) :: d_x,K_x,alpha_prime_x,a_x,b_x,d_x_half,K_x_half,alpha_prime_x_half,a_x_half,b_x_half
-  double precision, dimension(1:NY) :: d_y,K_y,alpha_prime_y,a_y,b_y,d_y_half,K_y_half,alpha_prime_y_half,a_y_half,b_y_half
-  double precision, dimension(1:NZ) :: d_z,K_z,alpha_prime_z,a_z,b_z,d_z_half,K_z_half,alpha_prime_z_half,a_z_half,b_z_half
+  double precision, dimension(1:NX) :: d_x,K_x,alpha_x,a_x,b_x,d_x_half,K_x_half,alpha_x_half,a_x_half,b_x_half
+  double precision, dimension(1:NY) :: d_y,K_y,alpha_y,a_y,b_y,d_y_half,K_y_half,alpha_y_half,a_y_half,b_y_half
+  double precision, dimension(1:NZ) :: d_z,K_z,alpha_z,a_z,b_z,d_z_half,K_z_half,alpha_z_half,a_z_half,b_z_half
 
 ! PML
   double precision thickness_PML_x,thickness_PML_y,thickness_PML_z
@@ -499,8 +499,8 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   d_x_half(:) = ZERO
   K_x(:) = 1.d0
   K_x_half(:) = 1.d0
-  alpha_prime_x(:) = ZERO
-  alpha_prime_x_half(:) = ZERO
+  alpha_x(:) = ZERO
+  alpha_x_half(:) = ZERO
   a_x(:) = ZERO
   a_x_half(:) = ZERO
 
@@ -508,8 +508,8 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   d_y_half(:) = ZERO
   K_y(:) = 1.d0
   K_y_half(:) = 1.d0
-  alpha_prime_y(:) = ZERO
-  alpha_prime_y_half(:) = ZERO
+  alpha_y(:) = ZERO
+  alpha_y_half(:) = ZERO
   a_y(:) = ZERO
   a_y_half(:) = ZERO
 
@@ -517,8 +517,8 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   d_z_half(:) = ZERO
   K_z(:) = 1.d0
   K_z_half(:) = 1.d0
-  alpha_prime_z(:) = ZERO
-  alpha_prime_z_half(:) = ZERO
+  alpha_z(:) = ZERO
+  alpha_z_half(:) = ZERO
   a_z(:) = ZERO
   a_z_half(:) = ZERO
 
@@ -543,7 +543,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -553,7 +553,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -568,7 +568,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -578,22 +578,22 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
 
 ! just in case, for -5 at the end
-    if(alpha_prime_x(i) < ZERO) alpha_prime_x(i) = ZERO
-    if(alpha_prime_x_half(i) < ZERO) alpha_prime_x_half(i) = ZERO
+    if(alpha_x(i) < ZERO) alpha_x(i) = ZERO
+    if(alpha_x_half(i) < ZERO) alpha_x_half(i) = ZERO
 
-    b_x(i) = exp(- (d_x(i) / K_x(i) + alpha_prime_x(i)) * DELTAT)
-    b_x_half(i) = exp(- (d_x_half(i) / K_x_half(i) + alpha_prime_x_half(i)) * DELTAT)
+    b_x(i) = exp(- (d_x(i) / K_x(i) + alpha_x(i)) * DELTAT)
+    b_x_half(i) = exp(- (d_x_half(i) / K_x_half(i) + alpha_x_half(i)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_x(i)) > 1.d-6) a_x(i) = d_x(i) * (b_x(i) - 1.d0) / (K_x(i) * (d_x(i) + K_x(i) * alpha_prime_x(i)))
+    if(abs(d_x(i)) > 1.d-6) a_x(i) = d_x(i) * (b_x(i) - 1.d0) / (K_x(i) * (d_x(i) + K_x(i) * alpha_x(i)))
     if(abs(d_x_half(i)) > 1.d-6) a_x_half(i) = d_x_half(i) * &
-      (b_x_half(i) - 1.d0) / (K_x_half(i) * (d_x_half(i) + K_x_half(i) * alpha_prime_x_half(i)))
+      (b_x_half(i) - 1.d0) / (K_x_half(i) * (d_x_half(i) + K_x_half(i) * alpha_x_half(i)))
 
   enddo
 
@@ -618,7 +618,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -628,7 +628,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -643,7 +643,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -653,18 +653,18 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
 
-    b_y(j) = exp(- (d_y(j) / K_y(j) + alpha_prime_y(j)) * DELTAT)
-    b_y_half(j) = exp(- (d_y_half(j) / K_y_half(j) + alpha_prime_y_half(j)) * DELTAT)
+    b_y(j) = exp(- (d_y(j) / K_y(j) + alpha_y(j)) * DELTAT)
+    b_y_half(j) = exp(- (d_y_half(j) / K_y_half(j) + alpha_y_half(j)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_y(j)) > 1.d-6) a_y(j) = d_y(j) * (b_y(j) - 1.d0) / (K_y(j) * (d_y(j) + K_y(j) * alpha_prime_y(j)))
+    if(abs(d_y(j)) > 1.d-6) a_y(j) = d_y(j) * (b_y(j) - 1.d0) / (K_y(j) * (d_y(j) + K_y(j) * alpha_y(j)))
     if(abs(d_y_half(j)) > 1.d-6) a_y_half(j) = d_y_half(j) * &
-      (b_y_half(j) - 1.d0) / (K_y_half(j) * (d_y_half(j) + K_y_half(j) * alpha_prime_y_half(j)))
+      (b_y_half(j) - 1.d0) / (K_y_half(j) * (d_y_half(j) + K_y_half(j) * alpha_y_half(j)))
 
   enddo
 
@@ -689,7 +689,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_z(k) = d0_z * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_z(k) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_z(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_z(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -699,7 +699,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_z_half(k) = d0_z * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_z_half(k) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_z_half(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_z_half(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -714,7 +714,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_z(k) = d0_z * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_z(k) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_z(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_z(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -724,18 +724,18 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
         d_z_half(k) = d0_z * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_z_half(k) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_prime_z_half(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_z_half(k) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
 
-    b_z(k) = exp(- (d_z(k) / K_z(k) + alpha_prime_z(k)) * DELTAT)
-    b_z_half(k) = exp(- (d_z_half(k) / K_z_half(k) + alpha_prime_z_half(k)) * DELTAT)
+    b_z(k) = exp(- (d_z(k) / K_z(k) + alpha_z(k)) * DELTAT)
+    b_z_half(k) = exp(- (d_z_half(k) / K_z_half(k) + alpha_z_half(k)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_z(k)) > 1.d-6) a_z(k) = d_z(k) * (b_z(k) - 1.d0) / (K_z(k) * (d_z(k) + K_z(k) * alpha_prime_z(k)))
+    if(abs(d_z(k)) > 1.d-6) a_z(k) = d_z(k) * (b_z(k) - 1.d0) / (K_z(k) * (d_z(k) + K_z(k) * alpha_z(k)))
     if(abs(d_z_half(k)) > 1.d-6) a_z_half(k) = d_z_half(k) * &
-      (b_z_half(k) - 1.d0) / (K_z_half(k) * (d_z_half(k) + K_z_half(k) * alpha_prime_z_half(k)))
+      (b_z_half(k) - 1.d0) / (K_z_half(k) * (d_z_half(k) + K_z_half(k) * alpha_z_half(k)))
 
   enddo
 
