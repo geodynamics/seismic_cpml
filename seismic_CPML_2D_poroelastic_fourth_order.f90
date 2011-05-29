@@ -82,17 +82,6 @@
 ! number = {4},
 ! doi = {10.1190/1.2939484}}
 !
-! @ARTICLE{KoMa07,
-! author = {Dimitri Komatitsch and Roland Martin},
-! title = {An unsplit convolutional {P}erfectly {M}atched {L}ayer improved
-!          at grazing incidence for the seismic wave equation},
-! journal = {Geophysics},
-! year = {2007},
-! volume = {72},
-! number = {5},
-! pages = {SM155-SM167},
-! doi = {10.1190/1.2757586}}
-!
 ! @ARTICLE{MaKo09,
 ! author = {Roland Martin and Dimitri Komatitsch},
 ! title = {An unsplit convolutional perfectly matched layer technique improved
@@ -113,6 +102,17 @@
 ! volume = {37},
 ! pages = {274-304},
 ! number = {3}}
+!
+! @ARTICLE{KoMa07,
+! author = {Dimitri Komatitsch and Roland Martin},
+! title = {An unsplit convolutional {P}erfectly {M}atched {L}ayer improved
+!          at grazing incidence for the seismic wave equation},
+! journal = {Geophysics},
+! year = {2007},
+! volume = {72},
+! number = {5},
+! pages = {SM155-SM167},
+! doi = {10.1190/1.2757586}}
 !
 ! The original CPML technique for Maxwell's equations is described in:
 !

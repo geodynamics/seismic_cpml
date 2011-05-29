@@ -71,17 +71,6 @@
 ! If you use this code for your own research, please cite some (or all) of these
 ! articles:
 !
-! @ARTICLE{KoMa07,
-! author = {Dimitri Komatitsch and Roland Martin},
-! title = {An unsplit convolutional {P}erfectly {M}atched {L}ayer improved
-!          at grazing incidence for the seismic wave equation},
-! journal = {Geophysics},
-! year = {2007},
-! volume = {72},
-! number = {5},
-! pages = {SM155-SM167},
-! doi = {10.1190/1.2757586}}
-!
 ! @ARTICLE{MaKoGe08,
 ! author = {Roland Martin and Dimitri Komatitsch and Stephen D. Gedney},
 ! title = {A variational formulation of a stabilized unsplit convolutional perfectly
@@ -113,6 +102,17 @@
 ! pages = {333-344},
 ! number = {1},
 ! doi = {10.1111/j.1365-246X.2009.04278.x}}
+!
+! @ARTICLE{KoMa07,
+! author = {Dimitri Komatitsch and Roland Martin},
+! title = {An unsplit convolutional {P}erfectly {M}atched {L}ayer improved
+!          at grazing incidence for the seismic wave equation},
+! journal = {Geophysics},
+! year = {2007},
+! volume = {72},
+! number = {5},
+! pages = {SM155-SM167},
+! doi = {10.1190/1.2757586}}
 !
 ! If you use the anisotropic implementation, please cite this article,
 ! in which the anisotropic parameters are described, as well:
