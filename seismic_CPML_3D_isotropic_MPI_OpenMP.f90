@@ -121,6 +121,10 @@
 !   then " display allfiles_Vy.gif " or " gimp allfiles_Vy.gif "
 !
 
+! IMPORTANT : all our CPML codes work fine in single precision as well (which is significantly faster).
+!             If you want you can thus force automatic conversion to single precision at compile time 
+!             or change all the declarations and constants in the code from double precision to single.
+
   implicit none
 
 ! header which contains standard MPI declarations
