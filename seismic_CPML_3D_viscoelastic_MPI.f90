@@ -1430,8 +1430,8 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 ! save energy
     open(unit=21,file='energy.dat',status='unknown')
       do it2=1,NSTEP
-     write(21,*) sngl(dble(it2-1)*DELTAT),total_energy_kinetic(it2),&
-     total_energy_potential(it2),total_energy(it2)
+     write(21,*) sngl(dble(it2-1)*DELTAT),sngl(total_energy_kinetic(it2)),&
+        sngl(total_energy_potential(it2)),sngl(total_energy(it2))
       enddo
      close(21)
 
@@ -1455,11 +1455,6 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 
 ! save seismograms
   call write_seismograms(sisvx,sisvy,NSTEP,NREC,DELTAT,t0)
-!  open(unit=20,file='energy.dat',status='unknown')
-!  do it = 1,NSTEP
-!    write(20,*) sngl(dble(it-1)*DELTAT),total_energy(it)
-!  enddo
-!  close(20)
 
 ! create script for Gnuplot for total energy
   open(unit=20,file='plot_energy',status='unknown')
@@ -1471,7 +1466,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   write(20,*)
   write(20,*) 'set output "CPML3D_total_energy_semilog.eps"'
   write(20,*) 'set logscale y'
-  write(20,*) 'plot "energy.dat" t ''Total energy'' w l 1'
+  write(20,*) 'plot "energy.dat" t ''Total energy'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
   close(20)
@@ -1486,32 +1481,32 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vx_receiver_001.eps"'
-  write(20,*) 'plot "Vx_file_001.dat" t ''Vx C-PML'' w l 1'
+  write(20,*) 'plot "Vx_file_001.dat" t ''Vx C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vy_receiver_001.eps"'
-  write(20,*) 'plot "Vy_file_001.dat" t ''Vy C-PML'' w l 1'
+  write(20,*) 'plot "Vy_file_001.dat" t ''Vy C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vz_receiver_001.eps"'
-  write(20,*) 'plot "Vz_file_001.dat" t ''Vz C-PML'' w l 1'
+  write(20,*) 'plot "Vz_file_001.dat" t ''Vz C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vx_receiver_002.eps"'
-  write(20,*) 'plot "Vx_file_002.dat" t ''Vx C-PML'' w l 1'
+  write(20,*) 'plot "Vx_file_002.dat" t ''Vx C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vy_receiver_002.eps"'
-  write(20,*) 'plot "Vy_file_002.dat" t ''Vy C-PML'' w l 1'
+  write(20,*) 'plot "Vy_file_002.dat" t ''Vy C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vz_receiver_002.eps"'
-  write(20,*) 'plot "Vz_file_002.dat" t ''Vz C-PML'' w l 1'
+  write(20,*) 'plot "Vz_file_002.dat" t ''Vz C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 

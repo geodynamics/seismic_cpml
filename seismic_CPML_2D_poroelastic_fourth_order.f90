@@ -1010,8 +1010,8 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
   write(20,*) 'set ylabel "Total energy"'
   write(20,*)
   write(20,*) '# set output "cpml_total_energy.eps"'
-  write(20,*) 'plot "energy.dat" us 1:2 t ''Ec'' w l 1, "energy.dat" us 1:3 &
-    & t ''Ep'' w l 3, "energy.dat" us 1:4 t ''Total energy'' w l 4'
+  write(20,*) 'plot "energy.dat" us 1:2 t ''Ec'' w l lc 1, "energy.dat" us 1:3 &
+    & t ''Ep'' w l lc 3, "energy.dat" us 1:4 t ''Total energy'' w l lc 4'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
   close(20)
@@ -1028,25 +1028,25 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
 
   write(20,*) 'set output "v_sigma_Vx_receiver_001.eps"'
   write(20,*) '#set yrange [-4:4.5]'
-  write(20,*) 'plot "Vx_file_001.dat" t ''Vx C-PML'' w l 1'
+  write(20,*) 'plot "Vx_file_001.dat" t ''Vx C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vy_receiver_001.eps"'
   write(20,*) '#set yrange [-15:19]'
-  write(20,*) 'plot "Vy_file_001.dat" t ''Vy C-PML'' w l 1'
+  write(20,*) 'plot "Vy_file_001.dat" t ''Vy C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vx_receiver_002.eps"'
   write(20,*) '#set yrange [-12:16]'
-  write(20,*) 'plot "Vx_file_002.dat" t ''Vx C-PML'' w l 1'
+  write(20,*) 'plot "Vx_file_002.dat" t ''Vx C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vy_receiver_002.eps"'
   write(20,*) '#set yrange [-7:10]'
-  write(20,*) 'plot "Vy_file_002.dat" t ''Vy C-PML'' w l 1'
+  write(20,*) 'plot "Vy_file_002.dat" t ''Vy C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 

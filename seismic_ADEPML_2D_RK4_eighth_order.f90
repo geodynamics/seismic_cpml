@@ -1055,8 +1055,8 @@ enddo
                          NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,2)
   open(unit=20,file='energy.dat',status='unknown')
   do it2 = 1,NSTEP
-    write(20,*) sngl(dble(it2-1)*DELTAT),total_energy_kinetic(it2), &
-       total_energy_potential(it2),total_energy_kinetic(it2) + total_energy_potential(it2)
+    write(20,*) sngl(dble(it2-1)*DELTAT),sngl(total_energy_kinetic(it2)), &
+       sngl(total_energy_potential(it2)),sngl(total_energy_kinetic(it2) + total_energy_potential(it2))
   enddo
   close(20)
   call write_seismograms(sisvx,sisvy,NSTEP,NREC,DELTAT)
@@ -1071,8 +1071,8 @@ enddo
 ! save total energy
   open(unit=20,file='energy.dat',status='unknown')
   do it = 1,NSTEP
-    write(20,*) sngl(dble(it-1)*DELTAT),total_energy_kinetic(it), &
-       total_energy_potential(it),total_energy_kinetic(it) + total_energy_potential(it)
+    write(20,*) sngl(dble(it-1)*DELTAT),sngl(total_energy_kinetic(it)), &
+       sngl(total_energy_potential(it)),sngl(total_energy_kinetic(it) + total_energy_potential(it))
   enddo
   close(20)
 
@@ -1086,8 +1086,8 @@ enddo
   write(20,*)
   write(20,*) 'set output "cpml_total_energy_semilog.eps"'
   write(20,*) 'set logscale y'
-  write(20,*) 'plot "energy.dat" us 1:2 t ''Ec'' w l 1, "energy.dat" us 1:3 &
-              & t ''Ep'' w l 3, "energy.dat" us 1:4 t ''Total energy'' w l 4'
+  write(20,*) 'plot "energy.dat" us 1:2 t ''Ec'' w l lc 1, "energy.dat" us 1:3 &
+              & t ''Ep'' w l lc 3, "energy.dat" us 1:4 t ''Total energy'' w l lc 4'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
   close(20)
@@ -1101,8 +1101,8 @@ enddo
   write(20,*)
   write(20,*) 'set output "compare_total_energy_semilog.eps"'
   write(20,*) 'set logscale y'
-  write(20,*) 'plot "energy.dat" us 1:4 t ''Total energy CPML'' w l 1, &
-              & "../collino/energy.dat" us 1:4 t ''Total energy Collino'' w l 2'
+  write(20,*) 'plot "energy.dat" us 1:4 t ''Total energy CPML'' w l lc 1, &
+              & "../collino/energy.dat" us 1:4 t ''Total energy Collino'' w l lc 2'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
   close(20)
@@ -1117,22 +1117,22 @@ enddo
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vx_receiver_001.eps"'
-  write(20,*) 'plot "Vx_file_001.dat" t ''Vx C-PML'' w l 1'
+  write(20,*) 'plot "Vx_file_001.dat" t ''Vx C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vy_receiver_001.eps"'
-  write(20,*) 'plot "Vy_file_001.dat" t ''Vy C-PML'' w l 1'
+  write(20,*) 'plot "Vy_file_001.dat" t ''Vy C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vx_receiver_002.eps"'
-  write(20,*) 'plot "Vx_file_002.dat" t ''Vx C-PML'' w l 1'
+  write(20,*) 'plot "Vx_file_002.dat" t ''Vx C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vy_receiver_002.eps"'
-  write(20,*) 'plot "Vy_file_002.dat" t ''Vy C-PML'' w l 1'
+  write(20,*) 'plot "Vy_file_002.dat" t ''Vy C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 

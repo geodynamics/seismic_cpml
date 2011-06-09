@@ -578,8 +578,8 @@
   write(20,*)
   write(20,*) 'set output "collino_total_energy_semilog.eps"'
   write(20,*) 'set logscale y'
-  write(20,*) 'plot "energy.dat" us 1:2 t ''Ec'' w l 1, "energy.dat" us 1:3 &
-              & t ''Ep'' w l 3, "energy.dat" us 1:4 t ''Total energy'' w l 4'
+  write(20,*) 'plot "energy.dat" us 1:2 t ''Ec'' w l lc 1, "energy.dat" us 1:3 &
+              & t ''Ep'' w l lc 3, "energy.dat" us 1:4 t ''Total energy'' w l lc 4'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
   close(20)
@@ -594,22 +594,22 @@
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vx_receiver_001.eps"'
-  write(20,*) 'plot "Vx_file_001.dat" t ''Vx C-PML'' w l 1'
+  write(20,*) 'plot "Vx_file_001.dat" t ''Vx C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vy_receiver_001.eps"'
-  write(20,*) 'plot "Vy_file_001.dat" t ''Vy C-PML'' w l 1'
+  write(20,*) 'plot "Vy_file_001.dat" t ''Vy C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vx_receiver_002.eps"'
-  write(20,*) 'plot "Vx_file_002.dat" t ''Vx C-PML'' w l 1'
+  write(20,*) 'plot "Vx_file_002.dat" t ''Vx C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vy_receiver_002.eps"'
-  write(20,*) 'plot "Vy_file_002.dat" t ''Vy C-PML'' w l 1'
+  write(20,*) 'plot "Vy_file_002.dat" t ''Vy C-PML'' w l lc 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
