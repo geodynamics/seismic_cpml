@@ -122,7 +122,7 @@
 !
 
 ! IMPORTANT : all our CPML codes work fine in single precision as well (which is significantly faster).
-!             If you want you can thus force automatic conversion to single precision at compile time 
+!             If you want you can thus force automatic conversion to single precision at compile time
 !             or change all the declarations and constants in the code from double precision to single.
 
   implicit none
@@ -1150,12 +1150,12 @@
 ! in the staggered grid cell but in a homogeneous medium we can safely ignore it
 
 ! compute total field from split components
-      epsilon_xx = ((lambda + 2.d0*mu) * sigmaxx(i,j,k) - lambda * sigmayy(i,j,k) - &
-          lambda*sigmazz(i,j,k)) / (4.d0 * mu * (lambda + mu))
-      epsilon_yy = ((lambda + 2.d0*mu) * sigmayy(i,j,k) - lambda * sigmaxx(i,j,k) - &
-          lambda*sigmazz(i,j,k)) / (4.d0 * mu * (lambda + mu))
-      epsilon_zz = ((lambda + 2.d0*mu) * sigmazz(i,j,k) - lambda * sigmaxx(i,j,k) - &
-          lambda*sigmayy(i,j,k)) / (4.d0 * mu * (lambda + mu))
+      epsilon_xx = (2.d0*(lambda + mu) * sigmaxx(i,j,k) - lambda * sigmayy(i,j,k) - &
+          lambda*sigmazz(i,j,k)) / (2.d0 * mu * (3.d0*lambda + 2.d0*mu))
+      epsilon_yy = (2.d0*(lambda + mu) * sigmayy(i,j,k) - lambda * sigmaxx(i,j,k) - &
+          lambda*sigmazz(i,j,k)) / (2.d0 * mu * (3.d0*lambda + 2.d0*mu))
+      epsilon_zz = (2.d0*(lambda + mu) * sigmazz(i,j,k) - lambda * sigmaxx(i,j,k) - &
+          lambda*sigmayy(i,j,k)) / (2.d0 * mu * (3.d0*lambda + 2.d0*mu))
       epsilon_xy = sigmaxy(i,j,k) / (2.d0 * mu)
       epsilon_xz = sigmaxz(i,j,k) / (2.d0 * mu)
       epsilon_yz = sigmayz(i,j,k) / (2.d0 * mu)

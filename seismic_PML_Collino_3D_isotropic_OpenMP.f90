@@ -39,7 +39,7 @@
   program seismic_PML_Collino_3D_iso
 
 ! IMPORTANT : all our CPML codes work fine in single precision as well (which is significantly faster).
-!             If you want you can thus force automatic conversion to single precision at compile time 
+!             If you want you can thus force automatic conversion to single precision at compile time
 !             or change all the declarations and constants in the code from double precision to single.
 
   implicit none
@@ -795,9 +795,12 @@ do k = 1,NZ-1
       sigmaxz_total = sigmaxz_1(i,j,k) + sigmaxz_3(i,j,k)
       sigmayz_total = sigmayz_2(i,j,k) + sigmayz_3(i,j,k)
 
-      epsilon_xx = ((lambda + 2.d0*mu) * sigmaxx_total - lambda * sigmayy_total -lambda*sigmazz_total) / (4.d0 * mu * (lambda + mu))
-      epsilon_yy = ((lambda + 2.d0*mu) * sigmayy_total - lambda * sigmaxx_total -lambda*sigmazz_total) / (4.d0 * mu * (lambda + mu))
-      epsilon_zz = ((lambda + 2.d0*mu) * sigmazz_total - lambda * sigmaxx_total -lambda*sigmayy_total) / (4.d0 * mu * (lambda + mu))
+      epsilon_xx = (2.d0*(lambda + mu) * sigmaxx_total - lambda * sigmayy_total -lambda*sigmazz_total) / &
+               (2.d0 * mu * (3.d0*lambda + 2.d0*mu))
+      epsilon_yy = (2.d0*(lambda + mu) * sigmayy_total - lambda * sigmaxx_total -lambda*sigmazz_total) / &
+               (2.d0 * mu * (3.d0*lambda + 2.d0*mu))
+      epsilon_zz = (2.d0*(lambda + mu) * sigmazz_total - lambda * sigmaxx_total -lambda*sigmayy_total) / &
+               (2.d0 * mu * (3.d0*lambda + 2.d0*mu))
       epsilon_xy = sigmaxy_total / (2.d0 * mu)
       epsilon_xz = sigmaxz_total / (2.d0 * mu)
       epsilon_yz = sigmayz_total / (2.d0 * mu)

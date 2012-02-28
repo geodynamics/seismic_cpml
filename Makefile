@@ -16,10 +16,10 @@ O = obj
 #MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -mp
 
-# Intel (leave option -ftz, which is *critical* for performance)
+# Intel (leave option -ftz, which can be *critical* for performance)
 #F90 = ifort
 #MPIF90 = mpif90
-#FLAGS = -O3 -xP -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -fpe0 -ftz
+#FLAGS = -O3 -xSSE4.2 -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -fpe0 -ftz
 #MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -openmp -openmp-report1
 
