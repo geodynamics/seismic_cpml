@@ -1,0 +1,225 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<TITLE>The SEISMIC_CPML software package</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.3  (Unix)">
+	<META NAME="CREATED" CONTENT="0;0">
+	<META NAME="CHANGEDBY" CONTENT="Dimitri Komatitsch">
+	<META NAME="CHANGED" CONTENT="20110503;580000">
+	<STYLE TYPE="text/css">
+	<!--
+		P { color: #000000; font-family: "Times New Roman"; font-size: 12pt }
+		A:link { color: #0000ff }
+		A:visited { color: #0000ff }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" LINK="#0000ff" VLINK="#0000ff" BGCOLOR="#ffffff" BACKGROUND="http://www.univ-pau.fr/%7Edkomati1/grayback.gif" DIR="LTR">
+<P><A HREF="http://www.univ-pau.fr/%7Edkomati1">Home page of Dimitri
+Komatitsch</A></P>
+<P ALIGN=CENTER><A NAME="_x0000_i1025"></A><IMG SRC="http://www.univ-pau.fr/%7Edkomati1/seismic_cpml.gif" NAME="graphics1" ALIGN=BOTTOM WIDTH=158 HEIGHT=30 BORDER=0></P>
+<P>&nbsp;</P>
+<P ALIGN=CENTER><A NAME="download_map"></A><IMG SRC="http://www.geodynamics.org/~buildbot/maps/Seismic_CPML.gif" NAME="download_map2" ALIGN=BOTTOM WIDTH=445 HEIGHT=223 BORDER=0></P>
+<P ALIGN=CENTER><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><U><B>Current
+SEISMIC_CPML download map since its first release</B></U></FONT></FONT></FONT></P>
+<P>&nbsp;</P>
+<P><FONT COLOR="#ff0000"><FONT SIZE=3 STYLE="font-size: 13pt">SEISMIC_CPML
+is a set of ten open-source Fortran90 programs</FONT></FONT> <FONT SIZE=3 STYLE="font-size: 13pt">to
+solve the two-dimensional or three-dimensional isotropic or
+anisotropic elastic, viscoelastic or poroelastic wave equation using
+a finite-difference method with Convolutional or Auxiliary Perfectly
+Matched Layer (C-PML or ADE-PML) conditions, developed by Dimitri
+Komatitsch and Roland Martin from University of Pau, France. </FONT>
+</P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">You
+can get the full source code of the programs at the official Web
+site: </FONT></FONT></FONT><A HREF="http://www.geodynamics.org/cig/software"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">http://www.geodynamics.org/cig/software</FONT></FONT></A></P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt">The unsplit <B>Convolutional
+Perfectly Matched Layer (C-PML) for the 3D elastic wave equation</B>
+was introduced and is described in detail in: </FONT>
+</P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt"><B>Dimitri Komatitsch and
+Roland Martin,</B></FONT> <FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">An
+unsplit convolutional Perfectly Matched Layer improved at grazing
+incidence for the seismic wave equation</SPAN></FONT><FONT SIZE=3 STYLE="font-size: 13pt"><I>,
+Geophysics</I></FONT><FONT SIZE=3 STYLE="font-size: 13pt">, vol.
+72(5), p SM155-SM167, doi: 10.1190/1.2757586 (2007). <A HREF="http://www.univ-pau.fr/%7Edkomati1/published_papers/geophysics_CPML_2007_elastic_typos_fixed.pdf">PDF
+reprint</A> <A HREF="http://www.univ-pau.fr/%7Edkomati1/bibtex_komatitsch.bib">BibTeX</A></FONT></P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt">It was originally developed
+for Maxwell's equations by Roden and Gedney (2000) (see reference
+below).</FONT></P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt">An extension to viscoelastic
+media is developed in:</FONT></P>
+<P><SPAN STYLE="text-decoration: none"><FONT SIZE=3 STYLE="font-size: 13pt"><B>Roland
+Martin and Dimitri Komatitsch, </B></FONT></SPAN><SPAN STYLE="text-decoration: none"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-weight: normal">An
+unsplit convolutional perfectly matched layer technique improved at
+grazing incidence for the viscoelastic wave equation, </SPAN></FONT></SPAN><SPAN STYLE="text-decoration: none"><FONT SIZE=3 STYLE="font-size: 13pt"><I><SPAN STYLE="font-weight: normal">Geophysical
+Journal International</SPAN></I></FONT></SPAN><SPAN STYLE="text-decoration: none"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-weight: normal">,
+</SPAN></FONT></SPAN><SPAN STYLE="text-decoration: none"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN LANG="fr-FR"><SPAN STYLE="font-weight: normal">vol.
+179(1), p. 333-344, </SPAN></SPAN></FONT></SPAN><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN LANG="fr-FR"><SPAN STYLE="font-style: normal"><SPAN STYLE="font-weight: normal">doi:
+10.1111/j.1365-246X.2009.04278.x </SPAN></SPAN></SPAN></FONT></FONT></SPAN></FONT><SPAN STYLE="text-decoration: none"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-weight: normal">(2009).</SPAN></FONT></SPAN><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none">
+</SPAN></FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN LANG="fr-FR"><SPAN STYLE="font-weight: normal"><A HREF="http://www.univ-pau.fr/%7Edkomati1/published_papers/GJI_CPML_2009_viscoelastic.pdf">PDF
+reprint</A> <A HREF="http://www.univ-pau.fr/%7Edkomati1/bibtex_komatitsch.bib">BibTeX</A></SPAN></SPAN></FONT></FONT></SPAN></FONT></P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt">An extension to poroelastic
+media is developed in:</FONT></P>
+<P><SPAN STYLE="text-decoration: none"><FONT SIZE=3 STYLE="font-size: 13pt"><B>Roland
+Martin, Dimitri Komatitsch and Abdelaâziz Ezziani</B></FONT></SPAN><FONT SIZE=3 STYLE="font-size: 13pt">,
+</FONT><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-style: normal">An
+unsplit convolutional Perfectly Matched Layer improved at grazing
+incidence for seismic wave propagation in poroelastic media</SPAN></FONT><FONT SIZE=3 STYLE="font-size: 13pt"><I>,
+Geophysics</I></FONT><FONT SIZE=3 STYLE="font-size: 13pt">, vol.
+73(4), p T51-T61, doi: 10.1190/1.2939484 (2008). <A HREF="http://www.univ-pau.fr/%7Edkomati1/published_papers/geophysics_CPML_2008_poroelastic_typos_fixed.pdf">PDF
+reprint</A> <A HREF="http://www.univ-pau.fr/%7Edkomati1/bibtex_komatitsch.bib">BibTeX</A></FONT></P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt">and a variational formulation
+is developed in:</FONT></P>
+<P><SPAN STYLE="text-decoration: none"><FONT SIZE=3 STYLE="font-size: 13pt"><B>Roland
+Martin, </B></FONT></SPAN><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>Dimitri
+Komatitsch</B></FONT></FONT></SPAN><SPAN STYLE="text-decoration: none">
+</SPAN><SPAN STYLE="text-decoration: none"><FONT SIZE=3 STYLE="font-size: 13pt"><B>and
+Stephen D. Gedney</B></FONT></SPAN><FONT SIZE=3 STYLE="font-size: 13pt">,
+A variational formulation of a stabilized unsplit convolutional
+perfectly matched layer for the isotropic or anisotropic seismic wave
+equation, </FONT><FONT SIZE=3 STYLE="font-size: 13pt"><I>Computer
+Modeling in Engineering and Sciences</I></FONT><FONT SIZE=3 STYLE="font-size: 13pt">,
+vol. 37(3), p. 274-304 (2008). </FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-weight: normal"><A HREF="http://www.univ-pau.fr/%7Edkomati1/published_papers/CMES_cpml_2008.pdf">PDF
+reprint</A> <A HREF="http://www.univ-pau.fr/%7Edkomati1/bibtex_komatitsch.bib">BibTeX</A></SPAN></FONT></FONT></SPAN></FONT></P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt">An extension to higher-order
+time schemes, called ADE-PML (Auxiliary Differential Equation - PML)
+is developed in:</FONT></P>
+<P><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=4><SPAN LANG="fr-FR"><B>Roland
+Martin, Dimitri Komatitsch, Stephen D. Gedney and Émilien Bruthiaux</B></SPAN></FONT></FONT></SPAN></FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=4><SPAN LANG="fr-FR"><SPAN STYLE="font-weight: normal">,
+A high-order time and space formulation of the unsplit perfectly
+matched layer for the seismic wave equation using Auxiliary
+Differential Equations (ADE-PML), </SPAN></SPAN></FONT></FONT></SPAN></FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=4><SPAN LANG="fr-FR"><I><SPAN STYLE="font-weight: normal">Computer
+Modeling in Engineering and Sciences</SPAN></I></SPAN></FONT></FONT></SPAN></FONT><FONT COLOR="#000000"><SPAN STYLE="text-decoration: none"><FONT FACE="Times New Roman, serif"><FONT SIZE=4><SPAN LANG="fr-FR"><SPAN STYLE="font-weight: normal">,
+vol. 56(1), p. 17-42 (2010).</SPAN></SPAN></FONT></FONT></SPAN></FONT>
+<FONT SIZE=3 STYLE="font-size: 13pt"><A HREF="http://www.univ-pau.fr/%7Edkomati1/published_papers/CMES_ADE_PML_2010.pdf">PDF
+reprint</A> <A HREF="http://www.univ-pau.fr/%7Edkomati1/bibtex_komatitsch.bib">BibTeX</A></FONT></P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt">Note that in the case of an
+anisotropic medium the modification made is not strictly speaking
+perfectly matched any more, i.e., not a PML, but rather </FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">a
+“Modified PML / M-PML” based on Meza-Fajardo and Papageorgiou,
+</FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><I>Bulletin
+of the Seismological Society of America</I></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">,
+vol. 98(4), p. 1811-1836 (2008). H</FONT></FONT></FONT><FONT SIZE=3 STYLE="font-size: 13pt">owever,
+it works well in practice even if it is not perfectly matched any
+more from a mathematical point of view.</FONT></P>
+<P><FONT COLOR="#ff0000"><FONT SIZE=3 STYLE="font-size: 13pt"><B>IMPORTANT:
+all of our codes are written in Fortran; if you have written or if
+you write a C or C++ version of some of these codes and want to make
+them open source (GNU GPL v2 or CeCILL, as you prefer) and part of
+the package, please do not hesitate to send them to us, we will add
+them to our tar file and will acknowledge you as the author.</B></FONT></FONT></P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt">This software is governed by
+the <A HREF="http://www.cecill.info/licences/Licence_CeCILL_V2-en.html">CeCILL
+license (version 2)</A> (a French license very similar to GNU GPL
+version 2) under French law and abiding by the rules of distribution
+of free software. You can use, modify and/or redistribute the
+software under the terms of the CeCILL license as circulated by CEA,
+CNRS and INRIA at the following URL &quot;<A HREF="http://www.cecill.info/index.en.html">http://www.cecill.info</A>&quot;.</FONT></P>
+<P><FONT SIZE=3 STYLE="font-size: 13pt">If you use this code for your
+own research, please cite some (or all) of these articles:</FONT></P>
+<P><FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">@ARTICLE{MaKo09,<BR>author
+= {Roland Martin and Dimitri Komatitsch},<BR>title = {An unsplit
+convolutional perfectly matched layer technique improved at grazing
+incidence for the viscoelastic wave equation},<BR>journal =
+{Geophysical Journal International},<BR>year = {2009},<BR>volume =
+{179},<BR>number = {1},<BR>pages = {333-344},<BR>doi =
+{10.1111/j.1365-246X.2009.04278.x}}<BR><BR>@ARTICLE{MaKoEz08,<BR>author
+= {Roland Martin and Dimitri Komatitsch and Abdelaaziz
+Ezziani},<BR>title = {An unsplit convolutional perfectly matched
+layer improved at grazing incidence for seismic wave equation in
+poroelastic media},<BR>journal = {Geophysics},<BR>year =
+{2008},<BR>volume = {73},<BR>pages = {T51-T61},<BR>number = {4},<BR>doi
+= {10.1190/1.2939484}}<BR><BR>@ARTICLE{MaKoGe08,<BR>author = {Roland
+Martin and Dimitri Komatitsch and Stephen D. Gedney},<BR>title = {A
+variational formulation of a stabilized unsplit convolutional
+perfectly matched layer for the isotropic or anisotropic seismic wave
+equation},<BR>journal = {Computer Modeling in Engineering and
+Sciences},<BR>year = {2008},<BR>volume = {37},<BR>pages =
+{274-304},<BR>number = {3}}</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">@ARTICLE{MaKoGeBr10,<BR>author
+= {Roland Martin and Dimitri Komatitsch and Stephen D. Gedney and
+Emilien Bruthiaux},<BR>title = {A high-order time and space
+formulation of the unsplit perfectly matched layer for the seismic
+wave equation using {Auxiliary Differential Equations
+(ADE-PML)}},<BR>journal = {Computer Modeling in Engineering and
+Sciences},<BR>year = {2010},<BR>volume = {56},<BR>pages =
+{17-42},<BR>number = {1}}</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">@ARTICLE{KoMa07,<BR>author
+= {Dimitri Komatitsch and Roland Martin},<BR>title = {An unsplit
+convolutional {P}erfectly {M}atched {L}ayer improved at grazing
+incidence for the seismic wave equation},<BR>journal =
+{Geophysics},<BR>year = {2007},<BR>volume = {72},<BR>number =
+{5},<BR>pages = {SM155-SM167},<BR>doi = {10.1190/1.2757586}}</FONT></FONT></P>
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">Roden
+and Gedney's original article for Maxwell's equations
+is:</FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=1 STYLE="font-size: 6pt"><BR><BR><BR></FONT></FONT></FONT><FONT FACE="Courier New, monospace"><FONT SIZE=3 STYLE="font-size: 13pt">@ARTICLE{RoGe00,<BR>author
+= {J. A. Roden and S. D. Gedney},<BR>title = {Convolution {PML}
+({CPML}): {A}n Efficient {FDTD} Implementation of the {CFS}-{PML} for
+Arbitrary Media},<BR>journal = {Microwave and Optical Technology
+Letters},<BR>year = {2000},<BR>volume = {27},<BR>number = {5},<BR>pages
+= {334-339},<BR>doi =
+{10.1002/1098-2760(20001205)27:5&lt;334::AID-MOP14&gt;3.0.CO;2-A}}<BR></FONT></FONT><A HREF="http://www.geodynamics.org/cig/software"><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=1 STYLE="font-size: 6pt"><B><BR><BR></B></FONT></FONT></FONT></A><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-weight: normal">The
+package is composed of the following ten programs:</SPAN></FONT></P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_CPML_2D_isotropic_second_order.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+2D C-PML program for an isotropic medium using a second-order
+finite-difference spatial operator.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_CPML_2D_isotropic_fourth_order.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+2D C-PML program for an isotropic medium using a fourth-order
+finite-difference spatial operator.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_CPML_2D_anisotropic.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+2D C-PML program for an anisotropic medium using a second-order
+finite-difference spatial operator. More precisely we implement a
+“Modified PML / M-PML” based on Meza-Fajardo and Papageorgiou,
+</FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><I>Bulletin
+of the Seismological Society of America</I></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">,
+vol. 98(4), p. 1811-1836 (2008). Strictly speaking the layers are not
+perfectly matched any more from a mathematical point of view, but the
+code works well in practice.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_CPML_2D_poroelastic_fourth_order.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+2D C-PML program for a poroelastic medium using a fourth-order
+finite-difference spatial operator.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_ADEPML_2D_RK4_eighth_order.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+2D ADE-PML program for an isotropic elastic medium using an
+eighth-order finite-difference spatial operator and fourth-order
+Runge-Kutta implicit, semi implicit or explicit time scheme.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_PML_Collino_2D_isotropic.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+2D classical split PML program for an isotropic medium using a
+second-order finite-difference spatial operator, for comparison.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_PML_Collino_2D_anisotropic_fourth.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><SPAN STYLE="font-weight: normal">:
+2D classical split PML program for an anisotropic medium using a
+fourth-order finite-difference spatial operator, for comparison.</SPAN></FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_CPML_3D_isotropic_MPI_OpenMP.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+3D C-PML program for an isotropic medium using a second-order
+finite-difference spatial operator. Parallel implementation based on
+both MPI and OpenMP.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_PML_Collino_3D_isotropic_OpenMP.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+3D classical split PML program for an isotropic medium using a
+second-order finite-difference spatial operator, for comparison.
+Parallel implementation based on OpenMP.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>seismic_CPML_3D_viscoelastic_MPI.f90</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+3D C-PML program for a viscoelastic medium using a fourth-order
+finite-difference spatial operator. Parallel implementation based on
+MPI.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#ff0000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt"><B>Makefile</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">:
+a standard Makefile. You can type “make all” to compile all the
+codes.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">For
+more details about the classical PML, see for instance <A HREF="http://en.wikipedia.org/wiki/Perfectly_Matched_Layer">Wikipedia
+about PML</A>.</FONT></FONT></FONT></P>
+<P><FONT COLOR="#000000"><FONT FACE="Liberation Serif, serif"><FONT SIZE=3 STYLE="font-size: 13pt">For
+more details about finite differences in the time domain (FDTD), see
+for instance <A HREF="http://en.wikipedia.org/wiki/Finite-difference_time-domain_method">Wikipedia
+about FDTD</A>.</FONT></FONT></FONT></P>
+<P><A HREF="http://www.cecill.info/licences/Licence_CeCILL_V2-en.html"><FONT SIZE=3 STYLE="font-size: 13pt">Full
+text of the CeCILL licence (version 2)</FONT></A></P>
+<P><A HREF="http://www.cecill.info/index.en.html"><FONT SIZE=3 STYLE="font-size: 13pt">Official
+web site of the CeCILL licence</FONT></A></P>
+<P><A HREF="http://www.univ-pau.fr/%7Edkomati1"><FONT SIZE=3 STYLE="font-size: 13pt">Home
+page of Dimitri Komatitsch</FONT></A></P>
+</BODY>
+</HTML>
