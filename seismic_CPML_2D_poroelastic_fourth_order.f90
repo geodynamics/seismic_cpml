@@ -293,9 +293,7 @@
 ! power to compute d0 profile
   double precision, parameter :: NPOWER = 2.d0
 
-! double precision, parameter :: K_MAX_PML = 7.d0   ! from Gedney page 8.11
   double precision, parameter :: K_MAX_PML = 1.d0   ! from Gedney page 8.11
-! double precision, parameter :: ALPHA_MAX_PML = 0.05d0   ! from Gedney page 8.22
   double precision, parameter :: ALPHA_MAX_PML = 2.d0*PI*(f0/2.d0)   ! from Festa and Vilotte
 
 ! 2D arrays for the memory variables
@@ -456,7 +454,7 @@
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
 
 ! define damping profile at half the grid points
@@ -466,7 +464,7 @@
         d_x_half_x(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_x_half_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x_half_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
 
     endif
@@ -481,7 +479,7 @@
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
 
 ! define damping profile at half the grid points
@@ -491,7 +489,7 @@
         d_x_half_x(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_x_half_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_x_half_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
 
     endif
@@ -532,7 +530,7 @@
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
 
 ! define damping profile at half the grid points
@@ -542,7 +540,7 @@
         d_y_half_y(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_y_half_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y_half_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
 
     endif
@@ -557,7 +555,7 @@
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
 
 ! define damping profile at half the grid points
@@ -567,7 +565,7 @@
         d_y_half_y(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_y_half_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
+        alpha_y_half_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
 
     endif

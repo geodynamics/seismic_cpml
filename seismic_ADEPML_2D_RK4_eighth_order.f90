@@ -286,15 +286,10 @@
 
 ! Kappa must be strong enough to absorb energy and low enough to avoid
 ! reflections.
-! Alpha1 must be low to absron energy and high enough to have efficiency on
+! Alpha1 must be low to absorb energy and high enough to have efficiency on
 ! grazing incident waves.
-! double precision, parameter :: K_MAX_PML_1 = 15.d0
   double precision, parameter :: K_MAX_PML_1 = 7.d0
   double precision, parameter :: ALPHA_MAX_PML_1 = 2.d0*PI*(f0/2.d0)
-
-! double precision, parameter :: K_MAX_PML_2 = K_MAX_PML_1 / 15.d0
-  double precision, parameter :: K_MAX_PML_2 = K_MAX_PML_1
-  double precision, parameter :: ALPHA_MAX_PML_2 =  ALPHA_MAX_PML_1 / 5.d0
 
 ! arrays for the memory variables
 ! could declare these arrays in PML only to save a lot of memory, but proof of concept only here
@@ -507,7 +502,7 @@
         d_x_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
       endif
 
 ! define damping profile at half the grid points
@@ -517,7 +512,7 @@
         d_x_half_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
       endif
 
     endif
@@ -532,7 +527,7 @@
         d_x_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
       endif
 
 ! define damping profile at half the grid points
@@ -542,7 +537,7 @@
         d_x_half_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
       endif
 
     endif
@@ -601,7 +596,7 @@ enddo
         d_y_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
       endif
 
 ! define damping profile at half the grid points
@@ -611,7 +606,7 @@ enddo
         d_y_half_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
       endif
 
     endif
@@ -626,7 +621,7 @@ enddo
         d_y_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
       endif
 
 ! define damping profile at half the grid points
@@ -636,7 +631,7 @@ enddo
         d_y_half_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
+        alpha_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
       endif
 
     endif
