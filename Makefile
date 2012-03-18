@@ -35,7 +35,7 @@ F90 = gfortran
 MPIF90 = mpif90
 FLAGS = -std=f2003 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow
 MEDIUM_MEMORY = -mcmodel=medium
-OPEN_MP = -fopenmp
+#OPEN_MP = -fopenmp
 
 default: clean seismic_CPML_2D_isotropic_second_order seismic_CPML_2D_isotropic_fourth_order seismic_CPML_2D_anisotropic seismic_PML_Collino_2D_isotropic seismic_PML_Collino_3D_isotropic_OpenMP seismic_CPML_3D_isotropic_MPI_OpenMP seismic_CPML_2D_poroelastic_fourth_order seismic_CPML_3D_viscoelastic_MPI seismic_PML_Collino_2D_anisotropic_fourth seismic_ADEPML_2D_RK4_eighth_order
 
