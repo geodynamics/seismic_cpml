@@ -340,7 +340,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
   double precision, dimension(-4:NY+4) :: d_y_2,K_y_2,alpha_prime_y_2,g_y_2
   double precision, dimension(-4:NY+4) :: d_y_half_2,K_y_half_2,alpha_prime_y_half_2,g_y_half_2
 
-! coefficients that allow to reset the memory variables at each RK4 substep depend on the substepping and are then of dimension 4,
+! coefficients that allow to reset the memory variables at each RK4 substep depend on the substepping and are then of dimension 4,
 ! 1D arrays for the damping profiles
   double precision, dimension(4,-4:NX+4) :: a_x_1,b_x_1
   double precision, dimension(4,-4:NX+4) :: a_x_half_1,b_x_half_1
@@ -370,7 +370,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 
   double precision rho_half_x_half_y
 
-! Variables are stored in indices in the first dimension to implement RK4
+! variables are stored in four indices in the first dimension to implement RK4
 ! dv does not always indicate a derivative
   double precision, dimension(4,-4:NX+4,-4:NY+4) :: dvx,dvy,dsigmaxx,dsigmayy,dsigmaxy
   double precision, dimension(4,-4:NX+4,-4:NY+4) :: dsigmaxx_R,dsigmayy_R,dsigmaxy_R
