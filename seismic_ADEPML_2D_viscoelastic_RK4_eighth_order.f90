@@ -1,11 +1,22 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
+! Program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order, eighth-order accurate in space and second-order accurate in time
+!
+! This viscoelastic code with with Auxiliary Differential Equation PML is modified by Ruiqi Shi from program
+! 'seismic_CPML_3D_viscoelastic_MPI.f90' and 'seismic_ADEPML_2D_RK4_eighth_order' of seismic CPML software package.
+!
+! Ruiqi Shi, Department of Exploration Geophysics, China University of Petroleum, Beijing P R China.
+! Email: shiruiqi123 AT gmail DOT com
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 ! Copyright Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France.
-! Contributor: Roland Martin, roland DOT martin aT univ-pau DOT fr
 !
 ! This software is a computer program whose purpose is to solve
-! the two-dimensional isotropic elastic wave equation
+! the two-dimensional viscoelastic wave equation
 ! using a finite-difference method with Auxiliary Differential
 ! Equation Perfectly Matched Layer (ADE-PML) conditions.
+!
 !
 ! This software is governed by the CeCILL license under French law and
 ! abiding by the rules of distribution of free software. You can use,
@@ -33,20 +44,22 @@
 ! The full text of the license is available at the end of this program
 ! and in file "LICENSE".
 
-  program seismic_ADEPML_2D_RK4_eighth_order
 
-! High order 2D explicit-semi implicit-implicit elastic finite-difference code
+program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
+
+! High order 2D explicit-semi implicit-implicit seismic wave finite-difference code
 ! in velocity and stress formulation with Auxiliary Differential
 ! Equation Perfectly Matched Layer (ADE-PML) absorbing conditions for
-! an isotropic medium. It is fourth order Runge-Kutta (RK4) in time
+! an SLS viscoelastic medium. It is fourth order Runge-Kutta (RK4) in time
 ! and 8th order in space using Holberg spatial
-! discretization. 1 and/or 2 frequency shift poles are implemented
-
-! Version 1.1.2
-! by Roland Martin, University of Pau, France, Jan 2010.
-! based on seismic_CPML_2D_isotropic_second_order.f90
-! by Dimitri Komatitsch and Roland Martin, University of Pau, France, 2007.
-
+! discretization.
+!
+! Version 1.0 July, 2011
+! by Ruiqi Shi, China University of Petroleum, Beijing P R China, 2011.
+! based on seismic_CPML_3D_viscoelastic_MPI.f90 and seismic_ADEPML_2D_RK4_eighth_order.f90
+! by Roland Martin, University of Pau, France
+!
+!
 ! The 8th-order staggered-grid formulation of Holberg is used:
 !
 !            ^ y
@@ -169,19 +182,45 @@
   implicit none
 
 ! total number of grid points in each direction of the grid
-  integer, parameter :: NX = 101
-  integer, parameter :: NY = 641
+  integer, parameter :: NX = 141
+  integer, parameter :: NY = 621  !NY = 800
 
 ! Explicit (epsn=1,epsn=0), Implicit (epsn=0,epsn1=1), semi-implicit (epsn=0.5,epsn1=0.5)
-   integer, parameter :: iexpl=0
-   integer, parameter :: iimpl=0
-   integer, parameter :: isemiimpl=1
-
-   double precision :: epsn,epsn1
+  integer, parameter :: iexpl=0
+  integer, parameter :: iimpl=0
+  integer, parameter :: isemiimpl=1
 
 ! size of a grid cell
-  double precision, parameter :: DELTAX = 10.d0
+  double precision, parameter :: DELTAX = 5.d0, ONE_OVER_DELTAX = 1.d0 / DELTAX
   double precision, parameter :: DELTAY = DELTAX
+  double precision, parameter :: ONE_OVER_DELTAY = ONE_OVER_DELTAX
+  double precision, parameter :: ONE=1.d0,TWO=2.d0, DIM=2.d0
+
+! P-velocity, S-velocity and density
+  double precision, parameter :: cp_top = 3050.d0
+  double precision, parameter :: cs_top = 1950.d0
+  double precision, parameter :: rho_top = 2000.d0
+  double precision, parameter :: mu_top = rho_top*cs_top*cs_top
+  double precision, parameter :: lambda_top = rho_top*(cp_top*cp_top - 2.d0*cs_top*cs_top)
+  double precision, parameter :: lambdaplustwomu_top = rho_top*cp_top*cp_top
+
+  double precision, parameter :: cp_bottom = 2600.d0
+  double precision, parameter :: cs_bottom = 1500.d0
+  double precision, parameter :: rho_bottom = 1500.d0
+  double precision, parameter :: mu_bottom = rho_bottom*cs_bottom*cs_bottom
+  double precision, parameter :: lambda_bottom = rho_bottom*(cp_bottom*cp_bottom - 2.d0*cs_bottom*cs_bottom)
+  double precision, parameter :: lambdaplustwomu_bottom = rho_bottom*cp_bottom*cp_bottom
+
+! total number of time steps
+  integer, parameter :: NSTEP = 3000
+
+! time step in seconds
+  double precision, parameter :: DELTAT = 7.5d-4
+
+! parameters for the source
+  double precision, parameter :: f0 = 15.d0
+  double precision, parameter :: t0 = 1.20d0 / f0
+  double precision, parameter :: factor = 1.d5
 
 ! flags to add PML layers to the edges of the grid
   logical, parameter :: USE_PML_XMIN = .true.
@@ -189,51 +228,33 @@
   logical, parameter :: USE_PML_YMIN = .true.
   logical, parameter :: USE_PML_YMAX = .true.
 
-! thickness of the PML layer in grid points. 8th order in space imposes to
-! increase the thickness of the CPML
+! thickness of the PML layer in grid points
   integer, parameter :: NPOINTS_PML = 10
 
-! P-velocity, S-velocity and density
-  double precision, parameter :: cp = 3300.d0
-  double precision, parameter :: cs =  1905.d0
-  double precision, parameter :: density = 2800.d0
-
-! total number of time steps
-! the time step is twice smaller for this fourth-order simulation,
-! therefore let us double the number of time steps to keep the same total duration
-  integer, parameter :: NSTEP =  100000
-
-! time step in seconds
-! 8th-order in space and 4th-order in time finite-difference schemes
-! are less stable than second-order in space and second-order in time,
-! therefore let us divide the time step by 2
-  double precision, parameter :: DELTAT = 1.d-3
-
-! parameters for the source
-  double precision, parameter :: f0 = 8.d0
-  double precision, parameter :: t0 = 1.20d0 / f0
-  double precision, parameter :: factor = 1.d4
+! heterogeneous model and height of the interface
+  logical, parameter :: HETEROGENEOUS_MODEL = .true.
 
 ! source
-  integer, parameter :: ISOURCE = NX - 2*NPOINTS_PML  - 1
-! integer, parameter :: ISOURCE = (NX-1)/2
-  integer, parameter :: JSOURCE = 2 * NY / 3 + 1
-  double precision, parameter :: xsource = (ISOURCE - 1) * DELTAX
-  double precision, parameter :: ysource = (JSOURCE - 1) * DELTAY
+! integer, parameter :: ISOURCE = NX - 2*NPOINTS_PML - 1
+  integer, parameter :: ISOURCE = NPOINTS_PML+11
+  integer, parameter :: JSOURCE = 2*NY / 3
+  double precision, parameter :: xsource = (ISOURCE) * DELTAX
+  double precision, parameter :: ysource = (JSOURCE) * DELTAY
+  double precision, parameter :: INTERFACE_HEIGHT = ysource - 125*DELTAY
+  integer, parameter:: JINTERFACE=INT(INTERFACE_HEIGHT/DELTAY)+1
 ! angle of source force clockwise with respect to vertical (Y) axis
-  double precision, parameter :: ANGLE_FORCE = 135.d0
+  double precision, parameter :: ANGLE_FORCE = 45.d0
 
 ! receivers
   integer, parameter :: NREC = 3
-  double precision, parameter :: xdeb = xsource    ! first receiver x in meters
-  double precision, parameter :: ydeb = ysource - 2000.d0   ! first receiver y in meters
-  double precision, parameter :: xfin = xsource    ! last receiver x in meters
-  double precision, parameter :: yfin = ysource - 4000.d0  ! last receiver y in meters
+  double precision, parameter :: xdeb = xsource - 100.d0 ! first receiver x in meters
+  double precision, parameter :: ydeb = 2300.d0 ! first receiver y in meters
+  double precision, parameter :: xfin = xsource ! last receiver x in meters
+  double precision, parameter :: yfin =  300.d0 ! last receiver y in meters
 
 ! display information on the screen from time to time
-! the time step is twice smaller for this fourth-order simulation,
-! therefore let us double the interval in time steps at which we display information
-  integer, parameter :: IT_DISPLAY = 400
+  integer, parameter :: IT_DISPLAY = 500  !IT_DISPLAY = 10000
+
 ! value of PI
   double precision, parameter :: PI = 3.141592653589793238462643d0
 
@@ -262,34 +283,23 @@
   double precision, parameter :: c2 = -1.041182d-1
   double precision, parameter :: c3 = 2.063707d-2
   double precision, parameter :: c4 = -3.570998d-3
+  double precision, parameter :: coe_sum = abs(c1)+abs(c2)+abs(c3)+abs(c4)
 
 ! RK4 scheme coefficients, 2 per subloop, 8 in total
   double precision, dimension(4) :: rk41, rk42
-
-! main arrays
-  double precision, dimension(-4:NX+4,-4:NY+4) :: lambda,mu,rho,vx,vy,sigmaxx,sigmayy,sigmaxy
-
-! Variables are stored in 4 indices in the first dimension to implement RK4
-! dv does not always indicate a derivative
-  double precision, dimension(4,-4:NX+4,-4:NY+4) :: dvx,dvy,dsigmaxx,dsigmayy,dsigmaxy
-
-! to interpolate material parameters at the right location in the staggered grid cell
-  double precision lambda_half_x,mu_half_x,lambda_plus_two_mu_half_x,mu_half_y,rho_half_x_half_y
-
-! for evolution of total energy in the medium
-  double precision epsilon_xx,epsilon_yy,epsilon_xy
-  double precision, dimension(NSTEP) :: total_energy_kinetic,total_energy_potential
 
 ! power to compute d0 profile
   double precision, parameter :: NPOWER = 2.d0
   double precision, parameter :: NPOWER2 = 2.d0
 
-! Kappa must be strong enough to absorb energy and low enough to avoid
-! reflections.
-! Alpha1 must be low to absorb energy and high enough to have efficiency on
-! grazing incident waves.
-  double precision, parameter :: K_MAX_PML_1 = 7.d0
-  double precision, parameter :: ALPHA_MAX_PML_1 = 2.d0*PI*(f0/2.d0)
+  !double precision, parameter :: K_MAX_PML = 7.d0 ! from Gedney page 8.11
+!  double precision, parameter :: ALPHA_MAX_PML = 0.d0 ! from festa and Vilotte
+  double precision, parameter :: ALPHA_MAX_PML_1 = 2.d0*PI*(f0/2.d0) ! from festa and Vilotte
+  double precision K_MAX_PML_1
+
+! double precision, parameter :: K_MAX_PML_2 = K_MAX_PML_1 / 15.d0
+!  double precision, parameter :: K_MAX_PML_2 = K_MAX_PML_1
+!  double precision, parameter :: ALPHA_MAX_PML_2 =  ALPHA_MAX_PML_1 / 5.d0
 
 ! arrays for the memory variables
 ! could declare these arrays in PML only to save a lot of memory, but proof of concept only here
@@ -305,16 +315,6 @@
       memory_dsigmaxy_dx_1, &
       memory_dsigmaxy_dy_1
 
-  double precision, dimension(4,-4:NX+4,-4:NY+4) :: &
-      memory_dvx_dx_2, &
-      memory_dvx_dy_2, &
-      memory_dvy_dx_2, &
-      memory_dvy_dy_2, &
-      memory_dsigmaxx_dx_2, &
-      memory_dsigmayy_dy_2, &
-      memory_dsigmaxy_dx_2, &
-      memory_dsigmaxy_dy_2
-
   double precision :: &
       value_dvx_dx, &
       value_dvx_dy, &
@@ -325,17 +325,20 @@
       value_dsigmaxy_dx, &
       value_dsigmaxy_dy
 
-! 1D arrays for the damping profiles
-  double precision, dimension(-4:NX+4) :: d_x_1,K_x_1,alpha_x_1,g_x_1,ksi_x
-  double precision, dimension(-4:NX+4) :: d_x_half_1,K_x_half_1,alpha_x_half_1,g_x_half_1,ksi_x_half
-  double precision, dimension(-4:NY+4) :: d_y_1,K_y_1,alpha_y_1,g_y_1,ksi_y
-  double precision, dimension(-4:NY+4) :: d_y_half_1,K_y_half_1,alpha_y_half_1,g_y_half_1,ksi_y_half
+  double precision :: duxdx,duxdy,duydx,duydy,div
+  double precision :: epsn,epsn1,Sn
 
 ! 1D arrays for the damping profiles
-  double precision, dimension(-4:NX+4) :: d_x_2,K_x_2,alpha_x_2,g_x_2
-  double precision, dimension(-4:NX+4) :: d_x_half_2,K_x_half_2,alpha_x_half_2,g_x_half_2
-  double precision, dimension(-4:NY+4) :: d_y_2,K_y_2,alpha_y_2,g_y_2
-  double precision, dimension(-4:NY+4) :: d_y_half_2,K_y_half_2,alpha_y_half_2,g_y_half_2
+  double precision, dimension(-4:NX+4) :: d_x_1,K_x_1,alpha_prime_x_1,g_x_1,ksi_x
+  double precision, dimension(-4:NX+4) :: d_x_half_1,K_x_half_1,alpha_prime_x_half_1,g_x_half_1,ksi_x_half
+  double precision, dimension(-4:NY+4) :: d_y_1,K_y_1,alpha_prime_y_1,g_y_1,ksi_y
+  double precision, dimension(-4:NY+4) :: d_y_half_1,K_y_half_1,alpha_prime_y_half_1,g_y_half_1,ksi_y_half
+
+! 1D arrays for the damping profiles
+  double precision, dimension(-4:NX+4) :: d_x_2,K_x_2,alpha_prime_x_2,g_x_2
+  double precision, dimension(-4:NX+4) :: d_x_half_2,K_x_half_2,alpha_prime_x_half_2,g_x_half_2
+  double precision, dimension(-4:NY+4) :: d_y_2,K_y_2,alpha_prime_y_2,g_y_2
+  double precision, dimension(-4:NY+4) :: d_y_half_2,K_y_half_2,alpha_prime_y_half_2,g_y_half_2
 
 ! coefficients that allow to reset the memory variables at each RK4 substep depend on the substepping and are then of dimension 4,
 ! 1D arrays for the damping profiles
@@ -344,29 +347,98 @@
   double precision, dimension(4,-4:NY+4) :: a_y_1,b_y_1
   double precision, dimension(4,-4:NY+4) :: a_y_half_1,b_y_half_1
 
+  double precision, dimension(-4:NX+4) :: r_x_1,s_x_1
+  double precision, dimension(-4:NX+4) :: r_x_half_1,s_x_half_1
+  double precision, dimension(-4:NY+4) :: r_y_1,s_y_1
+  double precision, dimension(-4:NY+4) :: r_y_half_1,s_y_half_1
+
 ! 1D arrays for the damping profiles
   double precision, dimension(4,-4:NX+4) :: a_x_2
   double precision, dimension(4,-4:NX+4) :: a_x_half_2
   double precision, dimension(4,-4:NY+4) :: a_y_2
   double precision, dimension(4,-4:NY+4) :: a_y_half_2
 
+! PML
   double precision :: thickness_PML_x,thickness_PML_y,xoriginleft,xoriginright,yoriginbottom,yorigintop
   double precision :: Rcoef,d0_x,d0_y,xval,yval,abscissa_in_PML,abscissa_normalized
 
+  double precision, dimension(-4:NX+4,-4:NY+4) :: vx,vy,sigmaxx,sigmayy,sigmaxy
+  double precision, dimension(-4:NX+4,-4:NY+4) :: sigmaxx_R,sigmayy_R,sigmaxy_R
+  double precision, dimension(-4:NX+4,-4:NY+4) :: e1_mech1,e1_mech2,e11_mech1,e11_mech2,e22_mech1,e22_mech2
+  double precision, dimension(-4:NX+4,-4:NY+4) :: e12_mech1,e12_mech2
+  double precision, dimension(-4:NX+4,-4:NY+4) :: rho, mu,lambda,lambdaplustwomu
+
+  double precision rho_half_x_half_y
+
+! Variables are stored in indices in the first dimension to implement RK4
+! dv does not always indicate a derivative
+  double precision, dimension(4,-4:NX+4,-4:NY+4) :: dvx,dvy,dsigmaxx,dsigmayy,dsigmaxy
+  double precision, dimension(4,-4:NX+4,-4:NY+4) :: dsigmaxx_R,dsigmayy_R,dsigmaxy_R
+  double precision, dimension(4,-4:NX+4,-4:NY+4) :: de1_mech1,de1_mech2,de11_mech1,de11_mech2
+  double precision, dimension(4,-4:NX+4,-4:NY+4) :: de12_mech1,de12_mech2
+
+
+  integer, parameter :: number_of_2Darrays = 2*8
+  integer, parameter :: number_of_3Darrays = 32
+
 ! for the source
-  double precision :: a,t,force_x,force_y,source_term
+  double precision a,t,force_x,force_y,source_term
+
+ ! for stability estimate
+  double precision :: c_max,c_min
 
 ! for receivers
-  double precision xspacerec,yspacerec,distval,dist
+  double precision distval,dist
   integer, dimension(NREC) :: ix_rec,iy_rec
   double precision, dimension(NREC) :: xrec,yrec
 
 ! for seismograms
   double precision, dimension(NSTEP,NREC) :: sisvx,sisvy
 
-  integer :: i,j,it,it2,irec,inc
+! max amplitude for color snapshots
+  double precision max_amplitudeVx
+  double precision max_amplitudeVy
 
-  double precision :: Courant_number,velocnorm
+! for evolution of total energy in the medium
+  double precision :: epsilon_xx,epsilon_yy,epsilon_xy
+  double precision, dimension(NSTEP) :: total_energy,total_energy_kinetic,total_energy_potential
+  double precision :: local_energy_kinetic,local_energy_potential
+
+  integer :: irec,inc
+
+  double precision :: mul_relaxed,lambdal_relaxed,lambdalplus2mul_relaxed
+  double precision :: mul_unrelaxed,lambdal_unrelaxed,lambdalplus2mul_unrelaxed
+  double precision :: Mu_nu1,Mu_nu2
+  double precision :: phi_nu1_mech1,phi_nu1_mech2
+  double precision :: phi_nu2_mech1,phi_nu2_mech2
+  double precision :: tauinv,inv_tau_sigma_nu1_mech1,inv_tau_sigma_nu1_mech2
+  double precision :: taumin,taumax, tau1, tau2, tau3, tau4
+  double precision :: inv_tau_sigma_nu2_mech1,inv_tau_sigma_nu2_mech2
+  double precision :: tau_epsilon_nu1_mech1, tau_sigma_nu1_mech1
+  double precision::  tau_epsilon_nu2_mech1, tau_sigma_nu2_mech1
+  double precision::  tau_epsilon_nu1_mech2, tau_sigma_nu1_mech2
+  double precision::  tau_epsilon_nu2_mech2 ,tau_sigma_nu2_mech2
+
+  integer :: i,j,it,it2
+
+  double precision :: Vsolidnorm
+
+  double precision Courant_number_bottom,Courant_number_top
+  double precision Dispersion_number_bottom,Dispersion_number_top
+
+! timer to count elapsed time
+  character(len=8) datein
+  character(len=10) timein
+  character(len=5)  :: zone
+  integer, dimension(8) :: time_values
+  integer ihours,iminutes,iseconds,int_tCPU
+  double precision :: time_start,time_end,tCPU
+
+! names of the time stamp files
+  character(len=150) outputname
+
+! main I/O file
+  integer, parameter :: IOUT = 41
 
 !---
 !--- program starts here
@@ -387,8 +459,63 @@
     epsn1 = 0.5d0
   endif
 
+ tau_epsilon_nu1_mech1 = 0.0325305d0
+ tau_sigma_nu1_mech1   = 0.0311465d0
+
+ tau_epsilon_nu1_mech1 = 0.0225d0
+ tau_sigma_nu1_mech1   = 0.0211d0
+
+  tau1= tau_sigma_nu1_mech1/tau_epsilon_nu1_mech1
+
+  tau_epsilon_nu2_mech1 = 0.0332577d0
+  tau_sigma_nu2_mech1   = 0.0304655d0
+
+  tau_epsilon_nu2_mech1 = 0.0232d0
+  tau_sigma_nu2_mech1   = 0.0204d0
+
+  tau2= tau_sigma_nu2_mech1/tau_epsilon_nu2_mech1
+
+  tau_epsilon_nu1_mech2 = 0.0032530d0
+  tau_sigma_nu1_mech2   = 0.0031146d0
+
+  tau_epsilon_nu1_mech2 = 0.0022d0
+ tau_sigma_nu1_mech2   = 0.0021d0
+
+  tau3= tau_sigma_nu1_mech2/tau_epsilon_nu1_mech2
+
+  tau_epsilon_nu2_mech2 = 0.0033257d0
+  tau_sigma_nu2_mech2   = 0.0030465d0
+
+  tau_epsilon_nu2_mech2 = 0.0023d0
+  tau_sigma_nu2_mech2   = 0.0020d0
+
+  tau4= tau_sigma_nu2_mech2/tau_epsilon_nu2_mech2
+
+  taumax=max(1.d0/tau1,1.d0/tau2,1.d0/tau3,1.d0/tau4)
+  taumin=min(1.d0/tau1,1.d0/tau2,1.d0/tau3,1.d0/tau4)
+
+ inv_tau_sigma_nu1_mech1 = ONE / tau_sigma_nu1_mech1
+  inv_tau_sigma_nu2_mech1 = ONE / tau_sigma_nu2_mech1
+  inv_tau_sigma_nu1_mech2 = ONE / tau_sigma_nu1_mech2
+  inv_tau_sigma_nu2_mech2 = ONE / tau_sigma_nu2_mech2
+
+phi_nu1_mech1 = (ONE - tau_epsilon_nu1_mech1/tau_sigma_nu1_mech1)&
+ / tau_sigma_nu1_mech1
+phi_nu2_mech1 = (ONE - tau_epsilon_nu2_mech1/tau_sigma_nu2_mech1)&
+ / tau_sigma_nu2_mech1
+phi_nu1_mech2 = (ONE - tau_epsilon_nu1_mech2/tau_sigma_nu1_mech2)&
+ / tau_sigma_nu1_mech2
+phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
+/ tau_sigma_nu2_mech2
+
+ Mu_nu1 = ONE - (ONE - tau_epsilon_nu1_mech1/tau_sigma_nu1_mech1) &
+- (ONE - tau_epsilon_nu1_mech2/tau_sigma_nu1_mech2)
+ Mu_nu2 = ONE - (ONE - tau_epsilon_nu2_mech1/tau_sigma_nu2_mech1) &
+- (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2)
+
+
   print *
-  print *,'2D elastic finite-difference code in velocity and stress formulation with C-PML'
+  print *,'2D visco-elastic FD code in velocity and stress formulation with ADE in 8th an RK4'
   print *
 
 ! display size of the model
@@ -396,11 +523,16 @@
   print *,'NX = ',NX
   print *,'NY = ',NY
   print *
-  print *,'size of the model along X = ',(NX - 1) * DELTAX
-  print *,'size of the model along Y = ',(NY - 1) * DELTAY
+  print *
+  print *,'size of the model along X = ',(NX+1) * DELTAX
+  print *,'size of the model along Y = ',(NY+1) * DELTAY
   print *
   print *,'Total number of grid points = ',NX * NY
-  print *
+  print *,'Number of points of all the arrays = ',dble(NX+4*2+1)*dble(NY+4*2+1)*number_of_2Darrays + &
+                         4*dble(NX+4*2+1)*dble(NY+4*2+1)*number_of_3Darrays
+  print *,'Size in GB of all the arrays = ',dble(NX+4*2+1)*dble(NY+4*2+1)*number_of_2Darrays*8.d0/(1024.d0*1024.d0*1024.d0) + &
+                         4*dble(NX+4*2+1)*dble(NY+4*2+1)*number_of_3Darrays*8.d0/(1024.d0*1024.d0*1024.d0)
+
 
 !--- define profile of absorption in PML region
 
@@ -409,18 +541,29 @@
   thickness_PML_y = NPOINTS_PML * DELTAY
 
 ! reflection coefficient (INRIA report section 6.1) http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
-  Rcoef = 0.00001d0
+   Rcoef = 1.d-5
+  c_max = max(cp_bottom,cp_top)
+  c_min = min(cs_bottom,cs_top)
+
+     K_MAX_PML_1 = 1.d0
+
+  print *,'K_MAX_PML = ',K_MAX_PML_1
 
 ! check that NPOWER is okay
   if(NPOWER < 1) stop 'NPOWER must be greater than 1'
 
 ! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
-  d0_x = - (NPOWER + 1) * cp * log(Rcoef) / (2.d0 * thickness_PML_x)
-  d0_y = - (NPOWER + 1) * cp * log(Rcoef) / (2.d0 * thickness_PML_y)
+  if(HETEROGENEOUS_MODEL) then
+  d0_x = - (NPOWER + 1) * c_max *dsqrt(taumax)* log(Rcoef) / (2.d0 * thickness_PML_x)
+  d0_y = - (NPOWER + 1) * c_max *dsqrt(taumax)* log(Rcoef) / (2.d0 * thickness_PML_y)
+ else
+  d0_x = - (NPOWER + 1) * cp_bottom *dsqrt(taumax)* log(Rcoef) / (2.d0 * thickness_PML_x)
+  d0_y = - (NPOWER + 1) * cp_bottom *dsqrt(taumax)* log(Rcoef) / (2.d0 * thickness_PML_y)
+ endif
 
-  print *,'d0_x = ',d0_x
-  print *,'d0_y = ',d0_y
-  print *
+    print *
+    print *,'d0_x = ',d0_x
+    print *,'d0_y = ',d0_y
 
 ! parameters involved in RK4 time expansion
   rk41(1) = ZERO
@@ -439,8 +582,8 @@
   d_x_half_1(:) = ZERO
   K_x_1(:) = 1.d0
   K_x_half_1(:) = 1.d0
-  alpha_x_1(:) = ZERO
-  alpha_x_half_1(:) = ZERO
+  alpha_prime_x_1(:) = ZERO
+  alpha_prime_x_half_1(:) = ZERO
   a_x_1(:,:) = ZERO
   a_x_half_1(:,:) = ZERO
   g_x_1(:) = 5.d-1
@@ -452,8 +595,8 @@
   d_y_half_1(:) = ZERO
   K_y_1(:) = 1.d0
   K_y_half_1(:) = 1.d0
-  alpha_y_1(:) = ZERO
-  alpha_y_half_1(:) = ZERO
+  alpha_prime_y_1(:) = ZERO
+  alpha_prime_y_half_1(:) = ZERO
   a_y_1(:,:) = ZERO
   a_y_half_1(:,:) = ZERO
   g_y_1(:) = 1.d0
@@ -463,8 +606,8 @@
   d_x_half_2(:) = ZERO
   K_x_2(:) = 1.d0
   K_x_half_2(:) = 1.d0
-  alpha_x_2(:) = ZERO
-  alpha_x_half_2(:) = ZERO
+  alpha_prime_x_2(:) = ZERO
+  alpha_prime_x_half_2(:) = ZERO
   a_x_2(:,:) = ZERO
   a_x_half_2(:,:) = ZERO
   g_x_2(:) = 1.d0
@@ -474,12 +617,21 @@
   d_y_half_2(:) = ZERO
   K_y_2(:) = 1.d0
   K_y_half_2(:) = 1.d0
-  alpha_y_2(:) = ZERO
-  alpha_y_half_2(:) = ZERO
+  alpha_prime_y_2(:) = ZERO
+  alpha_prime_y_half_2(:) = ZERO
   a_y_2(:,:) = ZERO
   a_y_half_2(:,:) = ZERO
   g_y_2(:) = 1.d0
   g_y_half_2(:) =1.d0
+
+  r_x_1(:) = ZERO
+  s_x_1(:) = ZERO
+  r_x_half_1(:) = ZERO
+  s_x_half_1(:) = ZERO
+  r_y_1(:) = ZERO
+  s_y_1(:) = ZERO
+  r_y_half_1(:) = ZERO
+  s_y_half_1(:) = ZERO
 
 ! damping in the X direction
 
@@ -502,7 +654,7 @@
         d_x_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
+        alpha_prime_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -512,7 +664,7 @@
         d_x_half_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
+        alpha_prime_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -527,7 +679,7 @@
         d_x_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
+        alpha_prime_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -537,7 +689,7 @@
         d_x_half_1(i) = d0_x * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_x_half_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
+        alpha_prime_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -547,29 +699,34 @@
     d_x_half_2(i) = 0.d0
 
 ! just in case, for -5 at the end
-    if(alpha_x_1(i) < ZERO) alpha_x_1(i) = ZERO
-    if(alpha_x_half_1(i) < ZERO) alpha_x_half_1(i) = ZERO
+    if(alpha_prime_x_1(i) < ZERO) alpha_prime_x_1(i) = ZERO
+    if(alpha_prime_x_half_1(i) < ZERO) alpha_prime_x_half_1(i) = ZERO
 
 ! just in case, for -5 at the end
-    if(alpha_x_2(i) < ZERO) alpha_x_2(i) = ZERO
-    if(alpha_x_half_2(i) < ZERO) alpha_x_half_2(i) = ZERO
+    if(alpha_prime_x_2(i) < ZERO) alpha_prime_x_2(i) = ZERO
+    if(alpha_prime_x_half_2(i) < ZERO) alpha_prime_x_half_2(i) = ZERO
 
 ! CPML damping parameters for the 4 sub time steps of RK4 algorithm
 do inc=1,4
-    b_x_1(inc,i) =  (1.-epsn*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_x_1(i)))/&
-    (1.+epsn1*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_x_1(i)))
+    b_x_1(inc,i) =  (1.-epsn*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_prime_x_1(i)))/&
+    (1.+epsn1*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_prime_x_1(i)))
     b_x_half_1(inc,i) = (1.-epsn*DELTAT*rk41(inc)*(d_x_half_1(i)/K_x_half_1(i) &
-   + alpha_x_half_1(i)))/(1. +epsn1*DELTAT*rk41(inc)*(d_x_half_1(i)/K_x_half_1(i) &
-    + alpha_x_half_1(i)))
+   + alpha_prime_x_half_1(i)))/(1. +epsn1*DELTAT*rk41(inc)*(d_x_half_1(i)/K_x_half_1(i) &
+    + alpha_prime_x_half_1(i)))
 
 ! this to avoid division by zero outside the PML
 if(abs(d_x_1(i)) > 1.d-6) a_x_1(inc,i) = - DELTAT*rk41(inc)*d_x_1(i) / (K_x_1(i)* K_x_1(i))/&
- (1. +epsn1*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_x_1(i)))
+ (1. +epsn1*DELTAT*rk41(inc)*(d_x_1(i)/K_x_1(i) + alpha_prime_x_1(i)))
 
  if(abs(d_x_half_1(i)) > 1.d-6) a_x_half_1(inc,i) =-DELTAT*rk41(inc)*d_x_half_1(i)/&
    (K_x_half_1(i)*K_x_half_1(i) )/&
    (1. +epsn1*DELTAT*rk41(inc)*(d_x_half_1(i)/K_x_half_1(i)&
-    + alpha_x_half_1(i)))
+    + alpha_prime_x_half_1(i)))
+
+   r_x_1(i) = -(d_x_1(i)/K_x_1(i) + alpha_prime_x_1(i))
+  s_x_1(i) = - d_x_1(i)/K_x_1(i)/K_x_1(i)
+  r_x_half_1(i) = -(d_x_half_1(i)/K_x_half_1(i) + alpha_prime_x_half_1(i))
+  s_x_half_1(i) = - d_x_half_1(i)/K_x_half_1(i)/K_x_half_1(i)
 
   enddo
 
@@ -596,7 +753,7 @@ enddo
         d_y_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
+        alpha_prime_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -606,7 +763,7 @@ enddo
         d_y_half_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
+        alpha_prime_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -621,7 +778,7 @@ enddo
         d_y_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
+        alpha_prime_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -631,44 +788,59 @@ enddo
         d_y_half_1(j) = d0_y * abscissa_normalized**NPOWER
 ! this taken from Gedney page 8.2
         K_y_half_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
-        alpha_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML_1
+        alpha_prime_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
 
     endif
 
 ! just in case, for -5 at the end
-    if(alpha_y_1(j) < ZERO) alpha_y_1(j) = ZERO
-    if(alpha_y_half_1(j) < ZERO) alpha_y_half_1(j) = ZERO
+    if(alpha_prime_y_1(j) < ZERO) alpha_prime_y_1(j) = ZERO
+    if(alpha_prime_y_half_1(j) < ZERO) alpha_prime_y_half_1(j) = ZERO
 
 ! CPML damping parameters for the 4 sub time steps of RK4 algorithm
 do inc=1,4
-    b_y_1(inc,j) =  (1.-epsn*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_y_1(j)))/&
-    (1.+epsn1*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_y_1(j)))
+    b_y_1(inc,j) =  (1.-epsn*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_prime_y_1(j)))/&
+    (1.+epsn1*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_prime_y_1(j)))
     b_y_half_1(inc,j) = (1.-epsn*DELTAT*rk41(inc)*(d_y_half_1(j)/K_y_half_1(j) + &
-    alpha_y_half_1(j)))/(1.+epsn1*DELTAT*rk41(inc)*(d_y_half_1(j)/K_y_half_1(j)&
-     + alpha_y_half_1(j)))
+    alpha_prime_y_half_1(j)))/(1.+epsn1*DELTAT*rk41(inc)*(d_y_half_1(j)/K_y_half_1(j)&
+     + alpha_prime_y_half_1(j)))
 
 ! this to avoid division by zero outside the PML
   if(abs(d_y_1(j)) > 1.d-6) a_y_1(inc,j) = - DELTAT*rk41(inc)*d_y_1(j)&
    / (K_y_1(j)* K_y_1(j))/&
-  (1.+epsn1*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_y_1(j)))
+  (1.+epsn1*DELTAT*rk41(inc)*(d_y_1(j)/K_y_1(j) + alpha_prime_y_1(j)))
  if(abs(d_y_half_1(j)) > 1.d-6) a_y_half_1(inc,j) = -DELTAT*rk41(inc)*d_y_half_1(j) /&
    (K_y_half_1(j) * K_y_half_1(j) )/&
-(1.+epsn1*DELTAT*rk41(inc)*(d_y_half_1(j)/K_y_half_1(j) + alpha_y_half_1(j)))
+(1.+epsn1*DELTAT*rk41(inc)*(d_y_half_1(j)/K_y_half_1(j) + alpha_prime_y_half_1(j)))
   enddo
+
+  r_y_1(j) = -(d_y_1(j)/K_y_1(j) + alpha_prime_y_1(j))
+  s_y_1(j) = - d_y_1(j)/K_y_1(j)/K_y_1(j)
+  r_y_half_1(j) = -(d_y_half_1(j)/K_y_half_1(j) + alpha_prime_y_half_1(j))
+  s_y_half_1(j) = - d_y_half_1(j)/K_y_half_1(j)/K_y_half_1(j)
 
 enddo
 
 ! compute the Lame parameters and density
   do j = -4,NY+4
     do i = -4,NX+4
-        rho(i,j) = density
-        mu(i,j) = density*cs*cs
-        lambda(i,j) = density*(cp*cp - 2.d0*cs*cs)
-    enddo
+      if(HETEROGENEOUS_MODEL .and. DELTAY*dble(j-1) > INTERFACE_HEIGHT) then
+         rho(i,j)= rho_top
+         mu(i,j)= mu_top
+         lambda(i,j) = lambda_top
+         lambdaplustwomu(i,j) = lambdaplustwomu_top
+      else
+         rho(i,j)= rho_bottom
+         mu(i,j)= mu_bottom
+         lambda(i,j) = lambda_bottom
+         lambdaplustwomu(i,j) = lambdaplustwomu_bottom
+      endif
+     enddo
   enddo
 
+
 ! print position of the source
+  print *
   print *,'Position of the source:'
   print *
   print *,'x = ',xsource
@@ -676,27 +848,29 @@ enddo
   print *
 
 ! define location of receivers
+  print *
   print *,'There are ',nrec,' receivers'
   print *
-  xspacerec = (xfin-xdeb) / dble(NREC-1)
-  yspacerec = (yfin-ydeb) / dble(NREC-1)
-  do irec=1,nrec
-    xrec(irec) = xdeb + dble(irec-1)*xspacerec
-    yrec(irec) = ydeb + dble(irec-1)*yspacerec
-  enddo
-! xrec(1)=200.d0
-! yrec(1)=4130.d0
-! xrec(2)=700.d0
-! yrec(2)=2300.d0
-! xrec(3)=800.d0
-! yrec(3)=300.d0
+!  xspacerec = (xfin-xdeb) / dble(NREC-1)
+!  yspacerec = (yfin-ydeb) / dble(NREC-1)
+!  do irec=1,nrec
+!    xrec(irec) = xdeb + dble(irec-1)*xspacerec
+!    yrec(irec) = ydeb + dble(irec-1)*yspacerec
+!  enddo
+
+  xrec(1) = xsource
+  yrec(1) = ysource - 393*DELTAY
+  xrec(2) = xsource
+  yrec(2) = ysource + 191*DELTAY
+  xrec(3) = xsource + 101*DELTAX
+  yrec(3) = ysource
 
 ! find closest grid point for each receiver
   do irec=1,nrec
     dist = HUGEVAL
     do j = 1,NY
     do i = 1,NX
-      distval = sqrt((DELTAX*dble(i-1) - xrec(irec))**2 + (DELTAY*dble(j-1) - yrec(irec))**2)
+      distval = sqrt((DELTAX*dble(i) - xrec(irec))**2 + (DELTAY*dble(j) - yrec(irec))**2)
       if(distval < dist) then
         dist = distval
         ix_rec(irec) = i
@@ -710,27 +884,57 @@ enddo
   enddo
 
 ! check the Courant stability condition for the explicit time scheme
-! R. Courant and K. O. Friedrichs and H. Lewy (1928)
-  Courant_number = cp * DELTAT * sqrt(1.d0/DELTAX**2 + 1.d0/DELTAY**2)
-  print *,'Courant number is ',Courant_number
+! R. Courant et K. O. Friedrichs et H. Lewy (1928)
+  Courant_number_bottom = cp_bottom *dsqrt(taumax)* DELTAT*sqrt(1.d0/DELTAX**2 + 1.d0/DELTAY**2)
+  Dispersion_number_bottom=cs_bottom*dsqrt(taumin)/(2.5d0*f0*max(DELTAX,DELTAY))
+  print *,'Courant number at the bottom is ',Courant_number_bottom
+  print *,'Dispersion number at the bottom is ',Dispersion_number_bottom
   print *
-  if(Courant_number > 1.d0) stop 'time step is too large, simulation will be unstable'
+  if(Courant_number_bottom > 1.d0/coe_sum) stop 'time step is too large, simulation will be unstable'
 
-! suppress old files (can be commented out if "call system" is missing in your compiler)
-! call system('rm -f Vx_*.dat Vy_*.dat image*.pnm image*.gif')
+  if(HETEROGENEOUS_MODEL) then
+    Courant_number_top = cp_top *dsqrt(taumax) * DELTAT* sqrt(1.d0/DELTAX**2 + 1.d0/DELTAY**2 )
+    Dispersion_number_top= cs_top*dsqrt(taumin) /(2.5d0*f0*max(DELTAX,DELTAY))
+    print *,'Courant number at the top is ',Courant_number_top
+    print *
+    print *,'Dispersion number at the top is ',Dispersion_number_top
+    if(Courant_number_top > 1.d0/coe_sum) stop 'time step is too large, simulation will be unstable'
+  endif
 
-! initialize arrays
-  dvx(:,:,:) = ZERO
-  dvy(:,:,:) = ZERO
-  dsigmaxx(:,:,:) = ZERO
-  dsigmayy(:,:,:) = ZERO
-  dsigmaxy(:,:,:) = ZERO
-
+! erase main arrays
   vx(:,:) = ZERO
   vy(:,:) = ZERO
-  sigmaxx(:,:) = ZERO
-  sigmayy(:,:) = ZERO
   sigmaxy(:,:) = ZERO
+  sigmayy(:,:) = ZERO
+  sigmaxx(:,:) = ZERO
+  sigmaxy_R(:,:) = ZERO
+  sigmayy_R(:,:) = ZERO
+  sigmaxx_R(:,:) = ZERO
+
+  dvx(:,:,:) = ZERO
+  dvy(:,:,:) = ZERO
+  dsigmaxy(:,:,:) = ZERO
+  dsigmayy(:,:,:) = ZERO
+  dsigmaxx(:,:,:) = ZERO
+  dsigmaxy_R(:,:,:) = ZERO
+  dsigmayy_R(:,:,:) = ZERO
+  dsigmaxx_R(:,:,:) = ZERO
+
+  e1_mech1(:,:)=ZERO
+  e1_mech2(:,:)=ZERO
+  e11_mech1(:,:)=ZERO
+  e11_mech2(:,:)=ZERO
+  e12_mech1(:,:)=ZERO
+  e12_mech2(:,:)=ZERO
+  e22_mech1(:,:)=ZERO
+  e22_mech2(:,:)=ZERO
+
+  de1_mech1(:,:,:)=ZERO
+  de1_mech2(:,:,:)=ZERO
+  de11_mech1(:,:,:)=ZERO
+  de11_mech2(:,:,:)=ZERO
+  de12_mech1(:,:,:)=ZERO
+  de12_mech2(:,:,:)=ZERO
 
 ! PML
   memory_dvx_dx_1(:,:,:) = ZERO
@@ -742,362 +946,443 @@ enddo
   memory_dsigmaxy_dx_1(:,:,:) = ZERO
   memory_dsigmaxy_dy_1(:,:,:) = ZERO
 
-  memory_dvx_dx_2(:,:,:) = ZERO
-  memory_dvx_dy_2(:,:,:) = ZERO
-  memory_dvy_dx_2(:,:,:) = ZERO
-  memory_dvy_dy_2(:,:,:) = ZERO
-  memory_dsigmaxx_dx_2(:,:,:) = ZERO
-  memory_dsigmayy_dy_2(:,:,:) = ZERO
-  memory_dsigmaxy_dx_2(:,:,:) = ZERO
-  memory_dsigmaxy_dy_2(:,:,:) = ZERO
-
-! initialize seismograms
+! erase seismograms
   sisvx(:,:) = ZERO
   sisvy(:,:) = ZERO
 
 ! initialize total energy
+  total_energy(:) = ZERO
   total_energy_kinetic(:) = ZERO
   total_energy_potential(:) = ZERO
+
+  call date_and_time(datein,timein,zone,time_values)
+! time_values(3): day of the month
+! time_values(5): hour of the day
+! time_values(6): minutes of the hour
+! time_values(7): seconds of the minute
+! time_values(8): milliseconds of the second
+! this fails if we cross the end of the month
+  time_start = 86400.d0*time_values(3) + 3600.d0*time_values(5) + &
+              60.d0*time_values(6) + time_values(7) + time_values(8) / 1000.d0
+
 
 !---
 !---  beginning of time loop
 !---
 
   do it = 1,NSTEP
+      ! v and sigma temporary variables of RK4
 
-! v and sigma temporary variables of RK4
+    dvx(1,:,:) = vx(:,:)
+    dvy(1,:,:) = vy(:,:)
+    dsigmaxx(1,:,:) = sigmaxx(:,:)
+    dsigmayy(1,:,:) = sigmayy(:,:)
+    dsigmaxy(1,:,:) = sigmaxy(:,:)
+    dsigmaxx_R(1,:,:) = sigmaxx_R(:,:)
+    dsigmayy_R(1,:,:) = sigmayy_R(:,:)
+    dsigmaxy_R(1,:,:) = sigmaxy_R(:,:)
 
-      dvx(1,:,:) = vx(:,:)
-      dvy(1,:,:) = vy(:,:)
-      dsigmaxx(1,:,:) = sigmaxx(:,:)
-      dsigmayy(1,:,:) = sigmayy(:,:)
-      dsigmaxy(1,:,:) = sigmaxy(:,:)
+    dvx(4,:,:) = dvx(1,:,:)
+    dvy(4,:,:) = dvy(1,:,:)
+    dsigmaxx(4,:,:) = dsigmaxx(1,:,:)
+    dsigmayy(4,:,:) = dsigmayy(1,:,:)
+    dsigmaxy(4,:,:) = dsigmaxy(1,:,:)
+    dsigmaxx_R(4,:,:) = dsigmaxx_R(1,:,:)
+    dsigmayy_R(4,:,:) = dsigmayy_R(1,:,:)
+    dsigmaxy_R(4,:,:) = dsigmaxy_R(1,:,:)
 
-      dvx(4,:,:) = dvx(1,:,:)
-      dvy(4,:,:) = dvy(1,:,:)
-      dsigmaxx(4,:,:) = dsigmaxx(1,:,:)
-      dsigmayy(4,:,:) = dsigmayy(1,:,:)
-      dsigmaxy(4,:,:) = dsigmaxy(1,:,:)
+    de1_mech1(4,:,:) = de1_mech1(1,:,:)
+    de1_mech2(4,:,:) = de1_mech2(1,:,:)
+    de11_mech1(4,:,:) = de11_mech1(1,:,:)
+    de11_mech2(4,:,:) = de11_mech2(1,:,:)
+    !de22_mech1(4,:,:) = de22_mech1(1,:,:)
+    !de22_mech2(4,:,:) = de22_mech2(1,:,:)
+    de12_mech1(4,:,:) = de12_mech1(1,:,:)
+    de12_mech2(4,:,:) = de12_mech2(1,:,:)
 
-! same thing for CPML memory variables
-      memory_dsigmaxx_dx_1(4,:,:) = memory_dsigmaxx_dx_1(2,:,:)
-      memory_dsigmaxy_dy_1(4,:,:) = memory_dsigmaxy_dy_1(2,:,:)
-      memory_dsigmaxx_dx_2(4,:,:) = memory_dsigmaxx_dx_2(2,:,:)
-      memory_dsigmaxy_dy_2(4,:,:) = memory_dsigmaxy_dy_2(2,:,:)
-      memory_dsigmaxy_dx_1(4,:,:) = memory_dsigmaxy_dx_1(2,:,:)
-      memory_dsigmayy_dy_1(4,:,:) = memory_dsigmayy_dy_1(2,:,:)
-      memory_dsigmaxy_dx_2(4,:,:) = memory_dsigmaxy_dx_2(2,:,:)
-      memory_dsigmayy_dy_2(4,:,:) = memory_dsigmayy_dy_2(2,:,:)
-      memory_dvx_dx_1(4,:,:) = memory_dvx_dx_1(2,:,:)
-      memory_dvy_dy_1(4,:,:) = memory_dvy_dy_1(2,:,:)
-      memory_dvx_dx_2(4,:,:) = memory_dvx_dx_2(2,:,:)
-      memory_dvy_dy_2(4,:,:) = memory_dvy_dy_2(2,:,:)
-      memory_dvy_dx_1(4,:,:) = memory_dvy_dx_1(2,:,:)
-      memory_dvx_dy_1(4,:,:) = memory_dvx_dy_1(2,:,:)
-      memory_dvy_dx_2(4,:,:) = memory_dvy_dx_2(2,:,:)
-      memory_dvx_dy_2(4,:,:) = memory_dvx_dy_2(2,:,:)
+    ! same thing for  memory variables
+    memory_dsigmaxx_dx_1(4,:,:) = memory_dsigmaxx_dx_1(1,:,:)
+    memory_dsigmaxy_dy_1(4,:,:) = memory_dsigmaxy_dy_1(1,:,:)
+    memory_dsigmaxy_dx_1(4,:,:) = memory_dsigmaxy_dx_1(1,:,:)
+    memory_dsigmayy_dy_1(4,:,:) = memory_dsigmayy_dy_1(1,:,:)
+    memory_dvx_dx_1(4,:,:) = memory_dvx_dx_1(1,:,:)
+    memory_dvy_dy_1(4,:,:) = memory_dvy_dy_1(1,:,:)
+    memory_dvy_dx_1(4,:,:) = memory_dvy_dx_1(1,:,:)
+    memory_dvx_dy_1(4,:,:) = memory_dvx_dy_1(1,:,:)
 
-! RK4 loop (loop on the four RK4 substeps)
- do inc= 1,4
+      ! RK4 loop (loop on the four RK4 substeps)
+    do inc= 1,4
 
-!------------------
-! compute velocity
-!------------------
+     !------------------
+     ! compute velocity
+     !------------------
+      do j = 2,NY
+            do i = 2,NX
 
-    do j = 2,NY
-      do i = 2,NX
+          value_dsigmaxx_dx = ( c1 * (dsigmaxx(1,i,j) - dsigmaxx(1,i-1,j)) + c2 * (dsigmaxx(1,i+1,j) - dsigmaxx(1,i-2,j)) + &
+                    c3 * (dsigmaxx(1,i+2,j) - dsigmaxx(1,i-3,j)) + c4 * (dsigmaxx(1,i+3,j) - dsigmaxx(1,i-4,j)) ) * ONE_OVER_DELTAX
 
-        value_dsigmaxx_dx = ( c1 * (dsigmaxx(1,i,j) - dsigmaxx(1,i-1,j)) + c2 * (dsigmaxx(1,i+1,j) - dsigmaxx(1,i-2,j)) + &
-         c3 * (dsigmaxx(1,i+2,j) - dsigmaxx(1,i-3,j)) + c4 * (dsigmaxx(1,i+3,j) - dsigmaxx(1,i-4,j)) )/ DELTAX
+          value_dsigmaxy_dy = ( c1 * (dsigmaxy(1,i,j) - dsigmaxy(1,i,j-1)) + c2* (dsigmaxy(1,i,j+1) - dsigmaxy(1,i,j-2)) + &
+                    c3 * (dsigmaxy(1,i,j+2) - dsigmaxy(1,i,j-3)) + c4 * (dsigmaxy(1,i,j+3) - dsigmaxy(1,i,j-4)) ) * ONE_OVER_DELTAY
 
-        value_dsigmaxy_dy = ( c1 * (dsigmaxy(1,i,j) - dsigmaxy(1,i,j-1)) + c2* (dsigmaxy(1,i,j+1) - dsigmaxy(1,i,j-2)) + &
-         c3 * (dsigmaxy(1,i,j+2) - dsigmaxy(1,i,j-3)) + c4 * (dsigmaxy(1,i,j+3) - dsigmaxy(1,i,j-4)) )/ DELTAY
+          if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
 
-    if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
-      memory_dsigmaxx_dx_1(2,i,j) = b_x_1(inc,i) * memory_dsigmaxx_dx_1(4,i,j) + a_x_1(inc,i) * value_dsigmaxx_dx
-      memory_dsigmaxy_dy_1(2,i,j) = b_y_1(inc,j) * memory_dsigmaxy_dy_1(4,i,j) + a_y_1(inc,j) * value_dsigmaxy_dy
+          memory_dsigmaxx_dx_1(2,i,j) = r_x_1(i) * memory_dsigmaxx_dx_1(1,i,j) + s_x_1(i) * value_dsigmaxx_dx
+          memory_dsigmaxy_dy_1(2,i,j) = r_y_1(j) * memory_dsigmaxy_dy_1(1,i,j) + s_y_1(j) * value_dsigmaxy_dy
 
-      value_dsigmaxx_dx = value_dsigmaxx_dx / K_x_1(i) + memory_dsigmaxx_dx_1(1,i,j)
-      value_dsigmaxy_dy = value_dsigmaxy_dy / K_y_1(j) + memory_dsigmaxy_dy_1(1,i,j)
-    endif
+        value_dsigmaxx_dx = value_dsigmaxx_dx / K_x_1(i) + memory_dsigmaxx_dx_1(1,i,j)
+          value_dsigmaxy_dy = value_dsigmaxy_dy / K_y_1(j) + memory_dsigmaxy_dy_1(1,i,j)
+          endif
 
-      dvx(2,i,j) = (value_dsigmaxx_dx + value_dsigmaxy_dy) / rho(i,j)
+          dvx(2,i,j) = (value_dsigmaxx_dx + value_dsigmaxy_dy)/rho(i,j)
 
-    enddo
-  enddo
+            enddo
+        enddo
 
-    do j = 1,NY-1
-      do i = 1,NX-1
+        do j = 1,NY-1
+            do i = 1,NX-1
+             rho_half_x_half_y = 0.25d0 * (rho(i,j) + rho(i+1,j) + rho(i+1,j+1) + rho(i,j+1))
 
-! interpolate density at the right location in the staggered grid cell
-      rho_half_x_half_y = 0.25d0 * (rho(i,j) + rho(i+1,j) + rho(i+1,j+1) + rho(i,j+1))
+             value_dsigmaxy_dx = ( c1 * (dsigmaxy(1,i+1,j) - dsigmaxy(1,i,j)) + c2 * (dsigmaxy(1,i+2,j) - dsigmaxy(1,i-1,j)) + &
+                    c3 * (dsigmaxy(1,i+3,j) - dsigmaxy(1,i-2,j)) + c4 * (dsigmaxy(1,i+4,j) - dsigmaxy(1,i-3,j)) )* ONE_OVER_DELTAX
 
-        value_dsigmaxy_dx = ( c1 * (dsigmaxy(1,i+1,j) - dsigmaxy(1,i,j)) + c2 * (dsigmaxy(1,i+2,j) - dsigmaxy(1,i-1,j)) + &
-         c3 * (dsigmaxy(1,i+3,j) - dsigmaxy(1,i-2,j)) + c4 * (dsigmaxy(1,i+4,j) - dsigmaxy(1,i-3,j)) )/ DELTAX
+             value_dsigmayy_dy = ( c1 * (dsigmayy(1,i,j+1) - dsigmayy(1,i,j)) + c2 * (dsigmayy(1,i,j+2) - dsigmayy(1,i,j-1)) + &
+                    c3 * (dsigmayy(1,i,j+3) - dsigmayy(1,i,j-2)) + c4 * (dsigmayy(1,i,j+4) - dsigmayy(1,i,j-3)) )* ONE_OVER_DELTAY
 
-        value_dsigmayy_dy = ( c1 * (dsigmayy(1,i,j+1) - dsigmayy(1,i,j)) + c2 * (dsigmayy(1,i,j+2) - dsigmayy(1,i,j-1)) + &
-         c3 * (dsigmayy(1,i,j+3) - dsigmayy(1,i,j-2)) + c4 * (dsigmayy(1,i,j+4) - dsigmayy(1,i,j-3)) )/ DELTAY
+            if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+            memory_dsigmaxy_dx_1(2,i,j) = r_x_half_1(i) * memory_dsigmaxy_dx_1(1,i,j) + s_x_half_1(i) * value_dsigmaxy_dx
+            memory_dsigmayy_dy_1(2,i,j) = r_y_half_1(j) * memory_dsigmayy_dy_1(1,i,j) + s_y_half_1(j) * value_dsigmayy_dy
 
-    if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
-      memory_dsigmaxy_dx_1(2,i,j) = b_x_half_1(inc,i) * memory_dsigmaxy_dx_1(4,i,j) + a_x_half_1(inc,i) * value_dsigmaxy_dx
-      memory_dsigmayy_dy_1(2,i,j) = b_y_half_1(inc,j) * memory_dsigmayy_dy_1(4,i,j) + a_y_half_1(inc,j) * value_dsigmayy_dy
+            value_dsigmaxy_dx = value_dsigmaxy_dx/K_x_half_1(i)+memory_dsigmaxy_dx_1(1,i,j)
+            value_dsigmayy_dy = value_dsigmayy_dy/K_y_half_1(j)+memory_dsigmayy_dy_1(1,i,j)
+            endif
 
-      value_dsigmaxy_dx = value_dsigmaxy_dx/K_x_half_1(i)+memory_dsigmaxy_dx_1(1,i,j)
-      value_dsigmayy_dy = value_dsigmayy_dy/K_y_half_1(j)+memory_dsigmayy_dy_1(1,i,j)
-    endif
+                dvy(2,i,j) = (value_dsigmaxy_dx + value_dsigmayy_dy) /rho_half_x_half_y
+            enddo
+        enddo
 
-      dvy(2,i,j) = (value_dsigmaxy_dx + value_dsigmayy_dy) / rho_half_x_half_y
 
-    enddo
-  enddo
+    ! add the source (force vector located at a given grid point)
+     a = pi*pi*f0*f0;
+     t = (dble(it-1)+ rk41(inc)) * DELTAT
 
-! add the source (force vector located at a given grid point)
-  a = pi*pi*f0*f0
-  t = (dble(it-1)+ rk41(inc)) * DELTAT
+    ! Gaussian
+    ! source_term = factor * exp(-a*(t-t0)**2)
 
-! Gaussian
-! source_term = factor * exp(-a*(t-t0)**2) !
+    ! first derivative of a Gaussian
+    source_term = - factor * 2.d0*a*(t-t0)*exp(-a*(t-t0)**2)
 
-! first derivative of a Gaussian
-  source_term = - factor * 2.d0*a*(t-t0)*exp(-a*(t-t0)**2)
+    ! Ricker source time function (second derivative of a Gaussian)
+    ! source_term = factor * (1.d0 - 2.d0*a*(t-t0)**2)*exp(-a*(t-t0)**2)
 
-! Ricker source time function (second derivative of a Gaussian)
-! source_term = factor * (1.d0 - 2.d0*a*(t-t0)**2)*exp(-a*(t-t0)**2)
+    force_x = sin(ANGLE_FORCE * DEGREES_TO_RADIANS) * source_term
+    force_y = cos(ANGLE_FORCE * DEGREES_TO_RADIANS) * source_term
 
-  force_x = sin(ANGLE_FORCE * DEGREES_TO_RADIANS) * source_term
-  force_y = cos(ANGLE_FORCE * DEGREES_TO_RADIANS) * source_term
+    ! define location of the source
+      i = ISOURCE
+      j = JSOURCE
 
-! define location of the source
-  i = ISOURCE
-  j = JSOURCE
+    ! interpolate density at the right location in the staggered grid cell
+    dvx(2,i,j) = dvx(2,i,j) + force_x/ rho(i,j)
 
-! interpolate density at the right location in the staggered grid cell
-  rho_half_x_half_y = 0.25d0 * (rho(i,j) + rho(i+1,j) + rho(i+1,j+1) + rho(i,j+1))
+    rho_half_x_half_y = 0.25d0 * (rho(i,j) + rho(i+1,j) + rho(i+1,j+1) + rho(i,j+1))
+    dvy(2,i,j) = dvy(2,i,j) + force_y/ rho_half_x_half_y
 
-  dvx(2,i,j) = dvx(2,i,j) + force_x  / rho(i,j)
-  dvy(2,i,j) = dvy(2,i,j) + force_y / rho_half_x_half_y
+    ! Dirichlet conditions (rigid boundaries) on all the edges of the grid
+        dvx(:,-4:1,:) = ZERO
+        dvx(:,NX:NX+4,:) = ZERO
 
-! Dirichlet conditions (rigid boundaries) on all the edges of the grid
-  dvx(:,-4:1,:) = ZERO
-  dvx(:,NX:NX+4,:) = ZERO
+        dvx(:,:,-4:1) = ZERO
+        dvx(:,:,NY:NY+4) = ZERO
 
-  dvx(:,:,-4:1) = ZERO
-  dvx(:,:,NY:NY+4) = ZERO
+        dvy(:,-4:1,:) = ZERO
+        dvy(:,NX:NX+4,:) = ZERO
 
-  dvy(:,-4:1,:) = ZERO
-  dvy(:,NX:NX+4,:) = ZERO
+        dvy(:,:,-4:1) = ZERO
+        dvy(:,:,NY:NY+4) = ZERO
 
-  dvy(:,:,-4:1) = ZERO
-  dvy(:,:,NY:NY+4) = ZERO
+   !----------------------
+   ! compute stress sigma
+   !----------------------
 
-!----------------------
-! compute stress sigma
-!----------------------
+   do j=2,NY
+     do i=1,NX-1
 
-  do j = 2,NY
-    do i = 1,NX-1
+      mul_relaxed = 0.5d0 * (mu(i+1,j) + mu(i,j))
+      lambdal_relaxed = 0.5d0 * (lambda(i+1,j) + lambda(i,j))
+      lambdalplus2mul_relaxed = 0.5d0 * (lambdaplustwomu(i+1,j) + lambdaplustwomu(i,j))
 
-! interpolate material parameters at the right location in the staggered grid cell
-      lambda_half_x = 0.5d0 * (lambda(i+1,j) + lambda(i,j))
-      mu_half_x = 0.5d0 * (mu(i+1,j) + mu(i,j))
-      lambda_plus_two_mu_half_x = lambda_half_x + 2.d0 * mu_half_x
+      lambdal_unrelaxed = (lambdal_relaxed + 2.d0/DIM*mul_relaxed) * Mu_nu1 - 2.d0/DIM*mul_relaxed * Mu_nu2
+      mul_unrelaxed = mul_relaxed * Mu_nu2
+      lambdalplus2mul_unrelaxed = lambdal_unrelaxed + TWO*mul_unrelaxed
 
         value_dvx_dx = ( c1 * (dvx(1,i+1,j) - dvx(1,i,j)) + c2 * (dvx(1,i+2,j) - dvx(1,i-1,j)) + &
-         c3 * (dvx(1,i+3,j) - dvx(1,i-2,j)) + c4 * (dvx(1,i+4,j) - dvx(1,i-3,j)) )/ DELTAX
+                  c3 * (dvx(1,i+3,j) - dvx(1,i-2,j)) + c4 * (dvx(1,i+4,j) - dvx(1,i-3,j)) )* ONE_OVER_DELTAX
 
         value_dvy_dy = ( c1 * (dvy(1,i,j) - dvy(1,i,j-1)) + c2 * (dvy(1,i,j+1) - dvy(1,i,j-2)) + &
-         c3 * (dvy(1,i,j+2) - dvy(1,i,j-3)) + c4 * (dvy(1,i,j+3) - dvy(1,i,j-4)) )/ DELTAY
+                  c3 * (dvy(1,i,j+2) - dvy(1,i,j-3)) + c4 * (dvy(1,i,j+3) - dvy(1,i,j-4)) )* ONE_OVER_DELTAY
 
-    if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
-      memory_dvx_dx_1(2,i,j) = b_x_half_1(inc,i) * memory_dvx_dx_1(4,i,j) + a_x_half_1(inc,i) * value_dvx_dx
-      memory_dvy_dy_1(2,i,j) = b_y_1(inc,j) * memory_dvy_dy_1(4,i,j) + a_y_1(inc,j) * value_dvy_dy
+        duxdx = value_dvx_dx
+        duydy = value_dvy_dy
 
-      value_dvx_dx = value_dvx_dx / K_x_half_1(i)  + memory_dvx_dx_1(1,i,j)
-      value_dvy_dy = value_dvy_dy / K_y_1(j) + memory_dvy_dy_1(1,i,j)
-    endif
+      if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+           memory_dvx_dx_1(2,i,j) = r_x_half_1(i) * memory_dvx_dx_1(1,i,j) + s_x_half_1(i) * value_dvx_dx
+           memory_dvy_dy_1(2,i,j) = r_y_1(j) * memory_dvy_dy_1(1,i,j) + s_y_1(j) * value_dvy_dy
 
-      dsigmaxx(2,i,j) = (lambda_plus_two_mu_half_x * value_dvx_dx + lambda_half_x * value_dvy_dy)
-      dsigmayy(2,i,j) =  (lambda_half_x * value_dvx_dx + lambda_plus_two_mu_half_x * value_dvy_dy)
+           duxdx = value_dvx_dx / K_x_half_1(i) + memory_dvx_dx_1(1,i,j)
+           duydy = value_dvy_dy / K_y_1(j) + memory_dvy_dy_1(1,i,j)
+        endif
 
+      div=duxdx+duydy
+
+!evolution e1_mech1
+ tauinv = - inv_tau_sigma_nu1_mech1
+ Sn   = div * phi_nu1_mech1
+ de1_mech1(2,i,j) = tauinv * de1_mech1(1,i,j) + Sn
+
+!evolution e1_mech2
+ tauinv = - inv_tau_sigma_nu1_mech2
+ Sn   = div * phi_nu1_mech2
+ de1_mech2(2,i,j) = tauinv * de1_mech2(1,i,j) + Sn
+
+! evolution e11_mech1
+ tauinv = - inv_tau_sigma_nu2_mech1
+ Sn   = (duxdx - div/DIM) * phi_nu2_mech1
+ de11_mech1(2,i,j) = tauinv * de11_mech1(1,i,j) + Sn
+
+! evolution e11_mech2
+ tauinv = - inv_tau_sigma_nu2_mech2
+ Sn   = (duxdx - div/DIM) * phi_nu2_mech2
+ de11_mech2(2,i,j) = tauinv * de11_mech2(1,i,j) + Sn
+
+!add the memory variables using the relaxed parameters (Carcione page 111)
+! there is a bug in Carcione's equation for sigma_zz
+  dsigmaxx(2,i,j) = ((lambdal_relaxed + 2.d0/DIM*mul_relaxed)* &
+        (de1_mech1(1,i,j) + de1_mech2(1,i,j)) + TWO * mul_relaxed * (de11_mech1(1,i,j) + de11_mech2(1,i,j))+ &
+        (lambdalplus2mul_unrelaxed * (duxdx) + lambdal_unrelaxed* (duydy) ))
+
+ dsigmayy(2,i,j) = ((lambdal_relaxed + 2.d0*mul_relaxed)* &
+        (de1_mech1(1,i,j) + de1_mech2(1,i,j)) - TWO/DIM * mul_relaxed * (de11_mech1(1,i,j) + de11_mech2(1,i,j)) + &
+        (lambdal_unrelaxed * (duxdx) + lambdalplus2mul_unrelaxed* (duydy) ))
+
+! compute the stress using the unrelaxed Lame parameters (Carcione page 111)
+  dsigmaxx_R(2,i,j) = lambdalplus2mul_relaxed * (duxdx) + lambdal_relaxed* (duydy)
+
+  dsigmayy_R(2,i,j) = lambdal_relaxed * (duxdx) + lambdalplus2mul_relaxed* (duydy)
+
+     enddo
     enddo
-  enddo
 
-    do j = 1,NY-1
-      do i = 2,NX
+   do j=1,NY-1
+     do i=2,NX
+      mul_relaxed = 0.5d0 * (mu(i,j+1) + mu(i,j))
+      mul_unrelaxed = mul_relaxed * Mu_nu2
 
-! interpolate material parameters at the right location in the staggered grid cell
-      mu_half_y = 0.5d0 * (mu(i,j+1) + mu(i,j))
-
-        value_dvx_dy = ( c1 * (dvx(1,i,j+1) - dvx(1,i,j)) + c2 * (dvx(1,i,j+2) - dvx(1,i,j-1)) +  &
-        c3 * (dvx(1,i,j+3) - dvx(1,i,j-2)) + c4 * (dvx(1,i,j+4) - dvx(1,i,j-3)) )/ DELTAY
         value_dvy_dx = ( c1 * (dvy(1,i,j) - dvy(1,i-1,j)) + c2 * (dvy(1,i+1,j) - dvy(1,i-2,j)) + &
-        c3 * (dvy(1,i+2,j) - dvy(1,i-3,j)) + c4 * (dvy(1,i+3,j) - dvy(1,i-4,j)) )/ DELTAX
+            c3 * (dvy(1,i+2,j) - dvy(1,i-3,j)) + c4 * (dvy(1,i+3,j) - dvy(1,i-4,j)) )* ONE_OVER_DELTAX
 
-    if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
-      memory_dvy_dx_1(2,i,j) = b_x_1(inc,i) * memory_dvy_dx_1(4,i,j) + a_x_1(inc,i) * value_dvy_dx
-      memory_dvx_dy_1(2,i,j) = b_y_half_1(inc,j) * memory_dvx_dy_1(4,i,j) + a_y_half_1(inc,j) * value_dvx_dy
+         value_dvx_dy = ( c1 * (dvx(1,i,j+1) - dvx(1,i,j)) + c2 * (dvx(1,i,j+2) - dvx(1,i,j-1)) +  &
+            c3 * (dvx(1,i,j+3) - dvx(1,i,j-2)) + c4 * (dvx(1,i,j+4) - dvx(1,i,j-3)) )* ONE_OVER_DELTAY
 
-      value_dvy_dx = value_dvy_dx / K_x_1(i)  + memory_dvy_dx_1(1,i,j)
-      value_dvx_dy = value_dvx_dy / K_y_half_1(j) + memory_dvx_dy_1(1,i,j)
-    endif
+             duydx = value_dvy_dx
+             duxdy = value_dvx_dy
 
-      dsigmaxy(2,i,j) = mu_half_y * (value_dvy_dx + value_dvx_dy)
+           if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+           memory_dvy_dx_1(2,i,j) = r_x_1(i) * memory_dvy_dx_1(1,i,j) + s_x_1(i) * value_dvy_dx
+           memory_dvx_dy_1(2,i,j) = r_y_half_1(j) * memory_dvx_dy_1(1,i,j) + s_y_half_1(j) * value_dvx_dy
 
+           duydx = value_dvy_dx / K_x_1(i)  + memory_dvy_dx_1(1,i,j)
+           duxdy = value_dvx_dy / K_y_half_1(j) + memory_dvx_dy_1(1,i,j)
+           endif
+
+! evolution e12_mech1
+     tauinv = - inv_tau_sigma_nu2_mech1
+     Sn   = (duxdy+duydx) * phi_nu2_mech1
+     de12_mech1(2,i,j) = tauinv * de12_mech1(1,i,j) + Sn
+
+! evolution e12_mech2
+     tauinv = - inv_tau_sigma_nu2_mech2
+     Sn   = (duxdy+duydx) * phi_nu2_mech2
+     de12_mech2(2,i,j) = tauinv * de12_mech2(1,i,j) + Sn
+
+    dsigmaxy(2,i,j) = mul_relaxed * (de12_mech1(1,i,j) + de12_mech2(1,i,j))+mul_unrelaxed * (duxdy+duydx)
+    dsigmaxy_R(2,i,j) = mul_relaxed * (duxdy+duydx)
+
+      enddo
     enddo
-  enddo
 
 ! The new values of the different variables v and sigma are computed
-      dvx(1,:,:) = dvx(4,:,:) + rk41(inc) * dvx(2,:,:) * DELTAT
-      dvy(1,:,:) = dvy(4,:,:) + rk41(inc) * dvy(2,:,:) * DELTAT
-      dsigmaxx(1,:,:) = dsigmaxx(4,:,:) + rk41(inc) * dsigmaxx(2,:,:) * DELTAT
-      dsigmayy(1,:,:) = dsigmayy(4,:,:) + rk41(inc) * dsigmayy(2,:,:) * DELTAT
-      dsigmaxy(1,:,:) = dsigmaxy(4,:,:) + rk41(inc) * dsigmaxy(2,:,:) * DELTAT
+        dvx(1,:,:) = dvx(4,:,:) + rk41(inc) * dvx(2,:,:) * DELTAT
+        dvy(1,:,:) = dvy(4,:,:) + rk41(inc) * dvy(2,:,:) * DELTAT
+        dsigmaxx(1,:,:) = dsigmaxx(4,:,:) + rk41(inc) * dsigmaxx(2,:,:) * DELTAT
+        dsigmayy(1,:,:) = dsigmayy(4,:,:) + rk41(inc) * dsigmayy(2,:,:) * DELTAT
+        dsigmaxy(1,:,:) = dsigmaxy(4,:,:) + rk41(inc) * dsigmaxy(2,:,:) * DELTAT
+        dsigmaxx_R(1,:,:) = dsigmaxx_R(4,:,:) + rk41(inc) * dsigmaxx_R(2,:,:) * DELTAT
+        dsigmayy_R(1,:,:) = dsigmayy_R(4,:,:) + rk41(inc) * dsigmayy_R(2,:,:) * DELTAT
+        dsigmaxy_R(1,:,:) = dsigmaxy_R(4,:,:) + rk41(inc) * dsigmaxy_R(2,:,:) * DELTAT
 
-      memory_dsigmaxx_dx_1(1,:,:) = memory_dsigmaxx_dx_1(2,:,:)
-      memory_dsigmaxy_dy_1(1,:,:) = memory_dsigmaxy_dy_1(2,:,:)
-      memory_dsigmaxy_dx_1(1,:,:) = memory_dsigmaxy_dx_1(2,:,:)
-      memory_dsigmayy_dy_1(1,:,:) = memory_dsigmayy_dy_1(2,:,:)
-      memory_dvx_dx_1(1,:,:) = memory_dvx_dx_1(2,:,:)
-      memory_dvy_dy_1(1,:,:) = memory_dvy_dy_1(2,:,:)
-      memory_dvx_dy_1(1,:,:) = memory_dvx_dy_1(2,:,:)
-      memory_dvy_dx_1(1,:,:) = memory_dvy_dx_1(2,:,:)
 
-! Dirichlet conditions (rigid boundaries) on all the edges of the grid
-  dvx(:,-4:1,:) = ZERO
-  dvx(:,NX:NX+4,:) = ZERO
+        de1_mech1(1,:,:) = de1_mech1(4,:,:) + rk41(inc) * de1_mech1(2,:,:) * DELTAT
+        de1_mech2(1,:,:) = de1_mech2(4,:,:) + rk41(inc) * de1_mech2(2,:,:) * DELTAT
+        de11_mech1(1,:,:) = de11_mech1(4,:,:) + rk41(inc) * de11_mech1(2,:,:) * DELTAT
+        de11_mech2(1,:,:) = de11_mech2(4,:,:) + rk41(inc) * de11_mech2(2,:,:) * DELTAT
+        de12_mech1(1,:,:) = de12_mech1(4,:,:) + rk41(inc) * de12_mech1(2,:,:) * DELTAT
+        de12_mech2(1,:,:) = de12_mech2(4,:,:) + rk41(inc) * de12_mech2(2,:,:) * DELTAT
 
-  dvx(:,:,-4:1) = ZERO
-  dvx(:,:,NY:NY+4) = ZERO
+        memory_dsigmaxx_dx_1(1,:,:) = memory_dsigmaxx_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxx_dx_1(2,:,:)
+        memory_dsigmaxy_dy_1(1,:,:) = memory_dsigmaxy_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxy_dy_1(2,:,:)
+        memory_dsigmaxy_dx_1(1,:,:) = memory_dsigmaxy_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxy_dx_1(2,:,:)
+        memory_dsigmayy_dy_1(1,:,:) = memory_dsigmayy_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmayy_dy_1(2,:,:)
+        memory_dvx_dx_1(1,:,:) = memory_dvx_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dvx_dx_1(2,:,:)
+        memory_dvy_dy_1(1,:,:) = memory_dvy_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dvy_dy_1(2,:,:)
+        memory_dvx_dy_1(1,:,:) = memory_dvx_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dvx_dy_1(2,:,:)
+        memory_dvy_dx_1(1,:,:) = memory_dvy_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dvy_dx_1(2,:,:)
 
-  dvy(:,-4:1,:) = ZERO
-  dvy(:,NX:NX+4,:) = ZERO
+        ! Dirichlet conditions (rigid boundaries) on all the edges of the grid
+        dvx(:,-4:1,:) = ZERO
+        dvx(:,NX:NX+4,:) = ZERO
 
-  dvy(:,:,-4:1) = ZERO
-  dvy(:,:,NY:NY+4) = ZERO
+        dvx(:,:,-4:1) = ZERO
+        dvx(:,:,NY:NY+4) = ZERO
 
-  vx(-4:1,:) = ZERO
-  vx(:,-4:1) = ZERO
-  vy(-4:1,:) = ZERO
-  vy(:,-4:1) = ZERO
+        dvy(:,-4:1,:) = ZERO
+        dvy(:,NX:NX+4,:) = ZERO
 
-  vx(NX:NX+4,:) = ZERO
-  vx(:,NY:NY+4) = ZERO
-  vy(NX:NX+4,:) = ZERO
-  vy(:,NY:NY+4) = ZERO
+        dvy(:,:,-4:1) = ZERO
+        dvy(:,:,NY:NY+4) = ZERO
 
-   enddo
+        vx(-4:1,:) = ZERO
+        vx(:,-4:1) = ZERO
+        vy(-4:1,:) = ZERO
+        vy(:,-4:1) = ZERO
 
-      vx(:,:) =  dvx(1,:,:)
-      vy(:,:) =  dvy(1,:,:)
-      sigmaxx(:,:) =  dsigmaxx(1,:,:)
-      sigmayy(:,:) =  dsigmayy(1,:,:)
-      sigmaxy(:,:) =  dsigmaxy(1,:,:)
+        vx(NX:NX+4,:) = ZERO
+        vx(:,NY:NY+4) = ZERO
+        vy(NX:NX+4,:) = ZERO
+        vy(:,NY:NY+4) = ZERO
+
+  enddo
+
+  vx(:,:) =  dvx(1,:,:)
+  vy(:,:) =  dvy(1,:,:)
+  sigmaxx(:,:) =  dsigmaxx(1,:,:)
+  sigmayy(:,:) =  dsigmayy(1,:,:)
+  sigmaxy(:,:) =  dsigmaxy(1,:,:)
+  sigmaxx_R(:,:) =  dsigmaxx_R(1,:,:)
+  sigmayy_R(:,:) =  dsigmayy_R(1,:,:)
+  sigmaxy_R(:,:) =  dsigmaxy_R(1,:,:)
+
+  e1_mech1(:,:) = de1_mech1(1,:,:)
+  e1_mech2(:,:) = de1_mech2(1,:,:)
+  e11_mech1(:,:) = de11_mech1(1,:,:)
+  e11_mech2(:,:) = de11_mech2(1,:,:)
+  e12_mech1(:,:) = de12_mech1(1,:,:)
+  e12_mech2(:,:) = de12_mech2(1,:,:)
 
 ! end of RK4 loop
 
 ! store seismograms
-  do irec = 1,NREC
-    sisvx(it,irec) = (vx(ix_rec(irec),iy_rec(irec))+&
-      vx(ix_rec(irec)+1,iy_rec(irec))+&
-      vx(ix_rec(irec),iy_rec(irec)+1)+&
-      vx(ix_rec(irec)+1,iy_rec(irec)+1))/4.d0
-    sisvy(it,irec) = vy(ix_rec(irec),iy_rec(irec))
-  enddo
+    do irec = 1,NREC
+      sisvx(it,irec) = vx(ix_rec(irec),iy_rec(irec))
+      sisvy(it,irec) = vy(ix_rec(irec),iy_rec(irec))
+    enddo
 
 ! compute total energy in the medium (without the PML layers)
+  local_energy_kinetic = ZERO
+  local_energy_potential = ZERO
+
+
+    do j = NPOINTS_PML, NY-NPOINTS_PML+1
+      do i = NPOINTS_PML, NX-NPOINTS_PML+1
 
 ! compute kinetic energy first, defined as 1/2 rho ||v||^2
 ! in principle we should use rho_half_x_half_y instead of rho for vy
 ! in order to interpolate density at the right location in the staggered grid cell
 ! but in a homogeneous medium we can safely ignore it
-  total_energy_kinetic(it) = 0.5d0 * sum( &
-      rho(NPOINTS_PML+1:NX-NPOINTS_PML,NPOINTS_PML+1:NY-NPOINTS_PML)*( &
-       vx(NPOINTS_PML+1:NX-NPOINTS_PML,NPOINTS_PML+1:NY-NPOINTS_PML)**2 +  &
-       vy(NPOINTS_PML+1:NX-NPOINTS_PML,NPOINTS_PML+1:NY-NPOINTS_PML)**2))
+      local_energy_kinetic = local_energy_kinetic + 0.5d0 * rho(i,j)*( &
+              vx(i,j)**2 + vy(i,j)**2)
+
+        total_energy_kinetic(it) = local_energy_kinetic
 
 ! add potential energy, defined as 1/2 epsilon_ij sigma_ij
 ! in principle we should interpolate the medium parameters at the right location
 ! in the staggered grid cell but in a homogeneous medium we can safely ignore it
-  total_energy_potential(it) = ZERO
-  do j = NPOINTS_PML+1, NY-NPOINTS_PML
-    do i = NPOINTS_PML+1, NX-NPOINTS_PML
-      epsilon_xx = ((lambda(i,j) + 2.d0*mu(i,j)) * sigmaxx(i,j) - lambda(i,j) * &
-        sigmayy(i,j)) / (4.d0 * mu(i,j) * (lambda(i,j) + mu(i,j)))
-      epsilon_yy = ((lambda(i,j) + 2.d0*mu(i,j)) * sigmayy(i,j) - lambda(i,j) * &
-        sigmaxx(i,j)) / (4.d0 * mu(i,j) * (lambda(i,j) + mu(i,j)))
-      epsilon_xy = sigmaxy(i,j) / (2.d0 * mu(i,j))
-      total_energy_potential(it) = total_energy_potential(it) + &
-        0.5d0 * (epsilon_xx * sigmaxx(i,j) + epsilon_yy * sigmayy(i,j) + 2.d0 * epsilon_xy * sigmaxy(i,j))
+
+! compute total field from split components
+      epsilon_xx = ((lambda(i,j) + 2.d0*mu(i,j)) * sigmaxx_R(i,j) - lambda(i,j) * sigmayy_R(i,j)) / &
+                   (4.d0 * mu(i,j) * (lambda(i,j) + mu(i,j)))
+
+      epsilon_yy = ((lambda(i,j) + 2.d0*mu(i,j)) * sigmayy_R(i,j) - lambda(i,j) * sigmaxx_R(i,j)) / &
+                   (4.d0 * mu(i,j) * (lambda(i,j) + mu(i,j)))
+
+      epsilon_xy = sigmaxy_R(i,j) / (2.d0 * mu(i,j))
+
+      local_energy_potential = local_energy_potential + &
+        0.5d0 * (epsilon_xx * sigmaxx_R(i,j) + epsilon_yy * sigmayy_R(i,j) + &
+        epsilon_yy * sigmayy_R(i,j)+ 2.d0 * epsilon_xy * sigmaxy_R(i,j))
+
+      total_energy_potential(it) = local_energy_potential
+
+        enddo
     enddo
-  enddo
+
+      total_energy(it) = total_energy_kinetic(it) + total_energy_potential(it)
 
 ! output information
   if(mod(it,IT_DISPLAY) == 0 .or. it == 5) then
-
-! print maximum of norm of velocity
-    velocnorm = maxval(sqrt(vx**2 + vy**2))
-    print *,'Time step # ',it
-    print *,'Time: ',sngl((it-1)*DELTAT),' seconds'
-    print *,'Max norm velocity vector V (m/s) = ',velocnorm
-    print *,'total energy = ',total_energy_kinetic(it) + total_energy_potential(it)
-    print *
+        Vsolidnorm = maxval(sqrt(vx**2 + vy**2))
+      print *,'Time step # ',it
+      print *,'Time: ',sngl((it-1)*DELTAT),' seconds'
+      print *,'Max norm velocity vector V (m/s) = ',Vsolidnorm
+      print *,'Total energy = ',total_energy(it)
 ! check stability of the code, exit if unstable
-    if(velocnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
+      if(Vsolidnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up in solid'
 
-    call create_color_image(vx(1:NX,1:NY),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
-                         NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,1)
-    call create_color_image(vy(1:NX,1:NY),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
-                         NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,2)
-  open(unit=20,file='energy.dat',status='unknown')
-  do it2 = 1,NSTEP
-    write(20,*) sngl(dble(it2-1)*DELTAT),sngl(total_energy_kinetic(it2)), &
-       sngl(total_energy_potential(it2)),sngl(total_energy_kinetic(it2) + total_energy_potential(it2))
-  enddo
-  close(20)
-  call write_seismograms(sisvx,sisvy,NSTEP,NREC,DELTAT)
-
-  endif
-
-  enddo   ! end of time loop
+! save energy
+     open(unit=21,file='energy.dat',status='unknown')
+     do it2=1,NSTEP
+       write(21,*) sngl(dble(it2-1)*DELTAT),total_energy_kinetic(it2),&
+          total_energy_potential(it2),total_energy(it2)
+     enddo
+     close(21)
 
 ! save seismograms
-  call write_seismograms(sisvx,sisvy,NSTEP,NREC,DELTAT)
+    print *,'saving seismograms'
+    print *
+    call write_seismograms(sisvx,sisvy,NSTEP,NREC,DELTAT,t0)
+
+    call create_color_image(vx(1:NX,1:NY),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+                         NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,1,max_amplitudeVx,JINTERFACE)
+    call create_color_image(vy(1:NX,1:NY),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+                         NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,2,max_amplitudeVy,JINTERFACE)
+
+    endif
+
+! --- end of time loop
+  enddo
+
+! save seismograms
+  call write_seismograms(sisvx,sisvy,NSTEP,NREC,DELTAT,t0)
 
 ! save total energy
-  open(unit=20,file='energy.dat',status='unknown')
+  open(unit=20,file='RK4_energy.dat',status='unknown')
   do it = 1,NSTEP
     write(20,*) sngl(dble(it-1)*DELTAT),sngl(total_energy_kinetic(it)), &
-       sngl(total_energy_potential(it)),sngl(total_energy_kinetic(it) + total_energy_potential(it))
+            sngl(total_energy_potential(it)),sngl(total_energy(it))
   enddo
   close(20)
 
 ! create script for Gnuplot for total energy
-  open(unit=20,file='plot_energy',status='unknown')
-  write(20,*) '# set term x11'
+  open(unit=20,file='RK4_plot_energy',status='unknown')
+  write(20,*) 'set term x11'
   write(20,*) 'set term postscript landscape monochrome dashed "Helvetica" 22'
   write(20,*)
   write(20,*) 'set xlabel "Time (s)"'
   write(20,*) 'set ylabel "Total energy"'
   write(20,*)
-  write(20,*) 'set output "cpml_total_energy_semilog.eps"'
+  write(20,*) 'set output "ADEPML2D_total_energy_semilog.eps"'
   write(20,*) 'set logscale y'
-  write(20,*) 'plot "energy.dat" us 1:2 t ''Ec'' w l lc 1, "energy.dat" us 1:3 &
-              & t ''Ep'' w l lc 3, "energy.dat" us 1:4 t ''Total energy'' w l lc 4'
-  write(20,*) 'pause -1 "Hit any key..."'
-  write(20,*)
-  close(20)
-
-  open(unit=20,file='plot_comparison',status='unknown')
-  write(20,*) '# set term x11'
-  write(20,*) 'set term postscript landscape monochrome dashed "Helvetica" 22'
-  write(20,*)
-  write(20,*) 'set xlabel "Time (s)"'
-  write(20,*) 'set ylabel "Total energy"'
-  write(20,*)
-  write(20,*) 'set output "compare_total_energy_semilog.eps"'
-  write(20,*) 'set logscale y'
-  write(20,*) 'plot "energy.dat" us 1:4 t ''Total energy CPML'' w l lc 1, &
-              & "../collino/energy.dat" us 1:4 t ''Total energy Collino'' w l lc 2'
+  write(20,*) 'plot "RK4_energy.dat" t ''Total energy'' w l 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
   close(20)
@@ -1105,50 +1390,94 @@ enddo
 ! create script for Gnuplot
   open(unit=20,file='plotgnu',status='unknown')
   write(20,*) 'set term x11'
-  write(20,*) '# set term postscript landscape monochrome dashed "Helvetica" 22'
+  write(20,*) 'set term postscript landscape monochrome dashed "Helvetica" 22'
   write(20,*)
   write(20,*) 'set xlabel "Time (s)"'
   write(20,*) 'set ylabel "Amplitude (m / s)"'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vx_receiver_001.eps"'
-  write(20,*) 'plot "Vx_file_001.dat" t ''Vx C-PML'' w l lc 1'
+  write(20,*) 'plot "RK4_Vx_file_001.dat" t ''Vx ADE-PML RK4'' w l 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vy_receiver_001.eps"'
-  write(20,*) 'plot "Vy_file_001.dat" t ''Vy C-PML'' w l lc 1'
+  write(20,*) 'plot "RK4_Vy_file_001.dat" t ''Vy ADE-PML RK4'' w l 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vx_receiver_002.eps"'
-  write(20,*) 'plot "Vx_file_002.dat" t ''Vx C-PML'' w l lc 1'
+  write(20,*) 'plot "RK4_Vx_file_002.dat" t ''Vx ADE-PML RK4'' w l 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   write(20,*) 'set output "v_sigma_Vy_receiver_002.eps"'
-  write(20,*) 'plot "Vy_file_002.dat" t ''Vy C-PML'' w l lc 1'
+  write(20,*) 'plot "RK4_Vy_file_002.dat" t ''Vy ADE-PML RK4'' w l 1'
+  write(20,*) 'pause -1 "Hit any key..."'
+  write(20,*)
+
+  write(20,*) 'set output "v_sigma_Vx_receiver_003.eps"'
+  write(20,*) 'plot "RK4_Vx_file_003.dat" t ''Vx ADE-PML RK4'' w l 1'
+  write(20,*) 'pause -1 "Hit any key..."'
+  write(20,*)
+
+  write(20,*) 'set output "v_sigma_Vy_receiver_003.eps"'
+  write(20,*) 'plot "RK4_Vy_file_003.dat" t ''Vy ADE-PML RK4'' w l 1'
   write(20,*) 'pause -1 "Hit any key..."'
   write(20,*)
 
   close(20)
 
+  ! count elapsed wall-clock time
+    call date_and_time(datein,timein,zone,time_values)
+! time_values(3): day of the month
+! time_values(5): hour of the day
+! time_values(6): minutes of the hour
+! time_values(7): seconds of the minute
+! time_values(8): milliseconds of the second
+! this fails if we cross the end of the month
+    time_end = 86400.d0*time_values(3) + 3600.d0*time_values(5) + &
+              60.d0*time_values(6) + time_values(7) + time_values(8) / 1000.d0
+
+! elapsed time since beginning of the simulation
+    tCPU = time_end - time_start
+    int_tCPU = int(tCPU)
+   ihours = int_tCPU / 3600
+    iminutes = (int_tCPU - 3600*ihours) / 60
+   iseconds = int_tCPU - 3600*ihours - 60*iminutes
+    write(*,*) 'Elapsed time in seconds = ',tCPU
+    write(*,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+    write(*,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
+    write(*,*)
+
+!    write time stamp file to give information about progression of simulation
+    write(outputname,"('timestamp',i6.6)") it
+    open(unit=IOUT,file=outputname,status='unknown')
+    write(IOUT,*) 'Time step # ',it
+    write(IOUT,*) 'Time: ',sngl((it-1)*DELTAT),' seconds'
+    write(IOUT,*) 'Max norm velocity vector V (m/s) = ',Vsolidnorm
+    write(IOUT,*) 'Total energy = ',total_energy(it)
+    write(IOUT,*) 'Elapsed time in seconds = ',tCPU
+    write(IOUT,"(' Elapsed time in hh:mm:ss = ',i4,' h ',i2.2,' m ',i2.2,' s')") ihours,iminutes,iseconds
+    write(IOUT,*) 'Mean elapsed time per time step in seconds = ',tCPU/dble(it)
+    close(IOUT)
+
   print *
   print *,'End of the simulation'
   print *
 
-  end program seismic_ADEPML_2D_RK4_eighth_order
+  end program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 
 !----
 !----  save the seismograms in ASCII text format
 !----
 
-  subroutine write_seismograms(sisvx,sisvy,nt,nrec,DELTAT)
+  subroutine write_seismograms(sisvx,sisvy,nt,nrec,DELTAT,t0)
 
   implicit none
 
   integer nt,nrec
-  double precision DELTAT
+  double precision DELTAT,t0
 
   double precision sisvx(nt,nrec)
   double precision sisvy(nt,nrec)
@@ -1159,20 +1488,20 @@ enddo
 
 ! X component
   do irec=1,nrec
-    write(file_name,"('Vx_file_',i3.3,'.dat')") irec
+    write(file_name,"('RK4_Vx_file_',i3.3,'.dat')") irec
     open(unit=11,file=file_name,status='unknown')
     do it=1,nt
-      write(11,*) sngl(dble(it-1)*DELTAT),' ',sngl(sisvx(it,irec))
+      write(11,*) sngl(dble(it-1)*DELTAT-t0),' ',sngl(sisvx(it,irec))
     enddo
     close(11)
   enddo
 
 ! Y component
   do irec=1,nrec
-    write(file_name,"('Vy_file_',i3.3,'.dat')") irec
+    write(file_name,"('RK4_Vy_file_',i3.3,'.dat')") irec
     open(unit=11,file=file_name,status='unknown')
     do it=1,nt
-      write(11,*) sngl(dble(it-1)*DELTAT),' ',sngl(sisvy(it,irec))
+      write(11,*) sngl(dble(it-1)*DELTAT-t0),' ',sngl(sisvy(it,irec))
     enddo
     close(11)
   enddo
@@ -1185,7 +1514,8 @@ enddo
 !----
 
   subroutine create_color_image(image_data_2D,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
-              NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,field_number)
+              NPOINTS_PML,USE_PML_LEFT,USE_PML_RIGHT,USE_PML_BOTTOM,USE_PML_TOP,field_number,max_amplitude,JINTERFACE)
+
 
   implicit none
 
@@ -1202,28 +1532,34 @@ enddo
   integer, parameter :: width_cross = 5, thickness_cross = 1, size_square = 3
 
   integer NX,NY,it,field_number,ISOURCE,JSOURCE,NPOINTS_PML,nrec
-  logical USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX
+  logical USE_PML_LEFT,USE_PML_RIGHT,USE_PML_BOTTOM,USE_PML_TOP
 
   double precision, dimension(NX,NY) :: image_data_2D
 
   integer, dimension(nrec) :: ix_rec,iy_rec
 
-  integer :: ix,iy,irec
+  integer ix,iy,irec,JINTERFACE
 
-  character(len=100) :: file_name,system_command
+  double precision max_amplitude
 
+  character(len=100) file_name,system_command
+
+  double precision normalized_value
   integer :: R, G, B
-
-  double precision :: normalized_value,max_amplitude
 
 ! open image file and create system command to convert image to more convenient format
 ! use the "convert" command from ImageMagick http://www.imagemagick.org
   if(field_number == 1) then
     write(file_name,"('image',i6.6,'_Vx.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vx.pnm image',i6.6,'_Vx.gif ; rm image',i6.6,'_Vx.pnm')") it,it,it
-  else if(field_number == 2) then
+  endif
+  if(field_number == 2) then
     write(file_name,"('image',i6.6,'_Vy.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vy.pnm image',i6.6,'_Vy.gif ; rm image',i6.6,'_Vy.pnm')") it,it,it
+  endif
+  if(field_number == 3) then
+    write(file_name,"('image',i6.6,'_Vnorm.pnm')") it
+    write(system_command,"('convert image',i6.6,'_Vnorm.pnm image',i6.6,'_Vnorm.gif ; rm image',i6.6,'_Vnorm.pnm')") it,it,it
   endif
 
   open(unit=27, file=file_name, status='unknown')
@@ -1264,14 +1600,17 @@ enddo
       B = 0
 
 ! display edges of the PML layers
-  else if((USE_PML_XMIN .and. ix == NPOINTS_PML) .or. &
-          (USE_PML_XMAX .and. ix == NX - NPOINTS_PML) .or. &
-          (USE_PML_YMIN .and. iy == NPOINTS_PML) .or. &
-          (USE_PML_YMAX .and. iy == NY - NPOINTS_PML)) then
+  else if((USE_PML_LEFT .and. ix == NPOINTS_PML) .or. &
+          (USE_PML_RIGHT .and. ix == NX - NPOINTS_PML) .or. &
+          (USE_PML_BOTTOM .and. iy == NPOINTS_PML) .or. &
+          (USE_PML_TOP .and. iy == NY - NPOINTS_PML)) then
       R = 255
       G = 150
       B = 0
-
+ else if(iy==JINTERFACE) then
+        R = 0
+        G = 0
+        B = 0
 ! suppress all the values that are below the threshold
     else if(abs(image_data_2D(ix,iy)) <= max_amplitude * cutvect) then
 
@@ -1319,7 +1658,7 @@ enddo
 ! close file
   close(27)
 
-! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
+! call the system to convert image to JPEG
 ! call system(system_command)
 
   end subroutine create_color_image

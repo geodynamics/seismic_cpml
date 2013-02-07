@@ -19,7 +19,7 @@ O = obj
 # Intel (leave option -ftz, which can be *critical* for performance)
 #F90 = ifort
 #MPIF90 = mpif90
-#FLAGS = -O3 -xSSE4.2 -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -fpe0 -ftz
+#FLAGS = -O3 -xHost -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -ftz
 #MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -openmp -openmp-report1
 
@@ -37,15 +37,18 @@ FLAGS = -std=f2003 -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -
 MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -fopenmp
 
-default: clean seismic_CPML_2D_isotropic_second_order seismic_CPML_2D_isotropic_fourth_order seismic_CPML_2D_anisotropic seismic_PML_Collino_2D_isotropic seismic_PML_Collino_3D_isotropic_OpenMP seismic_CPML_3D_isotropic_MPI_OpenMP seismic_CPML_2D_poroelastic_fourth_order seismic_CPML_3D_viscoelastic_MPI seismic_PML_Collino_2D_anisotropic_fourth seismic_ADEPML_2D_RK4_eighth_order
+default: clean seismic_CPML_2D_isotropic_second_order seismic_CPML_2D_isotropic_fourth_order seismic_CPML_2D_anisotropic seismic_PML_Collino_2D_isotropic seismic_PML_Collino_3D_isotropic_OpenMP seismic_CPML_3D_isotropic_MPI_OpenMP seismic_CPML_2D_poroelastic_fourth_order seismic_CPML_3D_viscoelastic_MPI seismic_PML_Collino_2D_anisotropic_fourth seismic_ADEPML_2D_elastic_RK4_eighth_order seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 
 all: default
 
 clean:
-	/bin/rm -f *.o xseismic_CPML_2D_isotropic_second_order xseismic_CPML_2D_isotropic_fourth_order xseismic_CPML_2D_anisotropic xseismic_PML_Collino_2D_isotropic xseismic_CPML_3D_isotropic_MPI_OpenMP xseismic_PML_Collino_3D_isotropic_OpenMP xseismic_CPML_2D_poroelastic_fourth_order xseismic_CPML_3D_viscoelastic_MPI xseismic_PML_Collino_2D_anisotropic_fourth xseismic_ADEPML_2D_RK4_eighth_order
+	/bin/rm -f *.o xseismic_CPML_2D_isotropic_second_order xseismic_CPML_2D_isotropic_fourth_order xseismic_CPML_2D_anisotropic xseismic_PML_Collino_2D_isotropic xseismic_CPML_3D_isotropic_MPI_OpenMP xseismic_PML_Collino_3D_isotropic_OpenMP xseismic_CPML_2D_poroelastic_fourth_order xseismic_CPML_3D_viscoelastic_MPI xseismic_PML_Collino_2D_anisotropic_fourth xseismic_ADEPML_2D_elastic_RK4_eighth_order xseismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 
-seismic_ADEPML_2D_RK4_eighth_order:
-	$(F90) $(FLAGS) -o xseismic_ADEPML_2D_RK4_eighth_order seismic_ADEPML_2D_RK4_eighth_order.f90
+seismic_ADEPML_2D_elastic_RK4_eighth_order:
+	$(F90) $(FLAGS) -o xseismic_ADEPML_2D_elastic_RK4_eighth_order seismic_ADEPML_2D_elastic_RK4_eighth_order.f90
+
+seismic_ADEPML_2D_viscoelastic_RK4_eighth_order:
+	$(F90) $(FLAGS) -o xseismic_ADEPML_2D_viscoelastic_RK4_eighth_order seismic_ADEPML_2D_viscoelastic_RK4_eighth_order.f90
 
 seismic_CPML_2D_poroelastic_fourth_order:
 	$(F90) $(FLAGS) -o xseismic_CPML_2D_poroelastic_fourth_order seismic_CPML_2D_poroelastic_fourth_order.f90
