@@ -1,0 +1,19 @@
+# 2D
+
+xseismic_CPML_2D_isotropic_second_order
+xseismic_CPML_2D_isotropic_fourth_order
+xseismic_CPML_2D_anisotropic
+
+xseismic_PML_Collino_2D_isotropic
+xseismic_PML_Collino_2D_anisotropic_fourth
+
+xseismic_ADEPML_2D_elastic_RK4_eighth_order
+xseismic_ADEPML_2D_viscoelastic_RK4_eighth_order
+
+# 3D
+
+xseismic_CPML_3D_isotropic_MPI_OpenMP
+xseismic_CPML_2D_poroelastic_fourth_order
+xseismic_CPML_3D_viscoelastic_MPI
+xseismic_PML_Collino_3D_isotropic_OpenMP
+
