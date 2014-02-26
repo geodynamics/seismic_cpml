@@ -1,0 +1,7 @@
+seismic_cpml
+============
+
+SEISMIC_CPML is a set of eleven open-source Fortran90 programs to solve the two-dimensional or three-dimensional isotropic or anisotropic elastic, viscoelastic or poroelastic wave equation using a finite-difference method with Convolutional or Auxiliary Perfectly Matched Layer (C-PML or ADE-PML) conditions, developed by Dimitri Komatitsch and Roland Martin from CNRS, France.
+
+See README_seismic_cpml.html in this directory for more details.
+
