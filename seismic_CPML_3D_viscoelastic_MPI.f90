@@ -1,9 +1,20 @@
 !
-! SEISMIC_CPML Version 1.1.1, November 2009.
+! SEISMIC_CPML Version 1.2, April 2015.
 !
-! Copyright Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France.
-! Contributors: Roland Martin, roland DOT martin aT univ-pau DOT fr
-!           and Dimitri Komatitsch, dimitri DOT komatitsch aT univ-pau DOT fr
+! Copyright CNRS, France.
+! Contributors: Roland Martin, roland DOT martin aT get DOT obs-mip DOT fr
+!           and Dimitri Komatitsch, komatitsch aT lma DOT cnrs-mrs DOT fr
+!
+! April 2015: Dimitri Komatitsch added support for the SolvOpt algorithm to compute
+! the attenuation parameters in an optimized way. If you use it please cite:
+!
+! @Article{BlKoChLoXi15,
+! Title   = {Positivity-preserving highly-accurate optimization of the {Z}ener viscoelastic model, with application
+!            to wave propagation in the presence of strong attenuation},
+! Author  = {\'Emilie Blanc and Dimitri Komatitsch and Emmanuel Chaljub and Bruno Lombard and Zhinan Xie},
+! Journal = {Geophysical Journal International},
+! Year    = {2015},
+! Note    = {in press.}}
 !
 ! This software is a computer program whose purpose is to solve
 ! the three-dimensional isotropic viscoelastic wave equation
@@ -44,16 +55,32 @@
 
 ! Roland Martin, University of Pau, France, October 2009.
 ! based on the elastic code of Komatitsch and Martin, 2007.
+! April 2015: Dimitri Komatitsch added support for the SolvOpt algorithm to compute
+! the attenuation parameters in an optimized way.
 
 ! The fourth-order staggered-grid formulation of Madariaga (1976) and Virieux (1986) is used.
+
+! *BEWARE* that the attenuation model implemented below is that of J. M. Carcione,
+! Seismic modeling in viscoelastic media, Geophysics, vol. 58(1), p. 110-120 (1993), which is NON causal,
+! i.e., waves speed up instead of slowing down when turning attenuation on.
+! This comes from the fact that in that model the relaxed state at zero frequency is used as a reference instead of
+! the unrelaxed state at infinite frequency. These days a causal model should be used instead,
+! i.e. one using the unrelaxed state at infinite frequency as a reference.
 
 ! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000).
 !
 ! Parallel implementation based on MPI.
 
 ! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000).
-! If you use this code for your own research, please cite some (or all) of these
-! articles:
+! If you use this code for your own research, please cite some (or all) of these articles:
+!
+! @Article{BlKoChLoXi15,
+! Title   = {Positivity-preserving highly-accurate optimization of the {Z}ener viscoelastic model, with application
+!            to wave propagation in the presence of strong attenuation},
+! Author  = {\'Emilie Blanc and Dimitri Komatitsch and Emmanuel Chaljub and Bruno Lombard and Zhinan Xie},
+! Journal = {Geophysical Journal International},
+! Year    = {2015},
+! Note    = {in press.}}
 !
 ! @ARTICLE{MaKo09,
 ! author = {Roland Martin and Dimitri Komatitsch},
@@ -128,10 +155,9 @@
 !             If you want you can thus force automatic conversion to single precision at compile time
 !             or change all the declarations and constants in the code from double precision to single.
 
-  implicit none
+  use mpi
 
-! header which contains standard MPI declarations
-  include 'mpif.h'
+  implicit none
 
 ! total number of grid points in each direction of the grid
   integer, parameter :: NX = 210
@@ -140,7 +166,7 @@
 
 ! number of processes used in the MPI run
 ! and local number of points (for simplicity we cut the mesh along Z only)
-  integer, parameter :: NPROC = 20
+  integer, parameter :: NPROC = 4 !! 20
   integer, parameter :: NZ_LOCAL = NZ / NPROC
 
 ! size of a grid cell
@@ -148,6 +174,7 @@
   double precision, parameter :: DELTAY = DELTAX, DELTAZ = DELTAX
   double precision, parameter :: ONE_OVER_DELTAY = ONE_OVER_DELTAX, ONE_OVER_DELTAZ = ONE_OVER_DELTAX
   double precision, parameter :: ONE=1.d0,TWO=2.d0, DIM=3.d0
+
 ! P-velocity, S-velocity and density
   double precision, parameter :: cp = 3000.d0
   double precision, parameter :: cs = 2000.d0
@@ -167,6 +194,14 @@
   double precision, parameter :: t0 = 1.20d0 / f0
   double precision, parameter :: factor = 1.d7
 
+! parameters for attenuation
+! number of standard linear solids
+  integer, parameter :: N_SLS = 2
+
+! Qp approximately equal to 13, Qkappa approximately to 20 and Qmu / Qs approximately to 10
+  double precision, parameter :: QKappa_att = 20.d0, QMu_att = 10.d0
+  double precision, parameter :: f0_attenuation = 16 ! in Hz
+
 ! flags to add PML layers to the edges of the grid
   logical, parameter :: USE_PML_XMIN = .true.
   logical, parameter :: USE_PML_XMAX = .true.
@@ -179,7 +214,7 @@
   integer, parameter :: NPOINTS_PML = 10
 
 ! source
-!  integer, parameter :: ISOURCE = NX - 2*NPOINTS_PML - 1
+! integer, parameter :: ISOURCE = NX - 2*NPOINTS_PML - 1
   integer, parameter :: ISOURCE = NPOINTS_PML+20
   integer, parameter :: JSOURCE = NY / 5 + 1
   double precision, parameter :: xsource = (ISOURCE) * DELTAX
@@ -260,7 +295,8 @@
       value_dsigmayz_dy, &
       value_dsigmayz_dz
 
-   double precision :: duxdx,duxdy,duxdz,duydx,duydy,duydz,duzdx,duzdy,duzdz,div
+  double precision :: duxdx,duxdy,duxdz,duydx,duydy,duydz,duzdx,duzdy,duzdz,div
+
 ! 1D arrays for the damping profiles
   double precision, dimension(1:NX) :: d_x,K_x,alpha_x,a_x,b_x,d_x_half,K_x_half,alpha_x_half,a_x_half,b_x_half
   double precision, dimension(1:NY) :: d_y,K_y,alpha_y,a_y,b_y,d_y_half,K_y_half,alpha_y_half,a_y_half,b_y_half
@@ -274,13 +310,16 @@
 ! change dimension of Z axis to add two planes for MPI
   double precision, dimension(0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: vx,vy,vz,sigmaxx,sigmayy,sigmazz,sigmaxy,sigmaxz,sigmayz
   double precision, dimension(0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: sigmaxx_R,sigmayy_R,sigmazz_R,sigmaxy_R,sigmaxz_R,sigmayz_R
-  double precision, dimension(0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: e1_mech1,e1_mech2,e11_mech1,e11_mech2,e22_mech1,e22_mech2
-  double precision, dimension(0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: e12_mech1,e12_mech2,e13_mech1,e13_mech2,e23_mech1,e23_mech2
+  double precision, dimension(N_SLS,0:NX+1,0:NY+1,-1:NZ_LOCAL+2) :: e1,e11,e22,e12,e13,e23
 
   integer, parameter :: number_of_arrays = 9 + 2*9 + 12
 
 ! for the source
   double precision a,t,force_x,force_y,source_term
+
+! for attenuation
+  double precision :: f_min_attenuation, f_max_attenuation
+  double precision, dimension(N_SLS) :: tau_epsilon_nu1,tau_sigma_nu1,tau_epsilon_nu2,tau_sigma_nu2
 
 ! for receivers
   double precision distval,dist
@@ -310,16 +349,12 @@
   double precision :: mul_relaxed,lambdal_relaxed,lambdalplus2mul_relaxed
   double precision :: mul_unrelaxed,lambdal_unrelaxed,lambdalplus2mul_unrelaxed
   double precision :: Un,Sn,Unp1,Mu_nu1,Mu_nu2
-  double precision :: phi_nu1_mech1,phi_nu1_mech2
-  double precision :: phi_nu2_mech1,phi_nu2_mech2
-  double precision :: tauinv,inv_tau_sigma_nu1_mech1,inv_tau_sigma_nu1_mech2
-  double precision :: taumin,taumax, tau1, tau2, tau3, tau4
-  double precision :: inv_tau_sigma_nu2_mech1,inv_tau_sigma_nu2_mech2
+  double precision :: phi_nu1(N_SLS)
+  double precision :: phi_nu2(N_SLS)
+  double precision :: tauinv,inv_tau_sigma_nu1(N_SLS)
+  double precision :: taumin,taumax,tau1,tau2,tau3,tau4
+  double precision :: inv_tau_sigma_nu2(N_SLS)
   double precision :: tauinvUn
-  double precision :: tau_epsilon_nu1_mech1, tau_sigma_nu1_mech1
-  double precision::  tau_epsilon_nu2_mech1, tau_sigma_nu2_mech1
-  double precision::  tau_epsilon_nu1_mech2, tau_sigma_nu1_mech2
-  double precision::  tau_epsilon_nu2_mech2 ,tau_sigma_nu2_mech2
 
   integer :: i,j,k,it,it2
 
@@ -364,59 +399,92 @@
 ! get the rank of our process from 0 (master) to nb_procs-1 (workers)
   call MPI_COMM_RANK(MPI_COMM_WORLD, rank, code)
 
- tau_epsilon_nu1_mech1 = 0.0334d0
-  tau_sigma_nu1_mech1   = 0.0303d0
+! attenuation constants for standard linear solids
+! nu1 is the dilatation/incompressibility mode (QKappa)
+! nu2 is the shear mode (Qmu)
+! array index (1) is the first standard linear solid, (2) is the second etc.
 
-!  tau_epsilon_nu1_mech1 = 0.0325305d0
-!  tau_sigma_nu1_mech1   = 0.0311465d0
+! from J. M. Carcione, Seismic modeling in viscoelastic media, Geophysics,
+! vol. 58(1), p. 110-120 (1993) for two memory-variable mechanisms (page 112).
+! Beware: these values implement specific values of the quality factors:
+! Qp approximately equal to 13, Qkappa approximately to 20 and Qmu / Qs approximately to 10,
+! which means very high attenuation, see that paper for details.
+! tau_epsilon_nu1(1) = 0.0334d0
+! tau_sigma_nu1(1)   = 0.0303d0
 
-  tau1= tau_sigma_nu1_mech1/tau_epsilon_nu1_mech1
+! tau_epsilon_nu2(1) = 0.0352d0
+! tau_sigma_nu2(1)   = 0.0287d0
 
-  tau_epsilon_nu2_mech1 = 0.0352d0
-  tau_sigma_nu2_mech1   = 0.0287d0
+! tau_epsilon_nu1(2) = 0.0028d0
+! tau_sigma_nu1(2)   = 0.0025d0
 
-!  tau_epsilon_nu2_mech1 = 0.0332577d0
-!  tau_sigma_nu2_mech1   = 0.0304655d0
+! tau_epsilon_nu2(2) = 0.0029d0
+! tau_sigma_nu2(2)   = 0.0024d0
 
-  tau2= tau_sigma_nu2_mech1/tau_epsilon_nu2_mech1
+! from J. M. Carcione, D. Kosloff and R. Kosloff, Wave propagation simulation
+! in a linear viscoelastic medium, Geophysical Journal International,
+! vol. 95, p. 597-611 (1988) for two memory-variable mechanisms (page 604).
+! Beware: these values implement specific values of the quality factors:
+! Qkappa approximately to 27 and Qmu / Qs approximately to 20,
+! which means very high attenuation, see that paper for details.
 
-  tau_epsilon_nu1_mech2 = 0.0028d0
-  tau_sigma_nu1_mech2   = 0.0025d0
+! tau_epsilon_nu1(1) = 0.0325305d0
+! tau_sigma_nu1(1)   = 0.0311465d0
 
-!  tau_epsilon_nu1_mech2 = 0.0032530d0
-!  tau_sigma_nu1_mech2   = 0.0031146d0
+! tau_epsilon_nu2(1) = 0.0332577d0
+! tau_sigma_nu2(1)   = 0.0304655d0
 
-  tau3= tau_sigma_nu1_mech2/tau_epsilon_nu1_mech2
+! tau_epsilon_nu1(2) = 0.0032530d0
+! tau_sigma_nu1(2)   = 0.0031146d0
 
-  tau_epsilon_nu2_mech2 = 0.0029d0
-  tau_sigma_nu2_mech2   = 0.0024d0
+! tau_epsilon_nu2(2) = 0.0033257d0
+! tau_sigma_nu2(2)   = 0.0030465d0
 
-!  tau_epsilon_nu2_mech2 = 0.0033257d0
-!  tau_sigma_nu2_mech2   = 0.0030465d0
+! f_min and f_max are computed as : f_max/f_min=12 and (log(f_min)+log(f_max))/2 = log(f0)
+  f_min_attenuation = exp(log(f0_attenuation)-log(12.d0)/2.d0)
+  f_max_attenuation = 12.d0 * f_min_attenuation
 
-  tau4= tau_sigma_nu2_mech2/tau_epsilon_nu2_mech2
+! use new SolvOpt nonlinear optimization with constraints from Emilie Blanc, Bruno Lombard and Dimitri Komatitsch
+! to compute attenuation mechanisms
+    call compute_attenuation_coeffs(N_SLS,QKappa_att,f0_attenuation,f_min_attenuation,f_max_attenuation, &
+                                  tau_epsilon_nu1,tau_sigma_nu1)
 
-  taumax=dmax1(1.d0/tau1,1.d0/tau2,1.d0/tau3,1.d0/tau4)
-  taumin=dmin1(1.d0/tau1,1.d0/tau2,1.d0/tau3,1.d0/tau4)
+    call compute_attenuation_coeffs(N_SLS,QMu_att,f0_attenuation,f_min_attenuation,f_max_attenuation, &
+                                  tau_epsilon_nu2,tau_sigma_nu2)
 
- inv_tau_sigma_nu1_mech1 = ONE / tau_sigma_nu1_mech1
-  inv_tau_sigma_nu2_mech1 = ONE / tau_sigma_nu2_mech1
-  inv_tau_sigma_nu1_mech2 = ONE / tau_sigma_nu1_mech2
-  inv_tau_sigma_nu2_mech2 = ONE / tau_sigma_nu2_mech2
+  if(rank == 0) then
+    print *
+    print *,'with new SolvOpt routine for attenuation:'
+    print *
+    print *,'N_SLS, QKappa_att, QMu_att = ',N_SLS, QKappa_att, QMu_att
+    print *,'f0_attenuation,f_min_attenuation,f_max_attenuation = ',f0_attenuation,f_min_attenuation,f_max_attenuation
+    print *,'tau_epsilon_nu1 = ',tau_epsilon_nu1
+    print *,'tau_sigma_nu1 = ',tau_sigma_nu1
+    print *,'tau_epsilon_nu2 = ',tau_epsilon_nu2
+    print *,'tau_sigma_nu2 = ',tau_sigma_nu2
+    print *
+  endif
 
-phi_nu1_mech1 = (ONE - tau_epsilon_nu1_mech1/tau_sigma_nu1_mech1)&
- / tau_sigma_nu1_mech1
-phi_nu2_mech1 = (ONE - tau_epsilon_nu2_mech1/tau_sigma_nu2_mech1)&
- / tau_sigma_nu2_mech1
-phi_nu1_mech2 = (ONE - tau_epsilon_nu1_mech2/tau_sigma_nu1_mech2)&
- / tau_sigma_nu1_mech2
-phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
-/ tau_sigma_nu2_mech2
+  tau1 = tau_sigma_nu1(1)/tau_epsilon_nu1(1)
+  tau2 = tau_sigma_nu2(1)/tau_epsilon_nu2(1)
+  tau3 = tau_sigma_nu1(2)/tau_epsilon_nu1(2)
+  tau4 = tau_sigma_nu2(2)/tau_epsilon_nu2(2)
 
- Mu_nu1 = ONE - (ONE - tau_epsilon_nu1_mech1/tau_sigma_nu1_mech1) &
-- (ONE - tau_epsilon_nu1_mech2/tau_sigma_nu1_mech2)
- Mu_nu2 = ONE - (ONE - tau_epsilon_nu2_mech1/tau_sigma_nu2_mech1) &
-- (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2)
+  taumax = max(1.d0/tau1,1.d0/tau2,1.d0/tau3,1.d0/tau4)
+  taumin = min(1.d0/tau1,1.d0/tau2,1.d0/tau3,1.d0/tau4)
+
+  inv_tau_sigma_nu1(1) = ONE / tau_sigma_nu1(1)
+  inv_tau_sigma_nu2(1) = ONE / tau_sigma_nu2(1)
+  inv_tau_sigma_nu1(2) = ONE / tau_sigma_nu1(2)
+  inv_tau_sigma_nu2(2) = ONE / tau_sigma_nu2(2)
+
+  phi_nu1(1) = (ONE - tau_epsilon_nu1(1)/tau_sigma_nu1(1)) / tau_sigma_nu1(1)
+  phi_nu2(1) = (ONE - tau_epsilon_nu2(1)/tau_sigma_nu2(1)) / tau_sigma_nu2(1)
+  phi_nu1(2) = (ONE - tau_epsilon_nu1(2)/tau_sigma_nu1(2)) / tau_sigma_nu1(2)
+  phi_nu2(2) = (ONE - tau_epsilon_nu2(2)/tau_sigma_nu2(2)) / tau_sigma_nu2(2)
+
+  Mu_nu1 = ONE - (ONE - tau_epsilon_nu1(1)/tau_sigma_nu1(1)) - (ONE - tau_epsilon_nu1(2)/tau_sigma_nu1(2))
+  Mu_nu2 = ONE - (ONE - tau_epsilon_nu2(1)/tau_sigma_nu2(1)) - (ONE - tau_epsilon_nu2(2)/tau_sigma_nu2(2))
 
 ! slice number for the cut plane in the middle of the mesh
   rank_cut_plane = nb_procs/2 - 1
@@ -455,7 +523,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 
 ! check that code was compiled with the right number of slices
   if(nb_procs /= NPROC) then
-    print *,'nb_procs,NPROC = ',nb_procs,NPROC
+    print *,'error in MPI number of slices: nb_procs,NPROC = ',nb_procs,NPROC,' but they should be equal'
     stop 'nb_procs must be equal to NPROC'
   endif
 
@@ -756,12 +824,13 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   print *
   print *,'There are ',nrec,' receivers'
   print *
-!  xspacerec = (xfin-xdeb) / dble(NREC-1)
-!  yspacerec = (yfin-ydeb) / dble(NREC-1)
-!  do irec=1,nrec
-!    xrec(irec) = xdeb + dble(irec-1)*xspacerec
-!    yrec(irec) = ydeb + dble(irec-1)*yspacerec
-!  enddo
+
+! xspacerec = (xfin-xdeb) / dble(NREC-1)
+! yspacerec = (yfin-ydeb) / dble(NREC-1)
+! do irec=1,nrec
+!   xrec(irec) = xdeb + dble(irec-1)*xspacerec
+!   yrec(irec) = ydeb + dble(irec-1)*yspacerec
+! enddo
 
  xrec(1)=xsource+500.d0  ! first receiver x in meters
  yrec(1)=ysource+500.d0  ! first receiver y in meters
@@ -798,8 +867,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
     print *,'Vpmax=',cp*dsqrt(taumax)
   endif
   if(Courant_number > 1.d0) stop 'time step is too large, simulation will be unstable'
-  print *, "Number of points per wavelength =",cs*dsqrt(taumin)/(2.5d0*f0)/DELTAX,&
-   'Vsmin=',cs*dsqrt(taumin)
+  print *, "Number of points per wavelength =",cs*dsqrt(taumin)/(2.5d0*f0)/DELTAX,'Vsmin=',cs*dsqrt(taumin)
 
 ! erase main arrays
   vx(:,:,:) = ZERO
@@ -813,18 +881,12 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   sigmazz(:,:,:) = ZERO
   sigmayz(:,:,:) = ZERO
 
-  e1_mech1(:,:,:)=ZERO
-  e1_mech2(:,:,:)=ZERO
-  e11_mech1(:,:,:)=ZERO
-  e11_mech2(:,:,:)=ZERO
-  e12_mech1(:,:,:)=ZERO
-  e12_mech2(:,:,:)=ZERO
-  e13_mech1(:,:,:)=ZERO
-  e13_mech2(:,:,:)=ZERO
-  e23_mech1(:,:,:)=ZERO
-  e23_mech2(:,:,:)=ZERO
-  e22_mech1(:,:,:)=ZERO
-  e22_mech2(:,:,:)=ZERO
+  e1(:,:,:,:) = ZERO
+  e11(:,:,:,:) = ZERO
+  e12(:,:,:,:) = ZERO
+  e13(:,:,:,:) = ZERO
+  e23(:,:,:,:) = ZERO
+  e22(:,:,:,:) = ZERO
 
 ! PML
   memory_dvx_dx(:,:,:) = ZERO
@@ -948,64 +1010,64 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 
       div=duxdx+duydy+duzdz
 
-!evolution e1_mech1
-  tauinv = - inv_tau_sigma_nu1_mech1
-  Un = e1_mech1(i,j,k)
-  Sn   = div * phi_nu1_mech1
+! evolution e1(1)
+  tauinv = - inv_tau_sigma_nu1(1)
+  Un = e1(1,i,j,k)
+  Sn   = div * phi_nu1(1)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e1_mech1(i,j,k) = Unp1
+  e1(1,i,j,k) = Unp1
 
-!evolution e1_mech2
-  tauinv = - inv_tau_sigma_nu1_mech2
-  Un = e1_mech2(i,j,k)
-  Sn   = div * phi_nu1_mech2
+! evolution e1(2)
+  tauinv = - inv_tau_sigma_nu1(2)
+  Un = e1(2,i,j,k)
+  Sn   = div * phi_nu1(2)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e1_mech2(i,j,k) = Unp1
+  e1(2,i,j,k) = Unp1
 
-! evolution e11_mech1
-  tauinv = - inv_tau_sigma_nu2_mech1
-  Un = e11_mech1(i,j,k)
-  Sn   = (duxdx - div/DIM) * phi_nu2_mech1
+! evolution e11(1)
+  tauinv = - inv_tau_sigma_nu2(1)
+  Un = e11(1,i,j,k)
+  Sn   = (duxdx - div/DIM) * phi_nu2(1)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e11_mech1(i,j,k) = Unp1
+  e11(1,i,j,k) = Unp1
 
-! evolution e11_mech2
-  tauinv = - inv_tau_sigma_nu2_mech2
-  Un = e11_mech2(i,j,k)
-  Sn   = (duxdx - div/DIM) * phi_nu2_mech2
+! evolution e11(2)
+  tauinv = - inv_tau_sigma_nu2(2)
+  Un = e11(2,i,j,k)
+  Sn   = (duxdx - div/DIM) * phi_nu2(2)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e11_mech2(i,j,k) = Unp1
+  e11(2,i,j,k) = Unp1
 
-! evolution e22_mech1
-  tauinv = - inv_tau_sigma_nu2_mech1
-  Un = e22_mech1(i,j,k)
-  Sn   = (duydy - div/DIM) * phi_nu2_mech1
+! evolution e22(1)
+  tauinv = - inv_tau_sigma_nu2(1)
+  Un = e22(1,i,j,k)
+  Sn   = (duydy - div/DIM) * phi_nu2(1)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e22_mech1(i,j,k) = Unp1
+  e22(1,i,j,k) = Unp1
 
-! evolution e22_mech2
-  tauinv = - inv_tau_sigma_nu2_mech2
-  Un = e22_mech2(i,j,k)
-  Sn   = (duydy - div/DIM) * phi_nu2_mech2
+! evolution e22(2)
+  tauinv = - inv_tau_sigma_nu2(2)
+  Un = e22(2,i,j,k)
+  Sn   = (duydy - div/DIM) * phi_nu2(2)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e22_mech2(i,j,k) = Unp1
+  e22(2,i,j,k) = Unp1
 
 
 !add the memory variables using the relaxed parameters (Carcione page 111)
 ! : there is a bug in Carcione's equation for sigma_zz
     sigmaxx(i,j,k) = sigmaxx(i,j,k)+deltat*((lambdal_relaxed + 2.d0/DIM*mul_relaxed)* &
-      (e1_mech1(i,j,k) + e1_mech2(i,j,k)) + TWO * mul_relaxed * (e11_mech1(i,j,k) + e11_mech2(i,j,k)))
+      (e1(1,i,j,k) + e1(2,i,j,k)) + TWO * mul_relaxed * (e11(1,i,j,k) + e11(2,i,j,k)))
     sigmayy(i,j,k) = sigmayy(i,j,k)+deltat*((lambdal_relaxed + 2.d0/DIM*mul_relaxed)* &
-      (e1_mech1(i,j,k) + e1_mech2(i,j,k)) + TWO * mul_relaxed * (e22_mech1(i,j,k) + e22_mech2(i,j,k)))
+      (e1(1,i,j,k) + e1(2,i,j,k)) + TWO * mul_relaxed * (e22(1,i,j,k) + e22(2,i,j,k)))
     sigmazz(i,j,k) = sigmazz(i,j,k)+deltat*((lambdal_relaxed + 2.d0*mul_relaxed)* &
-      (e1_mech1(i,j,k) + e1_mech2(i,j,k)) - TWO/DIM * mul_relaxed * (e11_mech1(i,j,k) + e11_mech2(i,j,k)&
-      +e22_mech1(i,j,k) + e22_mech2(i,j,k)))
+      (e1(1,i,j,k) + e1(2,i,j,k)) - TWO/DIM * mul_relaxed * (e11(1,i,j,k) + e11(2,i,j,k)&
+      +e22(1,i,j,k) + e22(2,i,j,k)))
 
 ! compute the stress using the unrelaxed Lame parameters (Carcione page 111)
 
@@ -1058,23 +1120,23 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
       duydx = value_dvy_dx / K_x(i) + memory_dvy_dx(i,j,k)
       duxdy = value_dvx_dy / K_y_half(j) + memory_dvx_dy(i,j,k)
 
-! evolution e12_mech1
-  tauinv = - inv_tau_sigma_nu2_mech1
-  Un = e12_mech1(i,j,k)
-  Sn   = (duxdy+duydx) * phi_nu2_mech1
+! evolution e12(1)
+  tauinv = - inv_tau_sigma_nu2(1)
+  Un = e12(1,i,j,k)
+  Sn   = (duxdy+duydx) * phi_nu2(1)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e12_mech1(i,j,k) = Unp1
+  e12(1,i,j,k) = Unp1
 
-! evolution e12_mech2
-  tauinv = - inv_tau_sigma_nu2_mech2
-  Un = e12_mech2(i,j,k)
-  Sn   = (duxdy+duydx) * phi_nu2_mech2
+! evolution e12(2)
+  tauinv = - inv_tau_sigma_nu2(2)
+  Un = e12(2,i,j,k)
+  Sn   = (duxdy+duydx) * phi_nu2(2)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e12_mech2(i,j,k) = Unp1
+  e12(2,i,j,k) = Unp1
 
-      sigmaxy(i,j,k) = sigmaxy(i,j,k)+deltat*mul_relaxed * (e12_mech1(i,j,k) + e12_mech2(i,j,k))
+      sigmaxy(i,j,k) = sigmaxy(i,j,k)+deltat*mul_relaxed * (e12(1,i,j,k) + e12(2,i,j,k))
 
     sigmaxy(i,j,k) = sigmaxy(i,j,k) + &
     mul_unrelaxed * (duxdy+duydx) * DELTAT
@@ -1102,23 +1164,23 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
       duzdx = value_dvz_dx / K_x(i) + memory_dvz_dx(i,j,k)
       duxdz = value_dvx_dz / K_z_half(kglobal) + memory_dvx_dz(i,j,k)
 
-! evolution e13_mech1
-  tauinv = - inv_tau_sigma_nu2_mech1
-  Un = e13_mech1(i,j,k)
-  Sn   = (duxdz+duzdx) * phi_nu2_mech1
+! evolution e13(1)
+  tauinv = - inv_tau_sigma_nu2(1)
+  Un = e13(1,i,j,k)
+  Sn   = (duxdz+duzdx) * phi_nu2(1)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e13_mech1(i,j,k) = Unp1
+  e13(1,i,j,k) = Unp1
 
-! evolution e13_mech2
-  tauinv = - inv_tau_sigma_nu2_mech2
-  Un = e13_mech2(i,j,k)
-  Sn   = (duxdz+duzdx) * phi_nu2_mech2
+! evolution e13(2)
+  tauinv = - inv_tau_sigma_nu2(2)
+  Un = e13(2,i,j,k)
+  Sn   = (duxdz+duzdx) * phi_nu2(2)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e13_mech2(i,j,k) = Unp1
+  e13(2,i,j,k) = Unp1
 
-      sigmaxz(i,j,k) = sigmaxz(i,j,k)+deltat*mul_relaxed * (e13_mech1(i,j,k) + e13_mech2(i,j,k))
+      sigmaxz(i,j,k) = sigmaxz(i,j,k)+deltat*mul_relaxed * (e13(1,i,j,k) + e13(2,i,j,k))
 
     sigmaxz(i,j,k) = sigmaxz(i,j,k) + &
     mul_unrelaxed * (duxdz+duzdx) * DELTAT
@@ -1142,23 +1204,23 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
       duzdy = value_dvz_dy / K_y_half(j) + memory_dvz_dy(i,j,k)
       duydz = value_dvy_dz / K_z_half(kglobal) + memory_dvy_dz(i,j,k)
 
-! evolution e23_mech1
-  tauinv = - inv_tau_sigma_nu2_mech1
-  Un = e23_mech1(i,j,k)
-  Sn   = (duydz+duzdy) * phi_nu2_mech1
+! evolution e23(1)
+  tauinv = - inv_tau_sigma_nu2(1)
+  Un = e23(1,i,j,k)
+  Sn   = (duydz+duzdy) * phi_nu2(1)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e23_mech1(i,j,k) = Unp1
+  e23(1,i,j,k) = Unp1
 
-! evolution e23_mech2
-  tauinv = - inv_tau_sigma_nu2_mech2
-  Un = e23_mech2(i,j,k)
-  Sn   = (duydz+duzdy) * phi_nu2_mech2
+! evolution e23(2)
+  tauinv = - inv_tau_sigma_nu2(2)
+  Un = e23(2,i,j,k)
+  Sn   = (duydz+duzdy) * phi_nu2(2)
   tauinvUn = tauinv * Un
   Unp1 = (Un + deltat*(Sn+0.5d0*tauinvUn))/(1.d0-deltat*0.5d0*tauinv)
-  e23_mech2(i,j,k) = Unp1
+  e23(2,i,j,k) = Unp1
 
-      sigmayz(i,j,k) = sigmayz(i,j,k)+deltat*mul_relaxed * (e23_mech1(i,j,k) + e23_mech2(i,j,k))
+      sigmayz(i,j,k) = sigmayz(i,j,k)+deltat*mul_relaxed * (e23(1,i,j,k) + e23(2,i,j,k))
 
     sigmayz(i,j,k) = sigmayz(i,j,k) + &
     mul_unrelaxed * (duydz+duzdy) * DELTAT
@@ -1385,7 +1447,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 
     if(rank == rank_cut_plane) then
 
-      print *,'Time step # ',it
+      print *,'Time step # ',it,' out of ',NSTEP,' out of ',NSTEP
       print *,'Time: ',sngl((it-1)*DELTAT),' seconds'
       print *,'Max norm velocity vector V (m/s) = ',Vsolidnorm
       print *,'Total energy = ',total_energy(it)
@@ -1521,6 +1583,9 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
   call MPI_FINALIZE(code)
 
   end program seismic_visco_CPML_3D_MPI_OpenMP
+
+! include the SolvOpt routines
+  include "attenuation_model_with_SolvOpt.f90"
 
 !----
 !----  save the seismograms in ASCII text format
@@ -2184,3 +2249,4 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 !
 ! Version 2.0 dated 2006-09-05.
 !
+

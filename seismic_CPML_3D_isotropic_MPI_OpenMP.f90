@@ -1181,7 +1181,7 @@
 
     if(rank == rank_cut_plane) then
 
-      print *,'Time step # ',it
+      print *,'Time step # ',it,' out of ',NSTEP
       print *,'Time: ',sngl((it-1)*DELTAT),' seconds'
       print *,'Max norm velocity vector V (m/s) = ',Vsolidnorm
       print *,'Total energy = ',total_energy(it)

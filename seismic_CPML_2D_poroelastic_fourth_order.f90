@@ -961,8 +961,9 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
 
 ! print maximum of norm of velocity
     velocnorm_all = maxval(sqrt(vx(:,:)**2 + vy(:,:)**2))
-    print *,'time step, time = ',it,dble(it-1)*DELTAT
-    print *,'maximum of norm of velocity is ',velocnorm_all
+    print *,'Time step # ',it,' out of ',NSTEP
+    print *,'Time: ',sngl((it-1)*DELTAT),' seconds'
+    print *,'Max norm velocity vector V (m/s) = ',velocnorm_all
     print *,'total energy = ',total_energy_kinetic(it) + total_energy_potential(it)
     print *
 

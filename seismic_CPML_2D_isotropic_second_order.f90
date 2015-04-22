@@ -726,7 +726,7 @@
 
 ! print maximum of norm of velocity
     velocnorm = maxval(sqrt(vx**2 + vy**2))
-    print *,'Time step # ',it
+    print *,'Time step # ',it,' out of ',NSTEP
     print *,'Time: ',sngl((it-1)*DELTAT),' seconds'
     print *,'Max norm velocity vector V (m/s) = ',velocnorm
     print *,'total energy = ',total_energy_kinetic(it) + total_energy_potential(it)
