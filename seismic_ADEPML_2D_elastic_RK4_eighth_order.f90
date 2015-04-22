@@ -813,7 +813,7 @@ enddo
         value_dsigmaxy_dy = ( c1 * (dsigmaxy(1,i,j) - dsigmaxy(1,i,j-1)) + c2* (dsigmaxy(1,i,j+1) - dsigmaxy(1,i,j-2)) + &
          c3 * (dsigmaxy(1,i,j+2) - dsigmaxy(1,i,j-3)) + c4 * (dsigmaxy(1,i,j+3) - dsigmaxy(1,i,j-4)) )/ DELTAY
 
-    if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+    if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
       memory_dsigmaxx_dx_1(2,i,j) = b_x_1(inc,i) * memory_dsigmaxx_dx_1(4,i,j) + a_x_1(inc,i) * value_dsigmaxx_dx
       memory_dsigmaxy_dy_1(2,i,j) = b_y_1(inc,j) * memory_dsigmaxy_dy_1(4,i,j) + a_y_1(inc,j) * value_dsigmaxy_dy
 
@@ -838,7 +838,7 @@ enddo
         value_dsigmayy_dy = ( c1 * (dsigmayy(1,i,j+1) - dsigmayy(1,i,j)) + c2 * (dsigmayy(1,i,j+2) - dsigmayy(1,i,j-1)) + &
          c3 * (dsigmayy(1,i,j+3) - dsigmayy(1,i,j-2)) + c4 * (dsigmayy(1,i,j+4) - dsigmayy(1,i,j-3)) )/ DELTAY
 
-    if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+    if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
       memory_dsigmaxy_dx_1(2,i,j) = b_x_half_1(inc,i) * memory_dsigmaxy_dx_1(4,i,j) + a_x_half_1(inc,i) * value_dsigmaxy_dx
       memory_dsigmayy_dy_1(2,i,j) = b_y_half_1(inc,j) * memory_dsigmayy_dy_1(4,i,j) + a_y_half_1(inc,j) * value_dsigmayy_dy
 
@@ -908,7 +908,7 @@ enddo
         value_dvy_dy = ( c1 * (dvy(1,i,j) - dvy(1,i,j-1)) + c2 * (dvy(1,i,j+1) - dvy(1,i,j-2)) + &
          c3 * (dvy(1,i,j+2) - dvy(1,i,j-3)) + c4 * (dvy(1,i,j+3) - dvy(1,i,j-4)) )/ DELTAY
 
-    if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+    if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
       memory_dvx_dx_1(2,i,j) = b_x_half_1(inc,i) * memory_dvx_dx_1(4,i,j) + a_x_half_1(inc,i) * value_dvx_dx
       memory_dvy_dy_1(2,i,j) = b_y_1(inc,j) * memory_dvy_dy_1(4,i,j) + a_y_1(inc,j) * value_dvy_dy
 
@@ -933,7 +933,7 @@ enddo
         value_dvy_dx = ( c1 * (dvy(1,i,j) - dvy(1,i-1,j)) + c2 * (dvy(1,i+1,j) - dvy(1,i-2,j)) + &
         c3 * (dvy(1,i+2,j) - dvy(1,i-3,j)) + c4 * (dvy(1,i+3,j) - dvy(1,i-4,j)) )/ DELTAX
 
-    if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+    if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
       memory_dvy_dx_1(2,i,j) = b_x_1(inc,i) * memory_dvy_dx_1(4,i,j) + a_x_1(inc,i) * value_dvy_dx
       memory_dvx_dy_1(2,i,j) = b_y_half_1(inc,j) * memory_dvx_dy_1(4,i,j) + a_y_half_1(inc,j) * value_dvx_dy
 

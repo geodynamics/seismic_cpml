@@ -901,7 +901,7 @@ phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
 
   do it = 1,NSTEP
 
-    if(rank == rank_cut_plane .AND. mod(it,20).eq.0) print *,'it = ',it
+    if(rank == rank_cut_plane .AND. mod(it,20)==0) print *,'it = ',it
 
 !----------------------
 ! compute stress sigma
