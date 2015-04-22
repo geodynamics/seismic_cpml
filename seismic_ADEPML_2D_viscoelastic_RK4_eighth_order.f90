@@ -1025,7 +1025,7 @@ enddo
           value_dsigmaxy_dy = ( c1 * (dsigmaxy(1,i,j) - dsigmaxy(1,i,j-1)) + c2* (dsigmaxy(1,i,j+1) - dsigmaxy(1,i,j-2)) + &
                     c3 * (dsigmaxy(1,i,j+2) - dsigmaxy(1,i,j-3)) + c4 * (dsigmaxy(1,i,j+3) - dsigmaxy(1,i,j-4)) ) * ONE_OVER_DELTAY
 
-          if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+          if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
 
           memory_dsigmaxx_dx_1(2,i,j) = r_x_1(i) * memory_dsigmaxx_dx_1(1,i,j) + s_x_1(i) * value_dsigmaxx_dx
           memory_dsigmaxy_dy_1(2,i,j) = r_y_1(j) * memory_dsigmaxy_dy_1(1,i,j) + s_y_1(j) * value_dsigmaxy_dy
@@ -1049,7 +1049,7 @@ enddo
              value_dsigmayy_dy = ( c1 * (dsigmayy(1,i,j+1) - dsigmayy(1,i,j)) + c2 * (dsigmayy(1,i,j+2) - dsigmayy(1,i,j-1)) + &
                     c3 * (dsigmayy(1,i,j+3) - dsigmayy(1,i,j-2)) + c4 * (dsigmayy(1,i,j+4) - dsigmayy(1,i,j-3)) )* ONE_OVER_DELTAY
 
-            if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+            if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
             memory_dsigmaxy_dx_1(2,i,j) = r_x_half_1(i) * memory_dsigmaxy_dx_1(1,i,j) + s_x_half_1(i) * value_dsigmaxy_dx
             memory_dsigmayy_dy_1(2,i,j) = r_y_half_1(j) * memory_dsigmayy_dy_1(1,i,j) + s_y_half_1(j) * value_dsigmayy_dy
 
@@ -1125,7 +1125,7 @@ enddo
         duxdx = value_dvx_dx
         duydy = value_dvy_dy
 
-      if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+      if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
            memory_dvx_dx_1(2,i,j) = r_x_half_1(i) * memory_dvx_dx_1(1,i,j) + s_x_half_1(i) * value_dvx_dx
            memory_dvy_dy_1(2,i,j) = r_y_1(j) * memory_dvy_dy_1(1,i,j) + s_y_1(j) * value_dvy_dy
 
@@ -1187,7 +1187,7 @@ enddo
              duydx = value_dvy_dx
              duxdy = value_dvx_dy
 
-           if(i.le.NPOINTS_PML+2 .or.i.ge.NX-NPOINTS_PML-2 .or. j.le.NPOINTS_PML+2 .or. j.ge. NY-NPOINTS_PML-2) then
+           if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
            memory_dvy_dx_1(2,i,j) = r_x_1(i) * memory_dvy_dx_1(1,i,j) + s_x_1(i) * value_dvy_dx
            memory_dvx_dy_1(2,i,j) = r_y_half_1(j) * memory_dvx_dy_1(1,i,j) + s_y_half_1(j) * value_dvx_dy
 
