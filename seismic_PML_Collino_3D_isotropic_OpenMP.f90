@@ -822,7 +822,7 @@ do k = 1,NZ-1
 
       Vsolidnorm = maxval(sqrt((vx_1 + vx_2 + vx_3)**2 + (vy_1 + vy_2 + vy_3)**2+(vz_1 + vz_2 + vz_3)**2))
 
-      print *,'Time step # ',it
+      print *,'Time step # ',it,' out of ',NSTEP
       print *,'Time: ',sngl((it-1)*DELTAT),' seconds'
       print *,'Max norm velocity vector V (m/s) = ',Vsolidnorm
       print *,'Total energy = ',total_energy(it)

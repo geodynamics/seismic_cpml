@@ -5,13 +5,30 @@
 ! This viscoelastic code with with Auxiliary Differential Equation PML is modified by Ruiqi Shi from program
 ! 'seismic_CPML_3D_viscoelastic_MPI.f90' and 'seismic_ADEPML_2D_RK4_eighth_order' of seismic CPML software package.
 !
-! Ruiqi Shi, Department of Exploration Geophysics, China University of Petroleum, Beijing P R China.
+! Ruiqi Shi, Department of Exploration Geophysics, China University of Petroleum, Beijing, China.
 ! Email: shiruiqi123 AT gmail DOT com
+!
+! based on the initial programs from Dimitri Komatitsch and Roland Martin in the SEISMIC_CPML package.
+!
+! SEISMIC_CPML Version 1.2, April 2015.
+!
+! Copyright CNRS, France.
+! Contributors: Dimitri Komatitsch, komatitsch aT lma DOT cnrs-mrs DOT fr
+!           and Roland Martin, roland DOT martin aT get DOT obs-mip DOT fr
+!
+! April 2015: Dimitri Komatitsch added support for the SolvOpt algorithm to compute
+! the attenuation parameters in an optimized way. If you use it please cite:
+!
+! @Article{BlKoChLoXi15,
+! Title   = {Positivity-preserving highly-accurate optimization of the {Z}ener viscoelastic model, with application
+!            to wave propagation in the presence of strong attenuation},
+! Author  = {\'Emilie Blanc and Dimitri Komatitsch and Emmanuel Chaljub and Bruno Lombard and Zhinan Xie},
+! Journal = {Geophysical Journal International},
+! Year    = {2015},
+! Note    = {in press.}}
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-! Copyright Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France.
-!
 ! This software is a computer program whose purpose is to solve
 ! the two-dimensional viscoelastic wave equation
 ! using a finite-difference method with Auxiliary Differential
@@ -44,7 +61,6 @@
 ! The full text of the license is available at the end of this program
 ! and in file "LICENSE".
 
-
 program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 
 ! High order 2D explicit-semi implicit-implicit seismic wave finite-difference code
@@ -55,11 +71,28 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 ! discretization.
 !
 ! Version 1.0 July, 2011
-! by Ruiqi Shi, China University of Petroleum, Beijing P R China, 2011.
+! by Ruiqi Shi, China University of Petroleum, Beijing, China, 2011.
 ! based on seismic_CPML_3D_viscoelastic_MPI.f90 and seismic_ADEPML_2D_RK4_eighth_order.f90
-! by Roland Martin, University of Pau, France
+! by Dimitri Komatitsch and Roland Martin, CNRS, France
 !
+! April 2015: Dimitri Komatitsch added support for the SolvOpt algorithm to compute
+! the attenuation parameters in an optimized way. If you use it please cite:
 !
+! @Article{BlKoChLoXi15,
+! Title   = {Positivity-preserving highly-accurate optimization of the {Z}ener viscoelastic model, with application
+!            to wave propagation in the presence of strong attenuation},
+! Author  = {\'Emilie Blanc and Dimitri Komatitsch and Emmanuel Chaljub and Bruno Lombard and Zhinan Xie},
+! Journal = {Geophysical Journal International},
+! Year    = {2015},
+! Note    = {in press.}}
+
+! *BEWARE* that the attenuation model implemented below is that of J. M. Carcione,
+! Seismic modeling in viscoelastic media, Geophysics, vol. 58(1), p. 110-120 (1993), which is NON causal,
+! i.e., waves speed up instead of slowing down when turning attenuation on.
+! This comes from the fact that in that model the relaxed state at zero frequency is used as a reference instead of
+! the unrelaxed state at infinite frequency. These days a causal model should be used instead,
+! i.e. one using the unrelaxed state at infinite frequency as a reference.
+
 ! The 8th-order staggered-grid formulation of Holberg is used:
 !
 !            ^ y
@@ -87,9 +120,16 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 !
 ! If you use this code for your own research, please cite some (or all) of these articles:
 !
+! @Article{BlKoChLoXi15,
+! Title   = {Positivity-preserving highly-accurate optimization of the {Z}ener viscoelastic model, with application
+!            to wave propagation in the presence of strong attenuation},
+! Author  = {\'Emilie Blanc and Dimitri Komatitsch and Emmanuel Chaljub and Bruno Lombard and Zhinan Xie},
+! Journal = {Geophysical Journal International},
+! Year    = {2015},
+! Note    = {in press.}}
+!
 ! @ARTICLE{MaKoGeBr10,
-! author = {Roland Martin and Dimitri Komatitsch and Stephen D. Gedney and
-! Emilien Bruthiaux},
+! author = {Roland Martin and Dimitri Komatitsch and Stephen D. Gedney and Emilien Bruthiaux},
 !  title = {A high-order time and space formulation of the unsplit perfectly matched layer
 !  for the seismic wave equation using {Auxiliary Differential Equations (ADE-PML)}},
 !  journal = {Comput. Model. Eng. Sci.},
@@ -183,7 +223,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 
 ! total number of grid points in each direction of the grid
   integer, parameter :: NX = 141
-  integer, parameter :: NY = 621  !NY = 800
+  integer, parameter :: NY = 621  ! NY = 800
 
 ! Explicit (epsn=1,epsn=0), Implicit (epsn=0,epsn1=1), semi-implicit (epsn=0.5,epsn1=0.5)
   integer, parameter :: iexpl=0
@@ -212,15 +252,23 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
   double precision, parameter :: lambdaplustwomu_bottom = rho_bottom*cp_bottom*cp_bottom
 
 ! total number of time steps
-  integer, parameter :: NSTEP = 3000
+  integer, parameter :: NSTEP = 5000
 
 ! time step in seconds
-  double precision, parameter :: DELTAT = 7.5d-4
+  double precision, parameter :: DELTAT = 5.d-4
 
 ! parameters for the source
   double precision, parameter :: f0 = 15.d0
   double precision, parameter :: t0 = 1.20d0 / f0
   double precision, parameter :: factor = 1.d5
+
+! parameters for attenuation
+! number of standard linear solids
+  integer, parameter :: N_SLS = 2
+
+! Qp approximately equal to 13, Qkappa approximately to 20 and Qmu / Qs approximately to 10
+  double precision, parameter :: QKappa_att = 20.d0, QMu_att = 10.d0
+  double precision, parameter :: f0_attenuation = 16 ! in Hz
 
 ! flags to add PML layers to the edges of the grid
   logical, parameter :: USE_PML_XMIN = .true.
@@ -253,7 +301,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
   double precision, parameter :: yfin =  300.d0 ! last receiver y in meters
 
 ! display information on the screen from time to time
-  integer, parameter :: IT_DISPLAY = 500  !IT_DISPLAY = 10000
+  integer, parameter :: IT_DISPLAY = 500
 
 ! value of PI
   double precision, parameter :: PI = 3.141592653589793238462643d0
@@ -271,19 +319,19 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
   double precision, parameter :: STABILITY_THRESHOLD = 1.d+25
 
 ! Holberg (1987) coefficients, taken from
-!  @ARTICLE{Hol87,
-!  author = {O. Holberg},
-!  title = {Computational aspects of the choice of operator and sampling interval
-!  for numerical differentiation in large-scale simulation of wave phenomena},
-!  journal = {Geophysical Prospecting},
-!  year = {1987},
-!  volume = {35},
-!  pages = {629-655}}
+! @ARTICLE{Hol87,
+! author = {O. Holberg},
+! title = {Computational aspects of the choice of operator and sampling interval
+! for numerical differentiation in large-scale simulation of wave phenomena},
+! journal = {Geophysical Prospecting},
+! year = {1987},
+! volume = {35},
+! pages = {629-655}}
   double precision, parameter :: c1 = 1.231666d0
   double precision, parameter :: c2 = -1.041182d-1
   double precision, parameter :: c3 = 2.063707d-2
   double precision, parameter :: c4 = -3.570998d-3
-  double precision, parameter :: coe_sum = abs(c1)+abs(c2)+abs(c3)+abs(c4)
+  double precision, parameter :: coefficient_sum = abs(c1)+abs(c2)+abs(c3)+abs(c4)
 
 ! RK4 scheme coefficients, 2 per subloop, 8 in total
   double precision, dimension(4) :: rk41, rk42
@@ -364,8 +412,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 
   double precision, dimension(-4:NX+4,-4:NY+4) :: vx,vy,sigmaxx,sigmayy,sigmaxy
   double precision, dimension(-4:NX+4,-4:NY+4) :: sigmaxx_R,sigmayy_R,sigmaxy_R
-  double precision, dimension(-4:NX+4,-4:NY+4) :: e1_mech1,e1_mech2,e11_mech1,e11_mech2,e22_mech1,e22_mech2
-  double precision, dimension(-4:NX+4,-4:NY+4) :: e12_mech1,e12_mech2
+  double precision, dimension(N_SLS,-4:NX+4,-4:NY+4) :: e1,e11,e22,e12
   double precision, dimension(-4:NX+4,-4:NY+4) :: rho, mu,lambda,lambdaplustwomu
 
   double precision rho_half_x_half_y
@@ -374,9 +421,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 ! dv does not always indicate a derivative
   double precision, dimension(4,-4:NX+4,-4:NY+4) :: dvx,dvy,dsigmaxx,dsigmayy,dsigmaxy
   double precision, dimension(4,-4:NX+4,-4:NY+4) :: dsigmaxx_R,dsigmayy_R,dsigmaxy_R
-  double precision, dimension(4,-4:NX+4,-4:NY+4) :: de1_mech1,de1_mech2,de11_mech1,de11_mech2
-  double precision, dimension(4,-4:NX+4,-4:NY+4) :: de12_mech1,de12_mech2
-
+  double precision, dimension(N_SLS,4,-4:NX+4,-4:NY+4) :: de1,de11,de12
 
   integer, parameter :: number_of_2Darrays = 2*8
   integer, parameter :: number_of_3Darrays = 32
@@ -384,7 +429,11 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 ! for the source
   double precision a,t,force_x,force_y,source_term
 
- ! for stability estimate
+! for attenuation
+  double precision :: f_min_attenuation, f_max_attenuation
+  double precision, dimension(N_SLS) :: tau_epsilon_nu1,tau_sigma_nu1,tau_epsilon_nu2,tau_sigma_nu2
+
+! for stability estimate
   double precision :: c_max,c_min
 
 ! for receivers
@@ -409,15 +458,11 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
   double precision :: mul_relaxed,lambdal_relaxed,lambdalplus2mul_relaxed
   double precision :: mul_unrelaxed,lambdal_unrelaxed,lambdalplus2mul_unrelaxed
   double precision :: Mu_nu1,Mu_nu2
-  double precision :: phi_nu1_mech1,phi_nu1_mech2
-  double precision :: phi_nu2_mech1,phi_nu2_mech2
-  double precision :: tauinv,inv_tau_sigma_nu1_mech1,inv_tau_sigma_nu1_mech2
+  double precision :: phi_nu1(N_SLS)
+  double precision :: phi_nu2(N_SLS)
+  double precision :: tauinv,inv_tau_sigma_nu1(N_SLS)
   double precision :: taumin,taumax, tau1, tau2, tau3, tau4
-  double precision :: inv_tau_sigma_nu2_mech1,inv_tau_sigma_nu2_mech2
-  double precision :: tau_epsilon_nu1_mech1, tau_sigma_nu1_mech1
-  double precision::  tau_epsilon_nu2_mech1, tau_sigma_nu2_mech1
-  double precision::  tau_epsilon_nu1_mech2, tau_sigma_nu1_mech2
-  double precision::  tau_epsilon_nu2_mech2 ,tau_sigma_nu2_mech2
+  double precision :: inv_tau_sigma_nu2(N_SLS)
 
   integer :: i,j,it,it2
 
@@ -441,7 +486,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
   integer, parameter :: IOUT = 41
 
 !---
-!--- program starts here
+!--- the program starts here
 !---
 
   if(iexpl == 1) then
@@ -459,60 +504,90 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
     epsn1 = 0.5d0
   endif
 
- tau_epsilon_nu1_mech1 = 0.0325305d0
- tau_sigma_nu1_mech1   = 0.0311465d0
+! attenuation constants for standard linear solids
+! nu1 is the dilatation/incompressibility mode (QKappa)
+! nu2 is the shear mode (Qmu)
+! array index (1) is the first standard linear solid, (2) is the second etc.
 
- tau_epsilon_nu1_mech1 = 0.0225d0
- tau_sigma_nu1_mech1   = 0.0211d0
+! from J. M. Carcione, Seismic modeling in viscoelastic media, Geophysics,
+! vol. 58(1), p. 110-120 (1993) for two memory-variable mechanisms (page 112).
+! Beware: these values implement specific values of the quality factors:
+! Qp approximately equal to 13, Qkappa approximately to 20 and Qmu / Qs approximately to 10,
+! which means very high attenuation, see that paper for details.
+! tau_epsilon_nu1(1) = 0.0334d0
+! tau_sigma_nu1(1)   = 0.0303d0
 
-  tau1= tau_sigma_nu1_mech1/tau_epsilon_nu1_mech1
+! tau_epsilon_nu2(1) = 0.0352d0
+! tau_sigma_nu2(1)   = 0.0287d0
 
-  tau_epsilon_nu2_mech1 = 0.0332577d0
-  tau_sigma_nu2_mech1   = 0.0304655d0
+! tau_epsilon_nu1(2) = 0.0028d0
+! tau_sigma_nu1(2)   = 0.0025d0
 
-  tau_epsilon_nu2_mech1 = 0.0232d0
-  tau_sigma_nu2_mech1   = 0.0204d0
+! tau_epsilon_nu2(2) = 0.0029d0
+! tau_sigma_nu2(2)   = 0.0024d0
 
-  tau2= tau_sigma_nu2_mech1/tau_epsilon_nu2_mech1
+! from J. M. Carcione, D. Kosloff and R. Kosloff, Wave propagation simulation
+! in a linear viscoelastic medium, Geophysical Journal International,
+! vol. 95, p. 597-611 (1988) for two memory-variable mechanisms (page 604).
+! Beware: these values implement specific values of the quality factors:
+! Qkappa approximately to 27 and Qmu / Qs approximately to 20,
+! which means very high attenuation, see that paper for details.
 
-  tau_epsilon_nu1_mech2 = 0.0032530d0
-  tau_sigma_nu1_mech2   = 0.0031146d0
+! tau_epsilon_nu1(1) = 0.0325305d0
+! tau_sigma_nu1(1)   = 0.0311465d0
 
-  tau_epsilon_nu1_mech2 = 0.0022d0
- tau_sigma_nu1_mech2   = 0.0021d0
+! tau_epsilon_nu2(1) = 0.0332577d0
+! tau_sigma_nu2(1)   = 0.0304655d0
 
-  tau3= tau_sigma_nu1_mech2/tau_epsilon_nu1_mech2
+! tau_epsilon_nu1(2) = 0.0032530d0
+! tau_sigma_nu1(2)   = 0.0031146d0
 
-  tau_epsilon_nu2_mech2 = 0.0033257d0
-  tau_sigma_nu2_mech2   = 0.0030465d0
+! tau_epsilon_nu2(2) = 0.0033257d0
+! tau_sigma_nu2(2)   = 0.0030465d0
 
-  tau_epsilon_nu2_mech2 = 0.0023d0
-  tau_sigma_nu2_mech2   = 0.0020d0
+! f_min and f_max are computed as : f_max/f_min=12 and (log(f_min)+log(f_max))/2 = log(f0)
+  f_min_attenuation = exp(log(f0_attenuation)-log(12.d0)/2.d0)
+  f_max_attenuation = 12.d0 * f_min_attenuation
 
-  tau4= tau_sigma_nu2_mech2/tau_epsilon_nu2_mech2
+! use new SolvOpt nonlinear optimization with constraints from Emilie Blanc, Bruno Lombard and Dimitri Komatitsch
+! to compute attenuation mechanisms
+    call compute_attenuation_coeffs(N_SLS,QKappa_att,f0_attenuation,f_min_attenuation,f_max_attenuation, &
+                                  tau_epsilon_nu1,tau_sigma_nu1)
 
-  taumax=max(1.d0/tau1,1.d0/tau2,1.d0/tau3,1.d0/tau4)
-  taumin=min(1.d0/tau1,1.d0/tau2,1.d0/tau3,1.d0/tau4)
+    call compute_attenuation_coeffs(N_SLS,QMu_att,f0_attenuation,f_min_attenuation,f_max_attenuation, &
+                                  tau_epsilon_nu2,tau_sigma_nu2)
 
- inv_tau_sigma_nu1_mech1 = ONE / tau_sigma_nu1_mech1
-  inv_tau_sigma_nu2_mech1 = ONE / tau_sigma_nu2_mech1
-  inv_tau_sigma_nu1_mech2 = ONE / tau_sigma_nu1_mech2
-  inv_tau_sigma_nu2_mech2 = ONE / tau_sigma_nu2_mech2
+    print *
+    print *,'with new SolvOpt routine for attenuation:'
+    print *
+    print *,'N_SLS, QKappa_att, QMu_att = ',N_SLS, QKappa_att, QMu_att
+    print *,'f0_attenuation,f_min_attenuation,f_max_attenuation = ',f0_attenuation,f_min_attenuation,f_max_attenuation
+    print *,'tau_epsilon_nu1 = ',tau_epsilon_nu1
+    print *,'tau_sigma_nu1 = ',tau_sigma_nu1
+    print *,'tau_epsilon_nu2 = ',tau_epsilon_nu2
+    print *,'tau_sigma_nu2 = ',tau_sigma_nu2
+    print *
 
-phi_nu1_mech1 = (ONE - tau_epsilon_nu1_mech1/tau_sigma_nu1_mech1)&
- / tau_sigma_nu1_mech1
-phi_nu2_mech1 = (ONE - tau_epsilon_nu2_mech1/tau_sigma_nu2_mech1)&
- / tau_sigma_nu2_mech1
-phi_nu1_mech2 = (ONE - tau_epsilon_nu1_mech2/tau_sigma_nu1_mech2)&
- / tau_sigma_nu1_mech2
-phi_nu2_mech2 = (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2) &
-/ tau_sigma_nu2_mech2
+  tau1 = tau_sigma_nu1(1)/tau_epsilon_nu1(1)
+  tau2 = tau_sigma_nu2(1)/tau_epsilon_nu2(1)
+  tau3 = tau_sigma_nu1(2)/tau_epsilon_nu1(2)
+  tau4 = tau_sigma_nu2(2)/tau_epsilon_nu2(2)
 
- Mu_nu1 = ONE - (ONE - tau_epsilon_nu1_mech1/tau_sigma_nu1_mech1) &
-- (ONE - tau_epsilon_nu1_mech2/tau_sigma_nu1_mech2)
- Mu_nu2 = ONE - (ONE - tau_epsilon_nu2_mech1/tau_sigma_nu2_mech1) &
-- (ONE - tau_epsilon_nu2_mech2/tau_sigma_nu2_mech2)
+  taumax = max(1.d0/tau1,1.d0/tau2,1.d0/tau3,1.d0/tau4)
+  taumin = min(1.d0/tau1,1.d0/tau2,1.d0/tau3,1.d0/tau4)
 
+  inv_tau_sigma_nu1(1) = ONE / tau_sigma_nu1(1)
+  inv_tau_sigma_nu2(1) = ONE / tau_sigma_nu2(1)
+  inv_tau_sigma_nu1(2) = ONE / tau_sigma_nu1(2)
+  inv_tau_sigma_nu2(2) = ONE / tau_sigma_nu2(2)
+
+  phi_nu1(1) = (ONE - tau_epsilon_nu1(1)/tau_sigma_nu1(1)) / tau_sigma_nu1(1)
+  phi_nu2(1) = (ONE - tau_epsilon_nu2(1)/tau_sigma_nu2(1)) / tau_sigma_nu2(1)
+  phi_nu1(2) = (ONE - tau_epsilon_nu1(2)/tau_sigma_nu1(2)) / tau_sigma_nu1(2)
+  phi_nu2(2) = (ONE - tau_epsilon_nu2(2)/tau_sigma_nu2(2)) / tau_sigma_nu2(2)
+
+  Mu_nu1 = ONE - (ONE - tau_epsilon_nu1(1)/tau_sigma_nu1(1)) - (ONE - tau_epsilon_nu1(2)/tau_sigma_nu1(2))
+  Mu_nu2 = ONE - (ONE - tau_epsilon_nu2(1)/tau_sigma_nu2(1)) - (ONE - tau_epsilon_nu2(2)/tau_sigma_nu2(2))
 
   print *
   print *,'2D visco-elastic FD code in velocity and stress formulation with ADE in 8th an RK4'
@@ -890,7 +965,7 @@ enddo
   print *,'Courant number at the bottom is ',Courant_number_bottom
   print *,'Dispersion number at the bottom is ',Dispersion_number_bottom
   print *
-  if(Courant_number_bottom > 1.d0/coe_sum) stop 'time step is too large, simulation will be unstable'
+  if(Courant_number_bottom > 1.d0/coefficient_sum) stop 'time step is too large, simulation will be unstable'
 
   if(HETEROGENEOUS_MODEL) then
     Courant_number_top = cp_top *dsqrt(taumax) * DELTAT* sqrt(1.d0/DELTAX**2 + 1.d0/DELTAY**2 )
@@ -898,7 +973,7 @@ enddo
     print *,'Courant number at the top is ',Courant_number_top
     print *
     print *,'Dispersion number at the top is ',Dispersion_number_top
-    if(Courant_number_top > 1.d0/coe_sum) stop 'time step is too large, simulation will be unstable'
+    if(Courant_number_top > 1.d0/coefficient_sum) stop 'time step is too large, simulation will be unstable'
   endif
 
 ! erase main arrays
@@ -920,21 +995,21 @@ enddo
   dsigmayy_R(:,:,:) = ZERO
   dsigmaxx_R(:,:,:) = ZERO
 
-  e1_mech1(:,:)=ZERO
-  e1_mech2(:,:)=ZERO
-  e11_mech1(:,:)=ZERO
-  e11_mech2(:,:)=ZERO
-  e12_mech1(:,:)=ZERO
-  e12_mech2(:,:)=ZERO
-  e22_mech1(:,:)=ZERO
-  e22_mech2(:,:)=ZERO
+  e1(1,:,:)=ZERO
+  e1(2,:,:)=ZERO
+  e11(1,:,:)=ZERO
+  e11(2,:,:)=ZERO
+  e12(1,:,:)=ZERO
+  e12(2,:,:)=ZERO
+  e22(1,:,:)=ZERO
+  e22(2,:,:)=ZERO
 
-  de1_mech1(:,:,:)=ZERO
-  de1_mech2(:,:,:)=ZERO
-  de11_mech1(:,:,:)=ZERO
-  de11_mech2(:,:,:)=ZERO
-  de12_mech1(:,:,:)=ZERO
-  de12_mech2(:,:,:)=ZERO
+  de1(1,:,:,:)=ZERO
+  de1(2,:,:,:)=ZERO
+  de11(1,:,:,:)=ZERO
+  de11(2,:,:,:)=ZERO
+  de12(1,:,:,:)=ZERO
+  de12(2,:,:,:)=ZERO
 
 ! PML
   memory_dvx_dx_1(:,:,:) = ZERO
@@ -991,14 +1066,14 @@ enddo
     dsigmayy_R(4,:,:) = dsigmayy_R(1,:,:)
     dsigmaxy_R(4,:,:) = dsigmaxy_R(1,:,:)
 
-    de1_mech1(4,:,:) = de1_mech1(1,:,:)
-    de1_mech2(4,:,:) = de1_mech2(1,:,:)
-    de11_mech1(4,:,:) = de11_mech1(1,:,:)
-    de11_mech2(4,:,:) = de11_mech2(1,:,:)
-    !de22_mech1(4,:,:) = de22_mech1(1,:,:)
-    !de22_mech2(4,:,:) = de22_mech2(1,:,:)
-    de12_mech1(4,:,:) = de12_mech1(1,:,:)
-    de12_mech2(4,:,:) = de12_mech2(1,:,:)
+    de1(1,4,:,:) = de1(1,1,:,:)
+    de1(2,4,:,:) = de1(2,1,:,:)
+    de11(1,4,:,:) = de11(1,1,:,:)
+    de11(2,4,:,:) = de11(2,1,:,:)
+  ! de22(1,4,:,:) = de22(1,1,:,:)
+  ! de22(2,4,:,:) = de22(2,1,:,:)
+    de12(1,4,:,:) = de12(1,1,:,:)
+    de12(2,4,:,:) = de12(2,1,:,:)
 
     ! same thing for  memory variables
     memory_dsigmaxx_dx_1(4,:,:) = memory_dsigmaxx_dx_1(1,:,:)
@@ -1135,34 +1210,34 @@ enddo
 
       div=duxdx+duydy
 
-!evolution e1_mech1
- tauinv = - inv_tau_sigma_nu1_mech1
- Sn   = div * phi_nu1_mech1
- de1_mech1(2,i,j) = tauinv * de1_mech1(1,i,j) + Sn
+!evolution e1(1)
+ tauinv = - inv_tau_sigma_nu1(1)
+ Sn   = div * phi_nu1(1)
+ de1(1,2,i,j) = tauinv * de1(1,1,i,j) + Sn
 
-!evolution e1_mech2
- tauinv = - inv_tau_sigma_nu1_mech2
- Sn   = div * phi_nu1_mech2
- de1_mech2(2,i,j) = tauinv * de1_mech2(1,i,j) + Sn
+!evolution e1(2)
+ tauinv = - inv_tau_sigma_nu1(2)
+ Sn   = div * phi_nu1(2)
+ de1(2,2,i,j) = tauinv * de1(2,1,i,j) + Sn
 
-! evolution e11_mech1
- tauinv = - inv_tau_sigma_nu2_mech1
- Sn   = (duxdx - div/DIM) * phi_nu2_mech1
- de11_mech1(2,i,j) = tauinv * de11_mech1(1,i,j) + Sn
+! evolution e11(1)
+ tauinv = - inv_tau_sigma_nu2(1)
+ Sn   = (duxdx - div/DIM) * phi_nu2(1)
+ de11(1,2,i,j) = tauinv * de11(1,1,i,j) + Sn
 
-! evolution e11_mech2
- tauinv = - inv_tau_sigma_nu2_mech2
- Sn   = (duxdx - div/DIM) * phi_nu2_mech2
- de11_mech2(2,i,j) = tauinv * de11_mech2(1,i,j) + Sn
+! evolution e11(2)
+ tauinv = - inv_tau_sigma_nu2(2)
+ Sn   = (duxdx - div/DIM) * phi_nu2(2)
+ de11(2,2,i,j) = tauinv * de11(2,1,i,j) + Sn
 
 !add the memory variables using the relaxed parameters (Carcione page 111)
 ! there is a bug in Carcione's equation for sigma_zz
   dsigmaxx(2,i,j) = ((lambdal_relaxed + 2.d0/DIM*mul_relaxed)* &
-        (de1_mech1(1,i,j) + de1_mech2(1,i,j)) + TWO * mul_relaxed * (de11_mech1(1,i,j) + de11_mech2(1,i,j))+ &
+        (de1(1,1,i,j) + de1(2,1,i,j)) + TWO * mul_relaxed * (de11(1,1,i,j) + de11(2,1,i,j))+ &
         (lambdalplus2mul_unrelaxed * (duxdx) + lambdal_unrelaxed* (duydy) ))
 
  dsigmayy(2,i,j) = ((lambdal_relaxed + 2.d0*mul_relaxed)* &
-        (de1_mech1(1,i,j) + de1_mech2(1,i,j)) - TWO/DIM * mul_relaxed * (de11_mech1(1,i,j) + de11_mech2(1,i,j)) + &
+        (de1(1,1,i,j) + de1(2,1,i,j)) - TWO/DIM * mul_relaxed * (de11(1,1,i,j) + de11(2,1,i,j)) + &
         (lambdal_unrelaxed * (duxdx) + lambdalplus2mul_unrelaxed* (duydy) ))
 
 ! compute the stress using the unrelaxed Lame parameters (Carcione page 111)
@@ -1195,17 +1270,17 @@ enddo
            duxdy = value_dvx_dy / K_y_half_1(j) + memory_dvx_dy_1(1,i,j)
            endif
 
-! evolution e12_mech1
-     tauinv = - inv_tau_sigma_nu2_mech1
-     Sn   = (duxdy+duydx) * phi_nu2_mech1
-     de12_mech1(2,i,j) = tauinv * de12_mech1(1,i,j) + Sn
+! evolution e12(1)
+     tauinv = - inv_tau_sigma_nu2(1)
+     Sn   = (duxdy+duydx) * phi_nu2(1)
+     de12(1,2,i,j) = tauinv * de12(1,1,i,j) + Sn
 
-! evolution e12_mech2
-     tauinv = - inv_tau_sigma_nu2_mech2
-     Sn   = (duxdy+duydx) * phi_nu2_mech2
-     de12_mech2(2,i,j) = tauinv * de12_mech2(1,i,j) + Sn
+! evolution e12(2)
+     tauinv = - inv_tau_sigma_nu2(2)
+     Sn   = (duxdy+duydx) * phi_nu2(2)
+     de12(2,2,i,j) = tauinv * de12(2,1,i,j) + Sn
 
-    dsigmaxy(2,i,j) = mul_relaxed * (de12_mech1(1,i,j) + de12_mech2(1,i,j))+mul_unrelaxed * (duxdy+duydx)
+    dsigmaxy(2,i,j) = mul_relaxed * (de12(1,1,i,j) + de12(2,1,i,j))+mul_unrelaxed * (duxdy+duydx)
     dsigmaxy_R(2,i,j) = mul_relaxed * (duxdy+duydx)
 
       enddo
@@ -1221,13 +1296,12 @@ enddo
         dsigmayy_R(1,:,:) = dsigmayy_R(4,:,:) + rk41(inc) * dsigmayy_R(2,:,:) * DELTAT
         dsigmaxy_R(1,:,:) = dsigmaxy_R(4,:,:) + rk41(inc) * dsigmaxy_R(2,:,:) * DELTAT
 
-
-        de1_mech1(1,:,:) = de1_mech1(4,:,:) + rk41(inc) * de1_mech1(2,:,:) * DELTAT
-        de1_mech2(1,:,:) = de1_mech2(4,:,:) + rk41(inc) * de1_mech2(2,:,:) * DELTAT
-        de11_mech1(1,:,:) = de11_mech1(4,:,:) + rk41(inc) * de11_mech1(2,:,:) * DELTAT
-        de11_mech2(1,:,:) = de11_mech2(4,:,:) + rk41(inc) * de11_mech2(2,:,:) * DELTAT
-        de12_mech1(1,:,:) = de12_mech1(4,:,:) + rk41(inc) * de12_mech1(2,:,:) * DELTAT
-        de12_mech2(1,:,:) = de12_mech2(4,:,:) + rk41(inc) * de12_mech2(2,:,:) * DELTAT
+        de1(1,1,:,:) = de1(1,4,:,:) + rk41(inc) * de1(1,2,:,:) * DELTAT
+        de1(2,1,:,:) = de1(2,4,:,:) + rk41(inc) * de1(2,2,:,:) * DELTAT
+        de11(1,1,:,:) = de11(1,4,:,:) + rk41(inc) * de11(1,2,:,:) * DELTAT
+        de11(2,1,:,:) = de11(2,4,:,:) + rk41(inc) * de11(2,2,:,:) * DELTAT
+        de12(1,1,:,:) = de12(1,4,:,:) + rk41(inc) * de12(1,2,:,:) * DELTAT
+        de12(2,1,:,:) = de12(2,4,:,:) + rk41(inc) * de12(2,2,:,:) * DELTAT
 
         memory_dsigmaxx_dx_1(1,:,:) = memory_dsigmaxx_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxx_dx_1(2,:,:)
         memory_dsigmaxy_dy_1(1,:,:) = memory_dsigmaxy_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxy_dy_1(2,:,:)
@@ -1272,12 +1346,12 @@ enddo
   sigmayy_R(:,:) =  dsigmayy_R(1,:,:)
   sigmaxy_R(:,:) =  dsigmaxy_R(1,:,:)
 
-  e1_mech1(:,:) = de1_mech1(1,:,:)
-  e1_mech2(:,:) = de1_mech2(1,:,:)
-  e11_mech1(:,:) = de11_mech1(1,:,:)
-  e11_mech2(:,:) = de11_mech2(1,:,:)
-  e12_mech1(:,:) = de12_mech1(1,:,:)
-  e12_mech2(:,:) = de12_mech2(1,:,:)
+  e1(1,:,:) = de1(1,1,:,:)
+  e1(2,:,:) = de1(2,1,:,:)
+  e11(1,:,:) = de11(1,1,:,:)
+  e11(2,:,:) = de11(2,1,:,:)
+  e12(1,:,:) = de12(1,1,:,:)
+  e12(2,:,:) = de12(2,1,:,:)
 
 ! end of RK4 loop
 
@@ -1331,7 +1405,7 @@ enddo
 ! output information
   if(mod(it,IT_DISPLAY) == 0 .or. it == 5) then
         Vsolidnorm = maxval(sqrt(vx**2 + vy**2))
-      print *,'Time step # ',it
+      print *,'Time step # ',it,' out of ',NSTEP
       print *,'Time: ',sngl((it-1)*DELTAT),' seconds'
       print *,'Max norm velocity vector V (m/s) = ',Vsolidnorm
       print *,'Total energy = ',total_energy(it)
@@ -1467,6 +1541,9 @@ enddo
   print *
 
   end program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
+
+! include the SolvOpt routines
+  include "attenuation_model_with_SolvOpt.f90"
 
 !----
 !----  save the seismograms in ASCII text format

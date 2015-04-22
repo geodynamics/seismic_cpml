@@ -1,7 +1,6 @@
 #
-# Makefile for SEISMIC_CPML Version 1.1.1, November 2009.
-# Dimitri Komatitsch
-# Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France
+# Makefile for SEISMIC_CPML Version 1.2, April 2015.
+# Dimitri Komatitsch, CNRS, France
 # 
 SHELL=/bin/sh
 
@@ -20,6 +19,7 @@ O = obj
 #F90 = ifort
 #MPIF90 = mpif90
 #FLAGS = -O3 -xHost -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -ftz
+#FLAGS = -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -ftz
 #MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -openmp -openmp-report1
 
