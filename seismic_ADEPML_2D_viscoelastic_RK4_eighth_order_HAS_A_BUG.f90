@@ -489,6 +489,10 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 !--- the program starts here
 !---
 
+!!!!!!!!!!! DK DK puts this for now, since Roland Martin's RK4 implementation has a major bug !!!!!!!!!!!!!!!
+  stop 'this code has a bug, see file email_from_Youshan_Liu_about_bug_in_the_original_fourth_order_Runge_Kutta_scheme.txt'
+!!!!!!!!!!! DK DK puts this for now, since Roland Martin's RK4 implementation has a major bug !!!!!!!!!!!!!!!
+
   if(iexpl == 1) then
     epsn = 1.d0
     epsn1 = 0.d0
