@@ -1,0 +1,83 @@
+
+Subject: some questions about your CPML code
+From: 刘有山 ysliu
+Date: 08/03/2015 05:22 AM
+To: komatitsch
+
+Dear Prof.  Komatitsch,
+
+
+         Please allow me to introduce myself. My name is Youshan Liu,
+         and I am a doctor student at Institute of Geology and Geophysics of Chinese Academy of Sciences.
+
+         Ocassionally, I read your code of CPML software package (seismic_ADEPML_2D_elastic_RK4_eighth_order).
+
+         Unfortunately, I found that your code with Runge-Kutta scheme may be not correct.
+
+         For ordinary equation:
+
+              y'(x) = f(x,y).
+
+         The Runge-Kutta integration include the following four steps:
+
+               y_n+1 = y_n + h/6*( K_1 + 2*K_2 + 2*K_3 + K_4)
+
+               K_1 = f(x_n, y_n)
+
+               K_2 = f(x_n + h/2, y_n + h/2*K_1)
+
+               K_3 = f(x_n + h/2, y_n + h/2*K_2)
+
+               K_4 = f(x_n + h  , y_n + h*K_3)
+
+
+
+        In your code, K_inc stored in dvx(2,:,:). You may miss the proccess of the linear combination of y_n+1 = y_n + h/6*( K_1 + 2*K_2 + 2*K_3 + K_4).
+
+        Although you defined the coefficient of the Runge-Kutta stored in array rk42, you never use them.
+
+
+
+        I have modified your code, and I send you.
+
+        I think that your code may be not correct !
+
+
+
+        I run the your code and your code modified by me with the identical parameters.
+
+        Your results may be not correct.
+
+
+
+        When I set the time interval dt = 3ms (Courant number is 0.8485), your original code is unstable, while your code modified me still work.
+
+
+
+        The results have been uploaded in attachment. The su format files can be opened by Fimage.exe.
+
+
+
+        In addation, your code titled by seismic_ADEPML_2D_viscoelastic_RK4_eighth_order may be also not correct.
+
+
+      I also improve the code to save much more memory.
+
+      I think the arrays of memory_dvx_dx, etc. can be allocated only in two dimension.
+
+      I have try them again.
+
+      It still work. Unfortunately, I check the original code several times. I found that it may be incorrect.
+
+      The original coed can not work with the time interval of 3 ms.
+
+      The modified code can work with the time interval of 3 ms.
+
+
+        Best wishes,
+
+        Youshan LiuS
+
+
+Attachments:
+elastic_rk4.zip 5.0 MB
