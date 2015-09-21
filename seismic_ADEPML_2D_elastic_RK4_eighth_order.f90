@@ -307,9 +307,11 @@ double precision, parameter :: ALPHA_MAX_PML = 2.d0*PI*(f0/2.d0)
 
 ! arrays for the memory variables
 ! could declare these arrays in PML only to save a lot of memory, but proof of concept only here
-! We have as many memory variables as the number of frequency shift poles in the CPML
-! Indices are 1 and 2 for the 2 frequency shift poles
-double precision, dimension(2,-4:NX+4,-4:NY+4) :: memory_dvx_dx, memory_dvx_dy, memory_dvy_dx, memory_dvy_dy, &
+!!! Youshan Liu suppressed the two comment lines below
+!!!!!! not true anymore: We have as many memory variables as the number of frequency shift poles in the CPML
+!!!!!! not true anymore: Indices are 1 and 2 for the 2 frequency shift poles
+! ==================== revised by Youshan Liu ==================
+double precision, dimension(-4:NX+4,-4:NY+4) :: memory_dvx_dx, memory_dvx_dy, memory_dvy_dx, memory_dvy_dy, &
                                                   memory_dsigmaxx_dx, memory_dsigmayy_dy, &
                                                   memory_dsigmaxy_dx, memory_dsigmaxy_dy
 
@@ -685,14 +687,14 @@ sigmayy(:,:) = ZERO
 sigmaxy(:,:) = ZERO
 
 ! PML
-memory_dvx_dx(:,:,:) = ZERO
-memory_dvx_dy(:,:,:) = ZERO
-memory_dvy_dx(:,:,:) = ZERO
-memory_dvy_dy(:,:,:) = ZERO
-memory_dsigmaxx_dx(:,:,:) = ZERO
-memory_dsigmayy_dy(:,:,:) = ZERO
-memory_dsigmaxy_dx(:,:,:) = ZERO
-memory_dsigmaxy_dy(:,:,:) = ZERO
+memory_dvx_dx(:,:) = ZERO
+memory_dvx_dy(:,:) = ZERO
+memory_dvy_dx(:,:) = ZERO
+memory_dvy_dy(:,:) = ZERO
+memory_dsigmaxx_dx(:,:) = ZERO
+memory_dsigmayy_dy(:,:) = ZERO
+memory_dsigmaxy_dx(:,:) = ZERO
+memory_dsigmaxy_dy(:,:) = ZERO
 
 ! initialize seismograms
 sisvx(:,:) = ZERO
@@ -727,22 +729,13 @@ do it = 1,NSTEP
 
    ! RK4 loop (loop on the four RK4 substeps)
    do inc= 1,4
-      ! revised by Youshan Liu
+      ! ==================== revised by Youshan Liu ==================
       ! The new values of the different variables v and sigma are computed
       dvx(1,:,:) = dvx(3,:,:) + rk41(inc) * dvx(2,:,:) * DELTAT
       dvy(1,:,:) = dvy(3,:,:) + rk41(inc) * dvy(2,:,:) * DELTAT
       dsigmaxx(1,:,:) = dsigmaxx(3,:,:) + rk41(inc) * dsigmaxx(2,:,:) * DELTAT
       dsigmayy(1,:,:) = dsigmayy(3,:,:) + rk41(inc) * dsigmayy(2,:,:) * DELTAT
       dsigmaxy(1,:,:) = dsigmaxy(3,:,:) + rk41(inc) * dsigmaxy(2,:,:) * DELTAT
-
-      memory_dvx_dx(1,:,:) = memory_dvx_dx(2,:,:)
-      memory_dvy_dy(1,:,:) = memory_dvy_dy(2,:,:)
-      memory_dvx_dy(1,:,:) = memory_dvx_dy(2,:,:)
-      memory_dvy_dx(1,:,:) = memory_dvy_dx(2,:,:)
-      memory_dsigmaxx_dx(1,:,:) = memory_dsigmaxx_dx(2,:,:)
-      memory_dsigmaxy_dy(1,:,:) = memory_dsigmaxy_dy(2,:,:)
-      memory_dsigmaxy_dx(1,:,:) = memory_dsigmaxy_dx(2,:,:)
-      memory_dsigmayy_dy(1,:,:) = memory_dsigmayy_dy(2,:,:)
 
       !------------------
       ! compute velocity
@@ -758,11 +751,12 @@ do it = 1,NSTEP
                c3 * (dsigmaxy(1,i,j+2) - dsigmaxy(1,i,j-3)) + c4 * (dsigmaxy(1,i,j+3) - dsigmaxy(1,i,j-4)) )/ DELTAY
 
             if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
-               memory_dsigmaxx_dx(2,i,j) = b_x(inc,i) * memory_dsigmaxx_dx(1,i,j) + a_x(inc,i) * value_dsigmaxx_dx
-               memory_dsigmaxy_dy(2,i,j) = b_y(inc,j) * memory_dsigmaxy_dy(1,i,j) + a_y(inc,j) * value_dsigmaxy_dy
+               ! ==================== revised by Youshan Liu ==================
+               memory_dsigmaxx_dx(i,j) = b_x(inc,i) * memory_dsigmaxx_dx(i,j) + a_x(inc,i) * value_dsigmaxx_dx
+               memory_dsigmaxy_dy(i,j) = b_y(inc,j) * memory_dsigmaxy_dy(i,j) + a_y(inc,j) * value_dsigmaxy_dy
 
-               value_dsigmaxx_dx = value_dsigmaxx_dx / K_x(i) + memory_dsigmaxx_dx(1,i,j)
-               value_dsigmaxy_dy = value_dsigmaxy_dy / K_y(j) + memory_dsigmaxy_dy(1,i,j)
+               value_dsigmaxx_dx = value_dsigmaxx_dx / K_x(i) + memory_dsigmaxx_dx(i,j)
+               value_dsigmaxy_dy = value_dsigmaxy_dy / K_y(j) + memory_dsigmaxy_dy(i,j)
             endif
 
             dvx(2,i,j) = (value_dsigmaxx_dx + value_dsigmaxy_dy) / rho(i,j)
@@ -783,11 +777,12 @@ do it = 1,NSTEP
                c3 * (dsigmayy(1,i,j+3) - dsigmayy(1,i,j-2)) + c4 * (dsigmayy(1,i,j+4) - dsigmayy(1,i,j-3)) )/ DELTAY
 
             if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
-               memory_dsigmaxy_dx(2,i,j) = b_x_half(inc,i) * memory_dsigmaxy_dx(1,i,j) + a_x_half(inc,i) * value_dsigmaxy_dx
-               memory_dsigmayy_dy(2,i,j) = b_y_half(inc,j) * memory_dsigmayy_dy(1,i,j) + a_y_half(inc,j) * value_dsigmayy_dy
+         ! ==================== revised by Youshan Liu ==================
+               memory_dsigmaxy_dx(i,j) = b_x_half(inc,i) * memory_dsigmaxy_dx(i,j) + a_x_half(inc,i) * value_dsigmaxy_dx
+               memory_dsigmayy_dy(i,j) = b_y_half(inc,j) * memory_dsigmayy_dy(i,j) + a_y_half(inc,j) * value_dsigmayy_dy
 
-               value_dsigmaxy_dx = value_dsigmaxy_dx/K_x_half(i)+memory_dsigmaxy_dx(1,i,j)
-               value_dsigmayy_dy = value_dsigmayy_dy/K_y_half(j)+memory_dsigmayy_dy(1,i,j)
+               value_dsigmaxy_dx = value_dsigmaxy_dx/K_x_half(i)+memory_dsigmaxy_dx(i,j)
+               value_dsigmayy_dy = value_dsigmayy_dy/K_y_half(j)+memory_dsigmayy_dy(i,j)
             endif
 
             dvy(2,i,j) = (value_dsigmaxy_dx + value_dsigmayy_dy) / rho_half_x_half_y
@@ -853,11 +848,12 @@ do it = 1,NSTEP
                c3 * (dvy(1,i,j+2) - dvy(1,i,j-3)) + c4 * (dvy(1,i,j+3) - dvy(1,i,j-4)) )/ DELTAY
 
             if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
-               memory_dvx_dx(2,i,j) = b_x_half(inc,i) * memory_dvx_dx(1,i,j) + a_x_half(inc,i) * value_dvx_dx
-               memory_dvy_dy(2,i,j) = b_y(inc,j) * memory_dvy_dy(1,i,j) + a_y(inc,j) * value_dvy_dy
+               ! ==================== revised by Youshan Liu ==================
+               memory_dvx_dx(i,j) = b_x_half(inc,i) * memory_dvx_dx(i,j) + a_x_half(inc,i) * value_dvx_dx
+               memory_dvy_dy(i,j) = b_y(inc,j) * memory_dvy_dy(i,j) + a_y(inc,j) * value_dvy_dy
 
-               value_dvx_dx = value_dvx_dx / K_x_half(i)  + memory_dvx_dx(1,i,j)
-               value_dvy_dy = value_dvy_dy / K_y(j) + memory_dvy_dy(1,i,j)
+               value_dvx_dx = value_dvx_dx / K_x_half(i)  + memory_dvx_dx(i,j)
+               value_dvy_dy = value_dvy_dy / K_y(j) + memory_dvy_dy(i,j)
             endif
 
             dsigmaxx(2,i,j) = (lambda_plus_two_mu_half_x * value_dvx_dx + lambda_half_x * value_dvy_dy)
@@ -878,11 +874,12 @@ do it = 1,NSTEP
                c3 * (dvy(1,i+2,j) - dvy(1,i-3,j)) + c4 * (dvy(1,i+3,j) - dvy(1,i-4,j)) )/ DELTAX
 
             if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
-               memory_dvy_dx(2,i,j) = b_x(inc,i) * memory_dvy_dx(1,i,j) + a_x(inc,i) * value_dvy_dx
-               memory_dvx_dy(2,i,j) = b_y_half(inc,j) * memory_dvx_dy(1,i,j) + a_y_half(inc,j) * value_dvx_dy
+               ! ==================== revised by Youshan Liu ==================
+               memory_dvy_dx(i,j) = b_x(inc,i) * memory_dvy_dx(i,j) + a_x(inc,i) * value_dvy_dx
+               memory_dvx_dy(i,j) = b_y_half(inc,j) * memory_dvx_dy(i,j) + a_y_half(inc,j) * value_dvx_dy
 
-               value_dvy_dx = value_dvy_dx / K_x(i)  + memory_dvy_dx(1,i,j)
-               value_dvx_dy = value_dvx_dy / K_y_half(j) + memory_dvx_dy(1,i,j)
+               value_dvy_dx = value_dvy_dx / K_x(i)  + memory_dvy_dx(i,j)
+               value_dvx_dy = value_dvx_dy / K_y_half(j) + memory_dvx_dy(i,j)
             endif
 
             dsigmaxy(2,i,j) = mu_half_y * (value_dvy_dx + value_dvx_dy)
@@ -890,8 +887,8 @@ do it = 1,NSTEP
           enddo
       enddo
 
-      ! revised by Youshan Liu
-      !! The new values of the different variables v and sigma are computed
+      ! ==================== revised by Youshan Liu ==================
+      ! the new values of the different variables v and sigma are computed
       vx(:,:) = vx(:,:) + rk42(inc) * dvx(2,:,:) * DELTAT
       vy(:,:) = vy(:,:) + rk42(inc) * dvy(2,:,:) * DELTAT
       sigmaxx(:,:) = sigmaxx(:,:) + rk42(inc) * dsigmaxx(2,:,:) * DELTAT
