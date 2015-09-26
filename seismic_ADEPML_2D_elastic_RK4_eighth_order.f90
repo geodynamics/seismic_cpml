@@ -291,7 +291,6 @@ double precision, dimension(3,-4:NX+4,-4:NY+4) :: dvx,dvy,dsigmaxx,dsigmayy,dsig
 double precision lambda_half_x,mu_half_x,lambda_plus_two_mu_half_x,mu_half_y,rho_half_x_half_y
 
 ! for evolution of total energy in the medium
-double precision epsilon_xx,epsilon_yy,epsilon_xy
 double precision, dimension(NSTEP) :: total_energy_kinetic,total_energy_potential
 
 ! power to compute d0 profile
@@ -347,9 +346,9 @@ double precision, dimension(NREC) :: xrec,yrec
 ! for seismograms
 double precision, dimension(NSTEP,NREC) :: sisvx,sisvy
 
-integer :: i,j,k,it,it2,irec,inc
+integer :: i,j,k,it,irec,inc
 
-double precision :: Courant_number,velocnorm
+double precision :: Courant_number
 
 !define by ysliu 8/2/2015
 integer(2) head(1:120)
