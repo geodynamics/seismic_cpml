@@ -40,8 +40,7 @@ program seismic_ADEPML_2D_elastic_RK4_eighth_order
 ! in velocity and stress formulation with Auxiliary Differential
 ! Equation Perfectly Matched Layer (ADE-PML) absorbing conditions for
 ! an isotropic elastic medium. It is fourth order Runge-Kutta (RK4) in time
-! and 8th order in space using Holberg spatial
-! discretization. 1 and/or 2 frequency shift poles are implemented
+! and 8th order in space using Holberg spatial discretization.
 
 ! Version 1.1.3
 ! by Roland Martin, University of Pau, France, Jan 2010
@@ -78,8 +77,7 @@ program seismic_ADEPML_2D_elastic_RK4_eighth_order
 ! If you use this code for your own research, please cite some (or all) of these articles:
 !
 ! @ARTICLE{MaKoGeBr10,
-! author = {Roland Martin and Dimitri Komatitsch and Stephen D. Gedney and
-! Emilien Bruthiaux},
+! author = {Roland Martin and Dimitri Komatitsch and Stephen D. Gedney and Emilien Bruthiaux},
 !  title = {A high-order time and space formulation of the unsplit perfectly matched layer
 !  for the seismic wave equation using {Auxiliary Differential Equations (ADE-PML)}},
 !  journal = {Comput. Model. Eng. Sci.},
