@@ -1,39 +1,15 @@
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
-! Program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order, eighth-order accurate in space and second-order accurate in time
-!
-! This viscoelastic code with with Auxiliary Differential Equation PML is modified by Ruiqi Shi from program
-! 'seismic_CPML_3D_viscoelastic_MPI.f90' and 'seismic_ADEPML_2D_RK4_eighth_order' of seismic CPML software package.
+! Copyright Universite de Pau et des Pays de l'Adour, CNRS and INRIA, France.
+! Contributors: Roland Martin, roland DOT martin aT univ-pau DOT fr
+!               and Ruiqi Shi and Youshan Liu, China.
 !
 ! Ruiqi Shi, Department of Exploration Geophysics, China University of Petroleum, Beijing, China.
 ! Email: shiruiqi123 AT gmail DOT com
 !
-! based on the initial programs from Dimitri Komatitsch and Roland Martin in the SEISMIC_CPML package.
-!
-! SEISMIC_CPML Version 1.2, April 2015.
-!
-! Copyright CNRS, France.
-! Contributors: Dimitri Komatitsch, komatitsch aT lma DOT cnrs-mrs DOT fr
-!           and Roland Martin, roland DOT martin aT get DOT obs-mip DOT fr
-!
-! April 2015: Dimitri Komatitsch added support for the SolvOpt algorithm to compute
-! the attenuation parameters in an optimized way. If you use it please cite:
-!
-! @Article{BlKoChLoXi15,
-! Title   = {Positivity-preserving highly-accurate optimization of the {Z}ener viscoelastic model, with application
-!            to wave propagation in the presence of strong attenuation},
-! Author  = {\'Emilie Blanc and Dimitri Komatitsch and Emmanuel Chaljub and Bruno Lombard and Zhinan Xie},
-! Journal = {Geophysical Journal International},
-! Year    = {2015},
-! Note    = {in press.}}
-!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 ! This software is a computer program whose purpose is to solve
 ! the two-dimensional viscoelastic wave equation
 ! using a finite-difference method with Auxiliary Differential
 ! Equation Perfectly Matched Layer (ADE-PML) conditions.
-!
 !
 ! This software is governed by the CeCILL license under French law and
 ! abiding by the rules of distribution of free software. You can use,
@@ -63,28 +39,19 @@
 
 program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 
-! High order 2D explicit-semi implicit-implicit seismic wave finite-difference code
+! High order 2D explicit-semi implicit-implicit viscoelastic finite-difference code
 ! in velocity and stress formulation with Auxiliary Differential
 ! Equation Perfectly Matched Layer (ADE-PML) absorbing conditions for
 ! an SLS viscoelastic medium. It is fourth order Runge-Kutta (RK4) in time
-! and 8th order in space using Holberg spatial
-! discretization.
-!
-! Version 1.0 July, 2011
-! by Ruiqi Shi, China University of Petroleum, Beijing, China, 2011.
-! based on seismic_CPML_3D_viscoelastic_MPI.f90 and seismic_ADEPML_2D_RK4_eighth_order.f90
-! by Dimitri Komatitsch and Roland Martin, CNRS, France
-!
-! April 2015: Dimitri Komatitsch added support for the SolvOpt algorithm to compute
-! the attenuation parameters in an optimized way. If you use it please cite:
-!
-! @Article{BlKoChLoXi15,
-! Title   = {Positivity-preserving highly-accurate optimization of the {Z}ener viscoelastic model, with application
-!            to wave propagation in the presence of strong attenuation},
-! Author  = {\'Emilie Blanc and Dimitri Komatitsch and Emmanuel Chaljub and Bruno Lombard and Zhinan Xie},
-! Journal = {Geophysical Journal International},
-! Year    = {2015},
-! Note    = {in press.}}
+! and 8th order in space using Holberg spatial discretization.
+
+! Version 1.1.3
+! by Roland Martin, University of Pau, France, Jan 2010
+! with improvements by Ruiqi Shi and
+! with a major bug fix in the Runge-Kutta implementation
+! and also significant memory usage optimization by Youshan Liu, China, August 2015.
+! based on seismic_CPML_2D_isotropic_second_order.f90
+! by Dimitri Komatitsch and Roland Martin, University of Pau, France, 2007.
 
 ! *BEWARE* that the attenuation model implemented below is that of J. M. Carcione,
 ! Seismic modeling in viscoelastic media, Geophysics, vol. 58(1), p. 110-120 (1993), which is NON causal,
