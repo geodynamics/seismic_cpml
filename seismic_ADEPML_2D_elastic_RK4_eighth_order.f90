@@ -950,13 +950,13 @@ do it = 1,NSTEP
       snapvx = vx(1:NX,1:NY)
       snapvy = vy(1:NX,1:NY)
       write(routine,'(a12,i5.5,a9)') './snapshots/',it,'snapVx.su'
-      open(21,file=routine,form='binary')
+      open(21,file=routine,access='stream')
          do j = 1,NX,1
             write(21) head,(real(snapvx(k,j)),k=1,NY)
          enddo
       close(21)
       write(routine,'(a12,i5.5,a9)') './snapshots/',it,'snapVy.su'
-      open(21,file=routine,form='binary')
+      open(21,file=routine,access='stream')
          do j = 1,NX,1
             write(21) head,(real(snapvy(k,j)),k=1,NY)
          enddo
@@ -1001,12 +1001,12 @@ seisvy = sisvy
 head=0
 head(58)=nstep
 head(59)=deltat*1e6
-open(21,file='./seismograms/seisVx.su',form='binary')
+open(21,file='./seismograms/seisVx.su',access='stream')
    do j=1,NREC,1
       write(21) head,(real(seisvx(k,j)),k=1,nstep)
    enddo
 close(21)
-open(21,file='./seismograms/seisVy.su',form='binary')
+open(21,file='./seismograms/seisVy.su',access='stream')
    do j=1,NREC,1
       write(21) head,(real(seisvy(k,j)),k=1,nstep)
    enddo
