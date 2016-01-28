@@ -963,7 +963,7 @@
 
   do it = 1,NSTEP
 
-    if(rank == rank_cut_plane .AND. mod(it,20)==0) print *,'it = ',it
+    if(rank == rank_cut_plane .and. mod(it,20)==0) print *,'it = ',it
 
 !----------------------
 ! compute stress sigma
