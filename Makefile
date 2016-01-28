@@ -18,8 +18,8 @@ O = obj
 # Intel (leave option -ftz, which can be *critical* for performance)
 #F90 = ifort
 #MPIF90 = mpif90
-#FLAGS = -O3 -xHost -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -ftz
-#FLAGS = -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -ftz
+#FLAGS = -O3 -xHost -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -ftz -stand f03
+#FLAGS = -check all -debug -g -O0 -fp-stack-check -traceback -ftrapuv -vec-report0 -implicitnone -warn truncated_source -warn argument_checking -warn unused -warn declarations -warn alignments -warn ignore_loc -warn usage -check nobounds -ftz -stand f03
 #MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -openmp -openmp-report1
 

@@ -197,7 +197,7 @@ SUBROUTINE decomposition_LU(a,i_min,n,indx,d)
       endif
     enddo
     if (big==0.) then
-      print*,'Singular matrix in routine decomposition_LU'
+      print *,'Singular matrix in routine decomposition_LU'
     endif
     vv(i) = 1./big
   enddo
@@ -344,7 +344,7 @@ SUBROUTINE lfit_zener(x,y,sig,ndat,poids,ia,covar,chisq,ma,Qref,point)
     endif
   enddo
   if(mfit==0) then
-    print*,'lfit: no parameters to be fitted'
+    print *,'lfit: no parameters to be fitted'
   endif
 
   do j=1,mfit
@@ -359,7 +359,7 @@ SUBROUTINE lfit_zener(x,y,sig,ndat,poids,ia,covar,chisq,ma,Qref,point)
     ym = y(i)
     if (mfit < ma) then
       do j=1,ma
-        if (.NOT. ia(j)) then
+        if (.not. ia(j)) then
           ym = ym - poids(j) * afunc(j)
         endif
       enddo
@@ -477,7 +477,7 @@ SUBROUTINE classical_linear_least_squares(Qref,poids,point,N,fmin,fmax)
   enddo
 
   do k=1,N
-    ia(k) = .TRUE.
+    ia(k) = .true.
   enddo
 
   call lfit_zener(x,y_ref,sig,m,poids,ia,covar,chi2,N,Qref,point)
