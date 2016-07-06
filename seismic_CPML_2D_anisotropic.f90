@@ -276,7 +276,8 @@
 ! power to compute d0 profile
   double precision, parameter :: NPOWER = 2.d0
 
-  double precision, parameter :: K_MAX_PML = 1.d0 ! from Gedney page 8.11
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-11
+  double precision, parameter :: K_MAX_PML = 1.d0
   double precision, parameter :: ALPHA_MAX_PML = 2.d0*PI*(f0/2.d0) ! from Festa and Vilotte
 
 ! arrays for the memory variables
@@ -428,7 +429,7 @@
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x(i) = d0_x * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
         alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
@@ -438,7 +439,7 @@
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x_half(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
         alpha_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
@@ -453,7 +454,7 @@
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x(i) = d0_x * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
         alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
@@ -463,7 +464,7 @@
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x_half(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
         alpha_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
@@ -503,7 +504,7 @@
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y(j) = d0_y * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
         alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
@@ -513,7 +514,7 @@
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y_half(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
         alpha_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
@@ -528,7 +529,7 @@
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y(j) = d0_y * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
         alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif
@@ -538,7 +539,7 @@
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y_half(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
         alpha_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
       endif

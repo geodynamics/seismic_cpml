@@ -301,9 +301,10 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
   double precision, parameter :: NPOWER = 2.d0
   double precision, parameter :: NPOWER2 = 2.d0
 
-  !double precision, parameter :: K_MAX_PML = 7.d0 ! from Gedney page 8.11
-!  double precision, parameter :: ALPHA_MAX_PML = 0.d0 ! from festa and Vilotte
-  double precision, parameter :: ALPHA_MAX_PML_1 = 2.d0*PI*(f0/2.d0) ! from festa and Vilotte
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-11
+  !double precision, parameter :: K_MAX_PML = 7.d0
+!  double precision, parameter :: ALPHA_MAX_PML = 0.d0 ! from Festa and Vilotte
+  double precision, parameter :: ALPHA_MAX_PML_1 = 2.d0*PI*(f0/2.d0) ! from Festa and Vilotte
   double precision K_MAX_PML_1
 
 ! double precision, parameter :: K_MAX_PML_2 = K_MAX_PML_1 / 15.d0
@@ -692,7 +693,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_1(i) = d0_x * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
         alpha_prime_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
@@ -702,7 +703,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_half_1(i) = d0_x * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x_half_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
         alpha_prime_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
@@ -717,7 +718,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_1(i) = d0_x * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
         alpha_prime_x_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
@@ -727,7 +728,7 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_half_1(i) = d0_x * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x_half_1(i) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
         alpha_prime_x_half_1(i) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
@@ -791,7 +792,7 @@ enddo
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_1(j) = d0_y * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
         alpha_prime_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
@@ -801,7 +802,7 @@ enddo
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_half_1(j) = d0_y * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y_half_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
         alpha_prime_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
@@ -816,7 +817,7 @@ enddo
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_1(j) = d0_y * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
         alpha_prime_y_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
@@ -826,7 +827,7 @@ enddo
       if(abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_half_1(j) = d0_y * abscissa_normalized**NPOWER
-! this taken from Gedney page 8.2
+! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y_half_1(j) = 1.d0 + (K_MAX_PML_1 - 1.d0) * abscissa_normalized**NPOWER2
         alpha_prime_y_half_1(j) = ALPHA_MAX_PML_1 * (1.d0 - abscissa_normalized)
       endif
