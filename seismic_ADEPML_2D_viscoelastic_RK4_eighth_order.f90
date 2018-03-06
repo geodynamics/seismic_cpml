@@ -3,6 +3,8 @@
 ! Contributors: Roland Martin, roland DOT martin aT get DOT obs-mip DOT fr
 !               and Ruiqi Shi and Youshan Liu, China.
 !
+! RK4 bug detected by Youshan Liu, China fixed by Quentin Brissaud, France and also Caltech (USA) in this version in March 2018.
+!
 ! Ruiqi Shi, Department of Exploration Geophysics, China University of Petroleum, Beijing, China.
 ! Email: shiruiqi123 AT gmail DOT com
 !
@@ -324,6 +326,15 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
       memory_dsigmayy_dy_1, &
       memory_dsigmaxy_dx_1, &
       memory_dsigmaxy_dy_1
+  double precision, dimension(-4:NX+4,-4:NY+4) :: &
+      memory_vx_dx_1, &
+      memory_vx_dy_1, &
+      memory_vy_dx_1, &
+      memory_vy_dy_1, &
+      memory_sigmaxx_dx_1, &
+      memory_sigmayy_dy_1, &
+      memory_sigmaxy_dx_1, &
+      memory_sigmaxy_dy_1
 
   double precision :: &
       value_dvx_dx, &
@@ -450,10 +461,6 @@ program seismic_ADEPML_2D_viscoelastic_RK4_eighth_order
 !---
 !--- the program starts here
 !---
-
-!!!!!!!!!!! DK DK puts this for now, since Roland Martin's RK4 implementation has a major bug !!!!!!!!!!!!!!!
-  stop 'this code has a bug, see file email_from_Youshan_Liu_about_bug_in_the_original_fourth_order_Runge_Kutta_scheme.txt'
-!!!!!!!!!!! DK DK puts this for now, since Roland Martin's RK4 implementation has a major bug !!!!!!!!!!!!!!!
 
   if(iexpl == 1) then
     epsn = 1.d0
@@ -931,7 +938,7 @@ enddo
   print *,'Courant number at the bottom is ',Courant_number_bottom
   print *,'Dispersion number at the bottom is ',Dispersion_number_bottom
   print *
-  if(Courant_number_bottom > 1.d0/coefficient_sum) stop 'time step is too large, simulation will be unstable'
+  !if(Courant_number_bottom > 1.d0/coefficient_sum) stop 'time step is too large, simulation will be unstable'
 
   if(HETEROGENEOUS_MODEL) then
     Courant_number_top = cp_top *dsqrt(taumax) * DELTAT* sqrt(1.d0/DELTAX**2 + 1.d0/DELTAY**2 )
@@ -939,7 +946,7 @@ enddo
     print *,'Courant number at the top is ',Courant_number_top
     print *
     print *,'Dispersion number at the top is ',Dispersion_number_top
-    if(Courant_number_top > 1.d0/coefficient_sum) stop 'time step is too large, simulation will be unstable'
+    !if(Courant_number_top > 1.d0/coefficient_sum) stop 'time step is too large, simulation will be unstable'
   endif
 
 ! erase main arrays
@@ -978,6 +985,15 @@ enddo
   de12(2,:,:,:)=ZERO
 
 ! PML
+  memory_vx_dx_1(:,:) = ZERO
+  memory_vx_dy_1(:,:) = ZERO
+  memory_vy_dx_1(:,:) = ZERO
+  memory_vy_dy_1(:,:) = ZERO
+  memory_sigmaxx_dx_1(:,:) = ZERO
+  memory_sigmayy_dy_1(:,:) = ZERO
+  memory_sigmaxy_dx_1(:,:) = ZERO
+  memory_sigmaxy_dy_1(:,:) = ZERO
+
   memory_dvx_dx_1(:,:,:) = ZERO
   memory_dvx_dy_1(:,:,:) = ZERO
   memory_dvy_dx_1(:,:,:) = ZERO
@@ -1013,46 +1029,100 @@ enddo
 
   do it = 1,NSTEP
       ! v and sigma temporary variables of RK4
+      ! Save initial value for each field
 
-    dvx(1,:,:) = vx(:,:)
-    dvy(1,:,:) = vy(:,:)
-    dsigmaxx(1,:,:) = sigmaxx(:,:)
-    dsigmayy(1,:,:) = sigmayy(:,:)
-    dsigmaxy(1,:,:) = sigmaxy(:,:)
-    dsigmaxx_R(1,:,:) = sigmaxx_R(:,:)
-    dsigmayy_R(1,:,:) = sigmayy_R(:,:)
-    dsigmaxy_R(1,:,:) = sigmaxy_R(:,:)
+    !dvx(1,:,:) = vx(:,:)
+    !dvy(1,:,:) = vy(:,:)
+    !dsigmaxx(1,:,:) = sigmaxx(:,:)
+    !dsigmayy(1,:,:) = sigmayy(:,:)
+    !dsigmaxy(1,:,:) = sigmaxy(:,:)
+    !dsigmaxx_R(1,:,:) = sigmaxx_R(:,:)
+    !dsigmayy_R(1,:,:) = sigmayy_R(:,:)
+    !dsigmaxy_R(1,:,:) = sigmaxy_R(:,:)
 
-    dvx(4,:,:) = dvx(1,:,:)
-    dvy(4,:,:) = dvy(1,:,:)
-    dsigmaxx(4,:,:) = dsigmaxx(1,:,:)
-    dsigmayy(4,:,:) = dsigmayy(1,:,:)
-    dsigmaxy(4,:,:) = dsigmaxy(1,:,:)
-    dsigmaxx_R(4,:,:) = dsigmaxx_R(1,:,:)
-    dsigmayy_R(4,:,:) = dsigmayy_R(1,:,:)
-    dsigmaxy_R(4,:,:) = dsigmaxy_R(1,:,:)
+    dvx(4,:,:) = vx(:,:)
+    dvy(4,:,:) = vy(:,:)
+    dsigmaxx(4,:,:) = sigmaxx(:,:)
+    dsigmayy(4,:,:) = sigmayy(:,:)
+    dsigmaxy(4,:,:) = sigmaxy(:,:)
+    dsigmaxx_R(4,:,:) = sigmaxx_R(:,:)
+    dsigmayy_R(4,:,:) = sigmayy_R(:,:)
+    dsigmaxy_R(4,:,:) = sigmaxy_R(:,:)
 
-    de1(1,4,:,:) = de1(1,1,:,:)
-    de1(2,4,:,:) = de1(2,1,:,:)
-    de11(1,4,:,:) = de11(1,1,:,:)
-    de11(2,4,:,:) = de11(2,1,:,:)
+    de1(1,4,:,:) = e1(1,:,:)
+    de1(2,4,:,:) = e1(2,:,:)
+    de11(1,4,:,:) = e11(1,:,:)
+    de11(2,4,:,:) = e11(2,:,:)
   ! de22(1,4,:,:) = de22(1,1,:,:)
   ! de22(2,4,:,:) = de22(2,1,:,:)
-    de12(1,4,:,:) = de12(1,1,:,:)
-    de12(2,4,:,:) = de12(2,1,:,:)
+    de12(1,4,:,:) = e12(1,:,:)
+    de12(2,4,:,:) = e12(2,:,:)
 
     ! same thing for  memory variables
-    memory_dsigmaxx_dx_1(4,:,:) = memory_dsigmaxx_dx_1(1,:,:)
-    memory_dsigmaxy_dy_1(4,:,:) = memory_dsigmaxy_dy_1(1,:,:)
-    memory_dsigmaxy_dx_1(4,:,:) = memory_dsigmaxy_dx_1(1,:,:)
-    memory_dsigmayy_dy_1(4,:,:) = memory_dsigmayy_dy_1(1,:,:)
-    memory_dvx_dx_1(4,:,:) = memory_dvx_dx_1(1,:,:)
-    memory_dvy_dy_1(4,:,:) = memory_dvy_dy_1(1,:,:)
-    memory_dvy_dx_1(4,:,:) = memory_dvy_dx_1(1,:,:)
-    memory_dvx_dy_1(4,:,:) = memory_dvx_dy_1(1,:,:)
+    memory_dsigmaxx_dx_1(4,:,:) = memory_sigmaxx_dx_1(:,:)
+    memory_dsigmaxy_dy_1(4,:,:) = memory_sigmaxy_dy_1(:,:)
+    memory_dsigmaxy_dx_1(4,:,:) = memory_sigmaxy_dx_1(:,:)
+    memory_dsigmayy_dy_1(4,:,:) = memory_sigmayy_dy_1(:,:)
+    memory_dvx_dx_1(4,:,:) = memory_vx_dx_1(:,:)
+    memory_dvy_dy_1(4,:,:) = memory_vy_dy_1(:,:)
+    memory_dvy_dx_1(4,:,:) = memory_vy_dx_1(:,:)
+    memory_dvx_dy_1(4,:,:) = memory_vx_dy_1(:,:)
+    
+    ! Initialization of time derivatives
+    dvx(2,:,:) = ZERO
+    dvy(2,:,:) = ZERO
+    dsigmaxx(2,:,:) = ZERO
+    dsigmayy(2,:,:) = ZERO
+    dsigmaxy(2,:,:) = ZERO
+    dsigmaxx_R(2,:,:) = ZERO
+    dsigmayy_R(2,:,:) = ZERO
+    dsigmaxy_R(2,:,:) = ZERO
+
+    de1(1,2,:,:) = ZERO
+    de1(2,2,:,:) = ZERO
+    de11(1,2,:,:) = ZERO
+    de11(2,2,:,:) = ZERO
+    de12(1,2,:,:) = ZERO
+    de12(2,2,:,:) = ZERO
+
+    ! same thing for  memory variables
+    memory_dsigmaxx_dx_1(2,:,:) = ZERO
+    memory_dsigmaxy_dy_1(2,:,:) = ZERO
+    memory_dsigmaxy_dx_1(2,:,:) = ZERO
+    memory_dsigmayy_dy_1(2,:,:) = ZERO
+    memory_dvx_dx_1(2,:,:) = ZERO
+    memory_dvy_dy_1(2,:,:) = ZERO
+    memory_dvy_dx_1(2,:,:) = ZERO
+    memory_dvx_dy_1(2,:,:) = ZERO
 
       ! RK4 loop (loop on the four RK4 substeps)
     do inc= 1,4
+
+! The new values of the different variables v and sigma are computed
+        dvx(1,:,:) = dvx(4,:,:) + rk41(inc) * dvx(2,:,:) * DELTAT
+        dvy(1,:,:) = dvy(4,:,:) + rk41(inc) * dvy(2,:,:) * DELTAT
+        dsigmaxx(1,:,:) = dsigmaxx(4,:,:) + rk41(inc) * dsigmaxx(2,:,:) * DELTAT
+        dsigmayy(1,:,:) = dsigmayy(4,:,:) + rk41(inc) * dsigmayy(2,:,:) * DELTAT
+        dsigmaxy(1,:,:) = dsigmaxy(4,:,:) + rk41(inc) * dsigmaxy(2,:,:) * DELTAT
+        dsigmaxx_R(1,:,:) = dsigmaxx_R(4,:,:) + rk41(inc) * dsigmaxx_R(2,:,:) * DELTAT
+        dsigmayy_R(1,:,:) = dsigmayy_R(4,:,:) + rk41(inc) * dsigmayy_R(2,:,:) * DELTAT
+        dsigmaxy_R(1,:,:) = dsigmaxy_R(4,:,:) + rk41(inc) * dsigmaxy_R(2,:,:) * DELTAT
+
+        de1(1,1,:,:) = de1(1,4,:,:) + rk41(inc) * de1(1,2,:,:) * DELTAT
+        de1(2,1,:,:) = de1(2,4,:,:) + rk41(inc) * de1(2,2,:,:) * DELTAT
+        de11(1,1,:,:) = de11(1,4,:,:) + rk41(inc) * de11(1,2,:,:) * DELTAT
+        de11(2,1,:,:) = de11(2,4,:,:) + rk41(inc) * de11(2,2,:,:) * DELTAT
+        de12(1,1,:,:) = de12(1,4,:,:) + rk41(inc) * de12(1,2,:,:) * DELTAT
+        de12(2,1,:,:) = de12(2,4,:,:) + rk41(inc) * de12(2,2,:,:) * DELTAT
+
+        memory_dsigmaxx_dx_1(1,:,:) = memory_dsigmaxx_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxx_dx_1(2,:,:)
+        memory_dsigmaxy_dy_1(1,:,:) = memory_dsigmaxy_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxy_dy_1(2,:,:)
+        memory_dsigmaxy_dx_1(1,:,:) = memory_dsigmaxy_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxy_dx_1(2,:,:)
+        memory_dsigmayy_dy_1(1,:,:) = memory_dsigmayy_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmayy_dy_1(2,:,:)
+        memory_dvx_dx_1(1,:,:) = memory_dvx_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dvx_dx_1(2,:,:)
+        memory_dvy_dy_1(1,:,:) = memory_dvy_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dvy_dy_1(2,:,:)
+        memory_dvx_dy_1(1,:,:) = memory_dvx_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dvx_dy_1(2,:,:)
+        memory_dvy_dx_1(1,:,:) = memory_dvy_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dvy_dx_1(2,:,:)
 
      !------------------
      ! compute velocity
@@ -1251,32 +1321,32 @@ enddo
 
       enddo
     enddo
-
-! The new values of the different variables v and sigma are computed
-        dvx(1,:,:) = dvx(4,:,:) + rk41(inc) * dvx(2,:,:) * DELTAT
-        dvy(1,:,:) = dvy(4,:,:) + rk41(inc) * dvy(2,:,:) * DELTAT
-        dsigmaxx(1,:,:) = dsigmaxx(4,:,:) + rk41(inc) * dsigmaxx(2,:,:) * DELTAT
-        dsigmayy(1,:,:) = dsigmayy(4,:,:) + rk41(inc) * dsigmayy(2,:,:) * DELTAT
-        dsigmaxy(1,:,:) = dsigmaxy(4,:,:) + rk41(inc) * dsigmaxy(2,:,:) * DELTAT
-        dsigmaxx_R(1,:,:) = dsigmaxx_R(4,:,:) + rk41(inc) * dsigmaxx_R(2,:,:) * DELTAT
-        dsigmayy_R(1,:,:) = dsigmayy_R(4,:,:) + rk41(inc) * dsigmayy_R(2,:,:) * DELTAT
-        dsigmaxy_R(1,:,:) = dsigmaxy_R(4,:,:) + rk41(inc) * dsigmaxy_R(2,:,:) * DELTAT
-
-        de1(1,1,:,:) = de1(1,4,:,:) + rk41(inc) * de1(1,2,:,:) * DELTAT
-        de1(2,1,:,:) = de1(2,4,:,:) + rk41(inc) * de1(2,2,:,:) * DELTAT
-        de11(1,1,:,:) = de11(1,4,:,:) + rk41(inc) * de11(1,2,:,:) * DELTAT
-        de11(2,1,:,:) = de11(2,4,:,:) + rk41(inc) * de11(2,2,:,:) * DELTAT
-        de12(1,1,:,:) = de12(1,4,:,:) + rk41(inc) * de12(1,2,:,:) * DELTAT
-        de12(2,1,:,:) = de12(2,4,:,:) + rk41(inc) * de12(2,2,:,:) * DELTAT
-
-        memory_dsigmaxx_dx_1(1,:,:) = memory_dsigmaxx_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxx_dx_1(2,:,:)
-        memory_dsigmaxy_dy_1(1,:,:) = memory_dsigmaxy_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxy_dy_1(2,:,:)
-        memory_dsigmaxy_dx_1(1,:,:) = memory_dsigmaxy_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmaxy_dx_1(2,:,:)
-        memory_dsigmayy_dy_1(1,:,:) = memory_dsigmayy_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dsigmayy_dy_1(2,:,:)
-        memory_dvx_dx_1(1,:,:) = memory_dvx_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dvx_dx_1(2,:,:)
-        memory_dvy_dy_1(1,:,:) = memory_dvy_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dvy_dy_1(2,:,:)
-        memory_dvx_dy_1(1,:,:) = memory_dvx_dy_1(4,:,:) + rk41(inc)*DELTAT*memory_dvx_dy_1(2,:,:)
-        memory_dvy_dx_1(1,:,:) = memory_dvy_dx_1(4,:,:) + rk41(inc)*DELTAT*memory_dvy_dx_1(2,:,:)
+    
+        ! Update solution for next time step Delta_t
+        vx(:,:) = vx(:,:) + rk42(inc) * dvx(2,:,:) * DELTAT
+        vy(:,:) = vy(:,:) + rk42(inc) * dvy(2,:,:) * DELTAT
+        sigmaxx(:,:) = sigmaxx(:,:) + rk42(inc) * dsigmaxx(2,:,:) * DELTAT
+        sigmayy(:,:) = sigmayy(:,:) + rk42(inc) * dsigmayy(2,:,:) * DELTAT
+        sigmaxy(:,:) = sigmaxy(:,:) + rk42(inc) * dsigmaxy(2,:,:) * DELTAT
+        sigmaxx_R(:,:) = sigmaxx_R(:,:) + rk42(inc) * dsigmaxx_R(2,:,:) * DELTAT
+        sigmayy_R(:,:) = sigmayy_R(:,:) + rk42(inc) * dsigmayy_R(2,:,:) * DELTAT
+        sigmaxy_R(:,:) = sigmaxy_R(:,:) + rk42(inc) * dsigmaxy_R(2,:,:) * DELTAT
+        
+        e1(1,:,:) = e1(1,:,:) + rk42(inc) * de1(1,2,:,:) * DELTAT
+        e1(2,:,:) = e1(2,:,:) + rk42(inc) * de1(2,2,:,:) * DELTAT
+        e11(1,:,:) = e11(1,:,:) + rk42(inc) * de11(1,2,:,:) * DELTAT
+        e11(2,:,:) = e11(2,:,:) + rk42(inc) * de11(2,2,:,:) * DELTAT
+        e12(1,:,:) = e12(1,:,:) + rk42(inc) * de12(1,2,:,:) * DELTAT
+        e12(2,:,:) = e12(2,:,:) + rk42(inc) * de12(2,2,:,:) * DELTAT
+        
+        memory_vx_dx_1(:,:) = memory_vx_dx_1(:,:) + rk42(inc) * memory_dvx_dx_1(2,:,:) * DELTAT
+        memory_vx_dy_1(:,:) = memory_vx_dy_1(:,:) + rk42(inc) * memory_dvx_dy_1(2,:,:) * DELTAT
+        memory_vy_dx_1(:,:) = memory_vy_dx_1(:,:) + rk42(inc) * memory_dvy_dx_1(2,:,:) * DELTAT
+        memory_vy_dy_1(:,:) = memory_vy_dy_1(:,:) + rk42(inc) * memory_dvy_dy_1(2,:,:) * DELTAT
+        memory_sigmaxx_dx_1(:,:) = memory_sigmaxx_dx_1(:,:) + rk42(inc) * memory_dsigmaxx_dx_1(2,:,:) * DELTAT
+        memory_sigmayy_dy_1(:,:) = memory_sigmayy_dy_1(:,:) + rk42(inc) * memory_dsigmayy_dy_1(2,:,:) * DELTAT
+        memory_sigmaxy_dx_1(:,:) = memory_sigmaxy_dx_1(:,:) + rk42(inc) * memory_dsigmaxy_dx_1(2,:,:) * DELTAT
+        memory_sigmaxy_dy_1(:,:) = memory_sigmaxy_dy_1(:,:) + rk42(inc) * memory_dsigmaxy_dy_1(2,:,:) * DELTAT
 
         ! Dirichlet conditions (rigid boundaries) on all the edges of the grid
         dvx(:,-4:1,:) = ZERO
@@ -1300,24 +1370,24 @@ enddo
         vx(:,NY:NY+4) = ZERO
         vy(NX:NX+4,:) = ZERO
         vy(:,NY:NY+4) = ZERO
-
+        
   enddo
 
-  vx(:,:) =  dvx(1,:,:)
-  vy(:,:) =  dvy(1,:,:)
-  sigmaxx(:,:) =  dsigmaxx(1,:,:)
-  sigmayy(:,:) =  dsigmayy(1,:,:)
-  sigmaxy(:,:) =  dsigmaxy(1,:,:)
-  sigmaxx_R(:,:) =  dsigmaxx_R(1,:,:)
-  sigmayy_R(:,:) =  dsigmayy_R(1,:,:)
-  sigmaxy_R(:,:) =  dsigmaxy_R(1,:,:)
+  !vx(:,:) =  dvx(1,:,:)
+  !vy(:,:) =  dvy(1,:,:)
+  !sigmaxx(:,:) =  dsigmaxx(1,:,:)
+  !sigmayy(:,:) =  dsigmayy(1,:,:)
+  !sigmaxy(:,:) =  dsigmaxy(1,:,:)
+  !sigmaxx_R(:,:) =  dsigmaxx_R(1,:,:)
+  !sigmayy_R(:,:) =  dsigmayy_R(1,:,:)
+  !sigmaxy_R(:,:) =  dsigmaxy_R(1,:,:)
 
-  e1(1,:,:) = de1(1,1,:,:)
-  e1(2,:,:) = de1(2,1,:,:)
-  e11(1,:,:) = de11(1,1,:,:)
-  e11(2,:,:) = de11(2,1,:,:)
-  e12(1,:,:) = de12(1,1,:,:)
-  e12(2,:,:) = de12(2,1,:,:)
+  !e1(1,:,:) = de1(1,1,:,:)
+  !e1(2,:,:) = de1(2,1,:,:)
+  !e11(1,:,:) = de11(1,1,:,:)
+  !e11(2,:,:) = de11(2,1,:,:)
+  !e12(1,:,:) = de12(1,1,:,:)
+  !e12(2,:,:) = de12(2,1,:,:)
 
 ! end of RK4 loop
 
