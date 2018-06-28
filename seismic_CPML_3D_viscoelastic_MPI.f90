@@ -18,12 +18,7 @@
 !
 ! This software is a computer program whose purpose is to solve
 ! the three-dimensional isotropic viscoelastic wave equation
-! using a fourth order finite-difference method with Convolutional Perfectly Matched
-! Layer (C-PML) conditions.
-!
-! This software is a computer program whose purpose is to solve
-! the two-dimensional viscoelastic anisotropic or poroelastic wave equation
-! using a spectral-element method (SEM).
+! using a fourth order finite-difference method with Convolutional Perfectly Matched Layer (C-PML) conditions.
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
