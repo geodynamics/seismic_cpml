@@ -10,7 +10,7 @@
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
+! the Free Software Foundation; either version 3 of the License, or
 ! (at your option) any later version.
 !
 ! This program is distributed in the hope that it will be useful,
@@ -138,7 +138,7 @@ program seismic_ADEPML_2D_elastic_RK4_eighth_order
 ! volume = {27},
 ! number = {5},
 ! pages = {334-339},
-! doi = {10.1002/1098-2760(20001205)27:5<334::AID-MOP14>3.0.CO;2-A}}
+! doi = {10.1002/1098-2760(20001205)27:5 < 334::AID-MOP14>3.0.CO;2-A}}
 
 !
 ! To display the 2D results as color images, use:
@@ -165,7 +165,7 @@ implicit none
 integer, parameter :: NX = 241
 integer, parameter :: NY = 241
 
-! Explicit (epsn=1,epsn=0), Implicit (epsn=0,epsn1=1), semi-implicit (epsn=0.5,epsn1=0.5)
+! Explicit (epsn=1,epsn=0), implicit (epsn=0,epsn1=1), semi-implicit (epsn=0.5,epsn1=0.5)
 integer, parameter :: iexpl=0
 integer, parameter :: iimpl=0
 integer, parameter :: isemiimpl=1
@@ -349,17 +349,17 @@ real,dimension(NX,NY) :: snapvx,snapvy
 !--- program starts here
 !---
 
-if(iexpl == 1) then
+if (iexpl == 1) then
    epsn = 1.d0
    epsn1 = 0.d0
 endif
 
-if(iimpl == 1) then
+if (iimpl == 1) then
    epsn = 0.d0
    epsn1 = 1.d0
 endif
 
-if(isemiimpl == 1) then
+if (isemiimpl == 1) then
    epsn = 0.5d0
    epsn1 = 0.5d0
 endif
@@ -389,7 +389,7 @@ thickness_PML_y = NPOINTS_PML * DELTAY
 Rcoef = 0.00001d0
 
 ! check that NPOWER is okay
-if(NPOWER < 1) stop 'NPOWER must be greater than 1'
+if (NPOWER < 1) stop 'NPOWER must be greater than 1'
 
 ! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
 d0_x = - (NPOWER + 1) * cp * log(Rcoef) / (2.d0 * thickness_PML_x)
@@ -448,11 +448,11 @@ do i = -4,NX+4
    xval = DELTAX * dble(i-1)
 
    !---------- left edge
-   if(USE_PML_XMIN) then
+   if (USE_PML_XMIN) then
 
       ! define damping profile at the grid points
       abscissa_in_PML = xoriginleft - xval
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
          abscissa_normalized = abscissa_in_PML / thickness_PML_x
          d_x(i) = d0_x * abscissa_normalized**NPOWER
          ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -462,7 +462,7 @@ do i = -4,NX+4
 
       ! define damping profile at half the grid points
       abscissa_in_PML = xoriginleft - (xval + DELTAX/2.d0)
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
          abscissa_normalized = abscissa_in_PML / thickness_PML_x
          d_x_half(i) = d0_x * abscissa_normalized**NPOWER
          ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -473,11 +473,11 @@ do i = -4,NX+4
    endif
 
    !---------- right edge
-   if(USE_PML_XMAX) then
+   if (USE_PML_XMAX) then
 
       ! define damping profile at the grid points
       abscissa_in_PML = xval - xoriginright
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
          abscissa_normalized = abscissa_in_PML / thickness_PML_x
          d_x(i) = d0_x * abscissa_normalized**NPOWER
          ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -487,7 +487,7 @@ do i = -4,NX+4
 
       ! define damping profile at half the grid points
       abscissa_in_PML = xval + DELTAX/2.d0 - xoriginright
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
          abscissa_normalized = abscissa_in_PML / thickness_PML_x
          d_x_half(i) = d0_x * abscissa_normalized**NPOWER
          ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -498,8 +498,8 @@ do i = -4,NX+4
    endif
 
    ! just in case, for -5 at the end
-   if(alpha_x(i) < ZERO) alpha_x(i) = ZERO
-   if(alpha_x_half(i) < ZERO) alpha_x_half(i) = ZERO
+   if (alpha_x(i) < ZERO) alpha_x(i) = ZERO
+   if (alpha_x_half(i) < ZERO) alpha_x_half(i) = ZERO
 
    ! CPML damping parameters for the 4 sub time steps of RK4 algorithm
    do inc=1,4
@@ -510,10 +510,10 @@ do i = -4,NX+4
            + alpha_x_half(i)))
 
       ! this to avoid division by zero outside the PML
-      if(abs(d_x(i)) > 1.d-6) a_x(inc,i) = - DELTAT*rk41(inc)*d_x(i) / (K_x(i)* K_x(i))/&
+      if (abs(d_x(i)) > 1.d-6) a_x(inc,i) = - DELTAT*rk41(inc)*d_x(i) / (K_x(i)* K_x(i))/&
           (1. +epsn1*DELTAT*rk41(inc)*(d_x(i)/K_x(i) + alpha_x(i)))
 
-      if(abs(d_x_half(i)) > 1.d-6) a_x_half(inc,i) =-DELTAT*rk41(inc)*d_x_half(i)/&
+      if (abs(d_x_half(i)) > 1.d-6) a_x_half(inc,i) =-DELTAT*rk41(inc)*d_x_half(i)/&
           (K_x_half(i)*K_x_half(i) )/&
           (1. +epsn1*DELTAT*rk41(inc)*(d_x_half(i)/K_x_half(i)&
           + alpha_x_half(i)))
@@ -534,11 +534,11 @@ do j = -4,NY+4
    yval = DELTAY * dble(j-1)
 
    !---------- bottom edge
-   if(USE_PML_YMIN) then
+   if (USE_PML_YMIN) then
 
       ! define damping profile at the grid points
       abscissa_in_PML = yoriginbottom - yval
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
          abscissa_normalized = abscissa_in_PML / thickness_PML_y
          d_y(j) = d0_y * abscissa_normalized**NPOWER
          ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -548,7 +548,7 @@ do j = -4,NY+4
 
       ! define damping profile at half the grid points
       abscissa_in_PML = yoriginbottom - (yval + DELTAY/2.d0)
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
          abscissa_normalized = abscissa_in_PML / thickness_PML_y
          d_y_half(j) = d0_y * abscissa_normalized**NPOWER
          ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -559,11 +559,11 @@ do j = -4,NY+4
    endif
 
    !---------- top edge
-   if(USE_PML_YMAX) then
+   if (USE_PML_YMAX) then
 
       ! define damping profile at the grid points
       abscissa_in_PML = yval - yorigintop
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
          abscissa_normalized = abscissa_in_PML / thickness_PML_y
          d_y(j) = d0_y * abscissa_normalized**NPOWER
          ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -573,7 +573,7 @@ do j = -4,NY+4
 
       ! define damping profile at half the grid points
       abscissa_in_PML = yval + DELTAY/2.d0 - yorigintop
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
          abscissa_normalized = abscissa_in_PML / thickness_PML_y
          d_y_half(j) = d0_y * abscissa_normalized**NPOWER
          ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -584,8 +584,8 @@ do j = -4,NY+4
    endif
 
    ! just in case, for -5 at the end
-   if(alpha_y(j) < ZERO) alpha_y(j) = ZERO
-   if(alpha_y_half(j) < ZERO) alpha_y_half(j) = ZERO
+   if (alpha_y(j) < ZERO) alpha_y(j) = ZERO
+   if (alpha_y_half(j) < ZERO) alpha_y_half(j) = ZERO
 
    ! CPML damping parameters for the 4 sub time steps of RK4 algorithm
    do inc=1,4
@@ -596,10 +596,10 @@ do j = -4,NY+4
                                                                 + alpha_y_half(j)))
 
       ! this to avoid division by zero outside the PML
-      if(abs(d_y(j)) > 1.d-6) a_y(inc,j) = - DELTAT*rk41(inc)*d_y(j) &
+      if (abs(d_y(j)) > 1.d-6) a_y(inc,j) = - DELTAT*rk41(inc)*d_y(j) &
                   / (K_y(j)* K_y(j))/&
                   (1.+epsn1*DELTAT*rk41(inc)*(d_y(j)/K_y(j) + alpha_y(j)))
-      if(abs(d_y_half(j)) > 1.d-6) a_y_half(inc,j) = -DELTAT*rk41(inc)*d_y_half(j) /&
+      if (abs(d_y_half(j)) > 1.d-6) a_y_half(inc,j) = -DELTAT*rk41(inc)*d_y_half(j) /&
                   (K_y_half(j) * K_y_half(j) )/&
                   (1.+epsn1*DELTAT*rk41(inc)*(d_y_half(j)/K_y_half(j) + alpha_y_half(j)))
    enddo
@@ -638,7 +638,7 @@ do irec=1,nrec
    do j = 1,NY
       do i = 1,NX
          distval = sqrt((DELTAX*dble(i-1) - xrec(irec))**2 + (DELTAY*dble(j-1) - yrec(irec))**2)
-         if(distval < dist) then
+         if (distval < dist) then
             dist = distval
             ix_rec(irec) = i
             iy_rec(irec) = j
@@ -655,7 +655,7 @@ enddo !do irec=1,nrec
 Courant_number = cp * DELTAT * sqrt(1.d0/DELTAX**2 + 1.d0/DELTAY**2)
 print *,'Courant number is ',Courant_number
 print *
-if(Courant_number > 1.d0) stop 'time step is too large, simulation will be unstable'
+if (Courant_number > 1.d0) stop 'time step is too large, simulation will be unstable'
 
 ! suppress old files (can be commented out if "call system" is missing in your compiler)
 ! call system('rm -f Vx_*.dat Vy_*.dat image*.pnm image*.gif')
@@ -737,7 +737,7 @@ do it = 1,NSTEP
             value_dsigmaxy_dy = ( c1 * (dsigmaxy(1,i,j) - dsigmaxy(1,i,j-1)) + c2* (dsigmaxy(1,i,j+1) - dsigmaxy(1,i,j-2)) + &
                c3 * (dsigmaxy(1,i,j+2) - dsigmaxy(1,i,j-3)) + c4 * (dsigmaxy(1,i,j+3) - dsigmaxy(1,i,j-4)) )/ DELTAY
 
-            if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
+            if (i <= NPOINTS_PML+2 .or. i >= NX-NPOINTS_PML-2 .or. j <= NPOINTS_PML+2 .or. j >= NY-NPOINTS_PML-2) then
                ! ==================== revised by Youshan Liu ==================
                memory_dsigmaxx_dx(i,j) = b_x(inc,i) * memory_dsigmaxx_dx(i,j) + a_x(inc,i) * value_dsigmaxx_dx
                memory_dsigmaxy_dy(i,j) = b_y(inc,j) * memory_dsigmaxy_dy(i,j) + a_y(inc,j) * value_dsigmaxy_dy
@@ -763,7 +763,7 @@ do it = 1,NSTEP
             value_dsigmayy_dy = ( c1 * (dsigmayy(1,i,j+1) - dsigmayy(1,i,j)) + c2 * (dsigmayy(1,i,j+2) - dsigmayy(1,i,j-1)) + &
                c3 * (dsigmayy(1,i,j+3) - dsigmayy(1,i,j-2)) + c4 * (dsigmayy(1,i,j+4) - dsigmayy(1,i,j-3)) )/ DELTAY
 
-            if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
+            if (i <= NPOINTS_PML+2 .or. i >= NX-NPOINTS_PML-2 .or. j <= NPOINTS_PML+2 .or. j >= NY-NPOINTS_PML-2) then
          ! ==================== revised by Youshan Liu ==================
                memory_dsigmaxy_dx(i,j) = b_x_half(inc,i) * memory_dsigmaxy_dx(i,j) + a_x_half(inc,i) * value_dsigmaxy_dx
                memory_dsigmayy_dy(i,j) = b_y_half(inc,j) * memory_dsigmayy_dy(i,j) + a_y_half(inc,j) * value_dsigmayy_dy
@@ -834,7 +834,7 @@ do it = 1,NSTEP
             value_dvy_dy = ( c1 * (dvy(1,i,j) - dvy(1,i,j-1)) + c2 * (dvy(1,i,j+1) - dvy(1,i,j-2)) + &
                c3 * (dvy(1,i,j+2) - dvy(1,i,j-3)) + c4 * (dvy(1,i,j+3) - dvy(1,i,j-4)) )/ DELTAY
 
-            if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
+            if (i <= NPOINTS_PML+2 .or. i >= NX-NPOINTS_PML-2 .or. j <= NPOINTS_PML+2 .or. j >= NY-NPOINTS_PML-2) then
                ! ==================== revised by Youshan Liu ==================
                memory_dvx_dx(i,j) = b_x_half(inc,i) * memory_dvx_dx(i,j) + a_x_half(inc,i) * value_dvx_dx
                memory_dvy_dy(i,j) = b_y(inc,j) * memory_dvy_dy(i,j) + a_y(inc,j) * value_dvy_dy
@@ -860,7 +860,7 @@ do it = 1,NSTEP
             value_dvy_dx = ( c1 * (dvy(1,i,j) - dvy(1,i-1,j)) + c2 * (dvy(1,i+1,j) - dvy(1,i-2,j)) + &
                c3 * (dvy(1,i+2,j) - dvy(1,i-3,j)) + c4 * (dvy(1,i+3,j) - dvy(1,i-4,j)) )/ DELTAX
 
-            if(i<=NPOINTS_PML+2 .or.i>=NX-NPOINTS_PML-2 .or. j<=NPOINTS_PML+2 .or. j>= NY-NPOINTS_PML-2) then
+            if (i <= NPOINTS_PML+2 .or. i >= NX-NPOINTS_PML-2 .or. j <= NPOINTS_PML+2 .or. j >= NY-NPOINTS_PML-2) then
                ! ==================== revised by Youshan Liu ==================
                memory_dvy_dx(i,j) = b_x(inc,i) * memory_dvy_dx(i,j) + a_x(inc,i) * value_dvy_dx
                memory_dvx_dy(i,j) = b_y_half(inc,j) * memory_dvx_dy(i,j) + a_y_half(inc,j) * value_dvx_dy
@@ -932,7 +932,7 @@ do it = 1,NSTEP
    !    enddo
    !  enddo
 
-   if(mod(it,IT_DISPLAY) == 0)then
+   if (mod(it,IT_DISPLAY) == 0) then
       write(*,*) it, ' of ', nstep
       head=0
       head(58) = NY
@@ -954,7 +954,7 @@ do it = 1,NSTEP
    endif
 
    !! output information
-   !  if(mod(it,IT_DISPLAY) == 0 .or. it == 5) then
+   !  if (mod(it,IT_DISPLAY) == 0 .or. it == 5) then
    !
    !! print maximum of norm of velocity
    !    velocnorm = maxval(sqrt(vx**2 + vy**2))
@@ -964,7 +964,7 @@ do it = 1,NSTEP
    !    print *,'total energy = ',total_energy_kinetic(it) + total_energy_potential(it)
    !    print *
    !! check stability of the code, exit if unstable
-   !    if(velocnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
+   !    if (velocnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
    !
    !    call create_color_image(vx(1:NX,1:NY),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
    !                         NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,1)
@@ -1158,10 +1158,10 @@ end program seismic_ADEPML_2D_elastic_RK4_eighth_order
 
 ! open image file and create system command to convert image to more convenient format
 ! use the "convert" command from ImageMagick http://www.imagemagick.org
-  if(field_number == 1) then
+  if (field_number == 1) then
     write(file_name,"('image',i6.6,'_Vx.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vx.pnm image',i6.6,'_Vx.gif ; rm image',i6.6,'_Vx.pnm')") it,it,it
-  else if(field_number == 2) then
+  else if (field_number == 2) then
     write(file_name,"('image',i6.6,'_Vy.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vy.pnm image',i6.6,'_Vy.gif ; rm image',i6.6,'_Vy.pnm')") it,it,it
   endif
@@ -1185,11 +1185,11 @@ end program seismic_ADEPML_2D_elastic_RK4_eighth_order
     normalized_value = image_data_2D(ix,iy) / max_amplitude
 
 ! suppress values that are outside [-1:+1] to avoid small edge effects
-    if(normalized_value < -1.d0) normalized_value = -1.d0
-    if(normalized_value > 1.d0) normalized_value = 1.d0
+    if (normalized_value < -1.d0) normalized_value = -1.d0
+    if (normalized_value > 1.d0) normalized_value = 1.d0
 
 ! draw an orange cross to represent the source
-    if((ix >= ISOURCE - width_cross .and. ix <= ISOURCE + width_cross .and. &
+    if ((ix >= ISOURCE - width_cross .and. ix <= ISOURCE + width_cross .and. &
         iy >= JSOURCE - thickness_cross .and. iy <= JSOURCE + thickness_cross) .or. &
        (ix >= ISOURCE - thickness_cross .and. ix <= ISOURCE + thickness_cross .and. &
         iy >= JSOURCE - width_cross .and. iy <= JSOURCE + width_cross)) then
@@ -1198,13 +1198,13 @@ end program seismic_ADEPML_2D_elastic_RK4_eighth_order
       B = 0
 
 ! display two-pixel-thick black frame around the image
-  else if(ix <= 2 .or. ix >= NX-1 .or. iy <= 2 .or. iy >= NY-1) then
+  else if (ix <= 2 .or. ix >= NX-1 .or. iy <= 2 .or. iy >= NY-1) then
       R = 0
       G = 0
       B = 0
 
 ! display edges of the PML layers
-  else if((USE_PML_XMIN .and. ix == NPOINTS_PML) .or. &
+  else if ((USE_PML_XMIN .and. ix == NPOINTS_PML) .or. &
           (USE_PML_XMAX .and. ix == NX - NPOINTS_PML) .or. &
           (USE_PML_YMIN .and. iy == NPOINTS_PML) .or. &
           (USE_PML_YMAX .and. iy == NY - NPOINTS_PML)) then
@@ -1213,10 +1213,10 @@ end program seismic_ADEPML_2D_elastic_RK4_eighth_order
       B = 0
 
 ! suppress all the values that are below the threshold
-    else if(abs(image_data_2D(ix,iy)) <= max_amplitude * cutvect) then
+    else if (abs(image_data_2D(ix,iy)) <= max_amplitude * cutvect) then
 
 ! use a black or white background for points that are below the threshold
-      if(WHITE_BACKGROUND) then
+      if (WHITE_BACKGROUND) then
         R = 255
         G = 255
         B = 255
@@ -1227,7 +1227,7 @@ end program seismic_ADEPML_2D_elastic_RK4_eighth_order
       endif
 
 ! represent regular image points using red if value is positive, blue if negative
-    else if(normalized_value >= 0.d0) then
+    else if (normalized_value >= 0.d0) then
       R = nint(255.d0*normalized_value**POWER_DISPLAY)
       G = 0
       B = 0
@@ -1239,7 +1239,7 @@ end program seismic_ADEPML_2D_elastic_RK4_eighth_order
 
 ! draw a green square to represent the receivers
   do irec = 1,nrec
-    if((ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
+    if ((ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
         iy >= iy_rec(irec) - size_square .and. iy <= iy_rec(irec) + size_square) .or. &
        (ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
         iy >= iy_rec(irec) - size_square .and. iy <= iy_rec(irec) + size_square)) then
@@ -1259,7 +1259,7 @@ end program seismic_ADEPML_2D_elastic_RK4_eighth_order
 ! close file
   close(27)
 
-! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
+! call the system to convert image to Gif (can be commented out if "call system" is missing in your compiler)
 ! call system(system_command)
 
   end subroutine create_color_image
