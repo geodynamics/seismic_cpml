@@ -35,7 +35,7 @@
 
 ! Suivant les compilateurs et les options de compilation utilisees,
 ! il peut y avoir des differences au 4eme chiffre significatif. C'est sans consequences sur la precision du calcul :
-! l'erreur est de 0.015 % avec optimisation non lineaire, a comparer a 1.47 % avec Emmerich and Korn (1987).
+! l'erreur est de 0.015 % avec optimization non lineaire, a comparer a 1.47 % avec Emmerich and Korn (1987).
 ! Si je relance le calcul en initialisant avec le resultat precedent, ce chiffre varie a nouveau tres legerement.
 
 !-------------------------------------------------------------------------
@@ -85,7 +85,7 @@
 
 ! From Emilie Blanc, April 2014:
 
-! le programme SolvOpt d'optimisation non-lineaire
+! le programme SolvOpt d'optimization non-lineaire
 ! avec contrainte. Ce programme prend quatre fonctions en entree :
 
 ! - fun() est la fonction a minimiser
@@ -101,7 +101,7 @@
 
 ! J'ai utilise ce code pour la poroelasticite haute-frequence, et aussi en
 ! viscoelasticite fractionnaire (modele d'Andrade, avec Bruno Lombard et
-! Cedric Bellis). Nous pouvons interagir sur l'algorithme d'optimisation
+! Cedric Bellis). Nous pouvons interagir sur l'algorithme d'optimization
 ! pour votre modele visco, et etudier l'effet des coefficients ainsi obtenus.
 
 !---------------------------------------------------
@@ -111,7 +111,7 @@
 ! Les entrees du programme principal sont le nombre de variables
 ! diffusives, le facteur de qualite voulu Qref et la frequence centrale f0.
 
-! Cependant, pour l'optimisation non-lineaire, j'ai mis theta_max=100*f0
+! Cependant, pour l'optimization non-lineaire, j'ai mis theta_max=100*f0
 ! et non pas theta_max=2*pi*100*f0. En effet, dans le programme, on
 ! travaille sur les frequences, et non pas sur les frequences angulaires.
 ! Cela dit, dans les deux cas j'obtiens les memes coefficients...
@@ -119,9 +119,9 @@
 
 !---------------------------------------------------
 
-SUBROUTINE compute_attenuation_coeffs(N,Qref,f0,f_min,f_max,tau_epsilon,tau_sigma)
+subroutine compute_attenuation_coeffs(N,Qref,f0,f_min,f_max,tau_epsilon,tau_sigma)
 
-  IMPLICIT NONE
+  implicit none
 
 ! pi
   double precision, parameter :: PI = 3.141592653589793d0
@@ -166,15 +166,15 @@ SUBROUTINE compute_attenuation_coeffs(N,Qref,f0,f_min,f_max,tau_epsilon,tau_sigm
 ! enddo
 ! print *
 
-END SUBROUTINE compute_attenuation_coeffs
+end subroutine compute_attenuation_coeffs
 
 !---------------------------------------------------
 
 ! classical calculation of the coefficients based on linear least squares
 
-SUBROUTINE decomposition_LU(a,i_min,n,indx,d)
+subroutine decomposition_LU(a,i_min,n,indx,d)
 
-  IMPLICIT NONE
+  implicit none
 
   integer, intent(in) :: i_min,n
   double precision, intent(out) :: d
@@ -192,11 +192,11 @@ SUBROUTINE decomposition_LU(a,i_min,n,indx,d)
   do i = i_min,n
     big = 0.
     do j = i_min,n
-      if (abs(a(i,j))>big) then
+      if (abs(a(i,j)) > big) then
         big = abs(a(i,j))
       endif
     enddo
-    if (big==0.) then
+    if (big == 0.) then
       print *,'Singular matrix in routine decomposition_LU'
     endif
     vv(i) = 1./big
@@ -220,13 +220,13 @@ SUBROUTINE decomposition_LU(a,i_min,n,indx,d)
       enddo
       a(i,j) = somme
       dum = vv(i)*abs(somme)
-      if (dum>=big) then
+      if (dum >= big) then
         big = dum
         imax = i
       endif
     enddo
 
-    if (j/=imax) then
+    if (j /= imax) then
       do k = i_min,n
         dum = a(imax,k)
         a(imax,k) = a(j,k)
@@ -240,7 +240,7 @@ SUBROUTINE decomposition_LU(a,i_min,n,indx,d)
     if (a(j,j) == 0.) then
       a(j,j) = eps
     endif
-    if (j/=n) then
+    if (j /= n) then
       dum = 1./a(j,j)
       do i = j+1,n
         a(i,j) = a(i,j)*dum
@@ -248,11 +248,11 @@ SUBROUTINE decomposition_LU(a,i_min,n,indx,d)
     endif
   enddo
 
-END SUBROUTINE decomposition_LU
+end subroutine decomposition_LU
 
-SUBROUTINE LUbksb(a,i_min,n,indx,b,m)
+subroutine LUbksb(a,i_min,n,indx,b,m)
 
-  IMPLICIT NONE
+  implicit none
 
   integer, intent(in) :: i_min,n,m
   integer, dimension(i_min:n), intent(in) :: indx
@@ -270,11 +270,11 @@ SUBROUTINE LUbksb(a,i_min,n,indx,b,m)
       ip = indx(i)
       somme = b(ip,k)
       b(ip,k) = b(i,k)
-      if (ii/=-1) then
+      if (ii /= -1) then
         do j = ii,i-1
           somme = somme - a(i,j)*b(j,k)
         enddo
-      else if (somme/=0.) then
+      else if (somme /= 0.) then
         ii = i
       endif
       b(i,k) = somme
@@ -289,11 +289,11 @@ SUBROUTINE LUbksb(a,i_min,n,indx,b,m)
     enddo
   enddo
 
-END SUBROUTINE LUbksb
+end subroutine LUbksb
 
-SUBROUTINE syst_LU(a,i_min,n,b,m)
+subroutine syst_LU(a,i_min,n,b,m)
 
-  IMPLICIT NONE
+  implicit none
 
   integer, intent(in) :: i_min,n,m
   double precision, dimension(i_min:n,i_min:n), intent(in) :: a
@@ -314,13 +314,13 @@ SUBROUTINE syst_LU(a,i_min,n,b,m)
   call decomposition_LU(aux,i_min,n,indx,d)
   call LUbksb(aux,i_min,n,indx,b,m)
 
-END SUBROUTINE syst_LU
+end subroutine syst_LU
 
-SUBROUTINE lfit_zener(x,y,sig,ndat,poids,ia,covar,chisq,ma,Qref,point)
+subroutine lfit_zener(x,y,sig,ndat,poids,ia,covar,chisq,ma,Qref,point)
 ! ma = nombre de variable diffusive
 ! ndat = m = K nombre d'abcisse freq_k
 
-  IMPLICIT NONE
+  implicit none
 
   integer, intent(in) :: ndat,ma
   logical, dimension(1:ma), intent(in) :: ia
@@ -339,11 +339,11 @@ SUBROUTINE lfit_zener(x,y,sig,ndat,poids,ia,covar,chisq,ma,Qref,point)
   mfit = 0
 
   do j = 1,ma
-    if(ia(j)) then
+    if (ia(j)) then
       mfit = mfit + 1
     endif
   enddo
-  if(mfit==0) then
+  if (mfit == 0) then
     print *,'lfit: no parameters to be fitted'
   endif
 
@@ -383,9 +383,9 @@ SUBROUTINE lfit_zener(x,y,sig,ndat,poids,ia,covar,chisq,ma,Qref,point)
   enddo
   enddo
 
-  if (ma==1) then
+  if (ma == 1) then
     poids(1) = beta(1,1)/covar(1,1)
-  else if (ma>1) then
+  else if (ma > 1) then
     call syst_LU(covar,1,mfit,beta,1)
     poids(1:ma) = unpack(beta(1:ma,1),ia,poids(1:ma))
   endif
@@ -396,11 +396,11 @@ SUBROUTINE lfit_zener(x,y,sig,ndat,poids,ia,covar,chisq,ma,Qref,point)
     chisq=chisq+((y(i)-dot_product(poids(1:ma),afunc(1:ma)))/sig(i))**2
   enddo
 
-END SUBROUTINE lfit_zener
+end subroutine lfit_zener
 
-SUBROUTINE func_zener(x,afunc,N,Qref,point)
+subroutine func_zener(x,afunc,N,Qref,point)
 
-  IMPLICIT NONE
+  implicit none
 
   integer, intent(in) :: N
   double precision, intent(in) :: x,Qref
@@ -416,11 +416,11 @@ SUBROUTINE func_zener(x,afunc,N,Qref,point)
     afunc(k) = num / deno
   enddo
 
-END SUBROUTINE func_zener
+end subroutine func_zener
 
-SUBROUTINE remplit_point(fmin,fmax,N,point)
+subroutine remplit_point(fmin,fmax,N,point)
 
-  IMPLICIT NONE
+  implicit none
 
 ! pi
   double precision, parameter :: PI = 3.141592653589793d0
@@ -432,7 +432,7 @@ SUBROUTINE remplit_point(fmin,fmax,N,point)
 
   integer l
 
-  IF (N == 1) THEN
+  if (N == 1) then
     point(1) = sqrt(fmin * fmax)
   ELSE
     do l = 1, N, 1
@@ -441,11 +441,11 @@ SUBROUTINE remplit_point(fmin,fmax,N,point)
     enddo
   endif
 
-END SUBROUTINE remplit_point
+end subroutine remplit_point
 
-SUBROUTINE classical_linear_least_squares(Qref,poids,point,N,fmin,fmax)
+subroutine classical_linear_least_squares(Qref,poids,point,N,fmin,fmax)
 
-  IMPLICIT NONE
+  implicit none
 
 ! pi
   double precision, parameter :: PI = 3.141592653589793d0
@@ -482,18 +482,18 @@ SUBROUTINE classical_linear_least_squares(Qref,poids,point,N,fmin,fmax)
 
   call lfit_zener(x,y_ref,sig,m,poids,ia,covar,chi2,N,Qref,point)
 
-END SUBROUTINE classical_linear_least_squares
+end subroutine classical_linear_least_squares
 
-! Calcul des coefficients par optimisation non-lineaire avec contraintes
+! Calcul des coefficients par optimization non-lineaire avec contraintes
 
-SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,theta_min,theta_max,f_min,f_max)
+subroutine solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,theta_min,theta_max,f_min,f_max)
 !-----------------------------------------------------------------------------
 ! The subroutine SOLVOPT performs a modified version of Shor's r-algorithm in
 ! order to find a local minimum resp. maximum of a nonlinear function
 ! defined on the n-dimensional Euclidean space
 ! or
 ! a local minimum for a nonlinear constrained problem:
-! min { f(x): g(x) (<)= 0, g(x) in R(m), x in R(n) }.
+! min { f(x): g(x) ( < )= 0, g(x) in R(m), x in R(n) }.
 ! Arguments:
 ! n       is the space dimension (integer*4),
 ! x       is the n-vector, the coordinates of the starting point
@@ -502,11 +502,11 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 ! f       returns the optimum function value
 !         (double precision),
 ! fun     is the entry name of a subroutine which computes the value
-!         of the function <fun> at a point x, should be declared as external
+!         of the function < fun> at a point x, should be declared as external
 !         in a calling routine,
 !        synopsis: fun(x,f)
 ! grad    is the entry name of a subroutine which computes the gradient
-!         vector of the function <fun> at a point x, should be declared as
+!         vector of the function < fun> at a point x, should be declared as
 !         external in a calling routine,
 !         synopsis: grad(x,g)
 ! func    is the entry name of a subroutine which computes the MAXIMAL
@@ -517,17 +517,17 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 !         vector for a constraint with the MAXIMAL RESIDUAL at a point x,
 !         should be declared as external in a calling routine,
 !        synopsis: gradc(x,gc)
-! flg,    (logical) is a flag for the use of a subroutine <grad>:
+! flg,    (logical) is a flag for the use of a subroutine < grad>:
 !         .true. means gradients are calculated by the user-supplied routine.
 ! flfc,   (logical) is a flag for a constrained problem:
 !         .true. means the maximal residual for a set of constraints
-!         is calculated by <func>.
-! flgc,   (logical) is a flag for the use of a subroutine <gradc>:
+!         is calculated by < func>.
+! flgc,   (logical) is a flag for the use of a subroutine < gradc>:
 !         .true. means gradients of the constraints are calculated
 !         by the user-supplied routine.
 ! options is a vector of optional parameters (double precision):
 !     options(1)= H, where sign(H)=-1 resp. sign(H)=+1 means minimize resp.
-!         maximize <fun> (valid only for an unconstrained problem) and
+!         maximize < fun> (valid only for an unconstrained problem) and
 !         H itself is a factor for the initial trial step size
 !         (options(1)=-1.d0 by default),
 !     options(2)= relative error for the argument in terms of the infinity-norm
@@ -543,25 +543,25 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 !    *options(8)= lower bound for the stepsize used for the difference
 !        approximation of gradients (1.d-11 by default,see the manual for more).
 !   (* ... changes should be done with care)
-! Returned optional values:
+! returned optional values:
 !     options(9),  the number of iterations, if positive,
 !         or an abnormal stop code, if negative (see manual for more),
 !                -1: allocation error,
 !                -2: improper space dimension,
-!                -3: <fun> returns an improper value,
-!                -4: <grad> returns a zero vector or improper value at the
+!                -3: < fun> returns an improper value,
+!                -4: < grad> returns a zero vector or improper value at the
 !                    starting point,
-!                -5: <func> returns an improper value,
-!                -6: <gradc> returns an improper value,
+!                -5: < func> returns an improper value,
+!                -6: < gradc> returns an improper value,
 !                -7: function is unbounded,
 !                -8: gradient is zero at the point,
 !                    but stopping criteria are not fulfilled,
 !                -9: iterations limit exceeded,
 !               -11: Premature stop is possible,
 !               -12: Result may not provide the true optimum,
-!               -13: Function is flat: result may be inaccurate
+!               -13: function is flat: result may be inaccurate
 !                   in view of a point.
-!               -14: Function is steep: result may be inaccurate
+!               -14: function is steep: result may be inaccurate
 !                    in view of a function value,
 !       options(10), the number of objective function evaluations, and
 !       options(11), the number of gradient evaluations.
@@ -569,7 +569,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 !       options(13), the number of constraint gradient evaluations.
 ! ____________________________________________________________________________
 !
-      IMPLICIT NONE
+      implicit none
       !include 'messages.inc'
 
       integer, intent(in) :: Kopt
@@ -620,7 +620,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
          infty /1.d100/, epsnorm /1.d-15/,  epsnorm2 /1.d-30/, &
          allocerrstr/'Allocation Error = '/
 ! Check the dimension:
-      if (n<2) then
+      if (n < 2) then
           print *, 'SolvOpt error:'
           print *, 'Improper space dimension.'
          stop 'error in allocate statement in SolvOpt'
@@ -630,104 +630,104 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
       n_float=dble(n)
 ! allocate working arrays:
       allocate (B(n,n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (g(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (g0(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (g1(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (gt(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (gc(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (z(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (x1(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (xopt(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (xrec(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (grec(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (xx(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (deltax(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
       allocate (idx(n),stat=allocerr)
-      if (allocerr/=0) then
+      if (allocerr /= 0) then
          options(9)=-one
          print *,allocerrstr,allocerr
          stop 'error in allocate statement in SolvOpt'
       endif
 
 ! store flags:
-      app=.not.flg
+      app= .not. flg
       constr=flfc
-      appconstr=.not.flgc
+      appconstr= .not. flgc
 ! Default values for options:
       call soptions(doptions)
       do i=1,8
-            if (options(i)==zero) then
+            if (options(i) == zero) then
                options(i)=doptions(i)
-            else if (i==2.or.i==3.or.i==6) then
+            else if (i == 2 .or. i == 3 .or. i == 6) then
                options(i)=dmax1(options(i),powerm12)
                options(i)=dmin1(options(i),one)
-               if (i==2)options(i)=dmax1(options(i),options(8)*hundr)
-            else if (i==7) then
+               if (i == 2)options(i)=dmax1(options(i),options(8)*hundr)
+            else if (i == 7) then
                options(7)=dmax1(options(i),1.5d0)
             endif
       enddo
@@ -759,9 +759,9 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
       enddo
 !---}
 ! Display control ---{
-      if (options(5)<=zero) then
+      if (options(5) <= zero) then
          dispdata=0
-         if (options(5)==-one) then
+         if (options(5) == -one) then
             dispwarn=.false.
          else
             dispwarn=.true.
@@ -774,7 +774,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 !---}
 
 ! Stepsize control ---{
-      dq=5.1d0           !! Step divider (at f_{i+1}>gamma*f_{i})
+      dq=5.1d0           !! Step divider (at f_{i+1} > gamma*f_{i})
       du20=two
       du10=1.5d0
       du03=1.05d0        !! Step multipliers (at certain steps made)
@@ -811,13 +811,13 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 ! ----}  End of setting constants
 ! ----}  End of the preamble
 !--------------------------------------------------------------------
-! COMPUTE THE FUNCTION  ( FIRST TIME ) ----{
+! COMPUTE THE function  ( FIRST TIME ) ----{
       call fun(x,f,Qref,n/2,n,Kopt,f_min,f_max)
       options(10)=options(10)+one
-      if (dabs(f)>=infty) then
+      if (dabs(f) >= infty) then
          if (dispwarn) then
             print *,'SolvOpt error:'
-            print *,'Function equals infinity at the point.'
+            print *,'function equals infinity at the point.'
             print *,'Choose another starting point.'
          endif
          options(9)=-three
@@ -828,22 +828,22 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
       enddo
       frec=f     !! record point and function value
 ! Constrained problem
-      if (constr)  then
+      if (constr) then
           kless=0
           fp=f
           call func(x,fc,n/2,n,theta_min,theta_max)
           options(12)=options(12)+one
-          if (dabs(fc)>=infty) then
+          if (dabs(fc) >= infty) then
              if (dispwarn) then
                 print *,'SolvOpt error:'
-                print *,'<FUNC> returns infinite value at the point.'
+                print *,' < FUNC > returns infinite value at the point.'
                 print *,'Choose another starting point.'
              endif
              options(9)=-five
              goto 999
           endif
         PenCoef=one          !! first rough approximation
-        if (fc<=cnteps) then
+        if (fc <= cnteps) then
          FsbPnt=.true.       !! feasible point
          fc=zero
         else
@@ -873,7 +873,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
          ng=ng+g(i)*g(i)
       enddo
       ng=dsqrt(ng)
-      if (ng>=infty) then
+      if (ng >= infty) then
          if (dispwarn) then
             print *,'SolvOpt error:'
             print *,'Gradient equals infinity at the starting point.'
@@ -881,7 +881,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
          endif
          options(9)=-four
          goto 999
-      else if (ng<ZeroGrad) then
+      else if (ng < ZeroGrad) then
          if (dispwarn) then
             print *,'SolvOpt error:'
             print *,'Gradient equals zero at the starting point.'
@@ -891,10 +891,10 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
          goto 999
       endif
       if (constr) then
-       if (.not.FsbPnt) then
+       if (.not. FsbPnt) then
          !if (appconstr) then
             !do j=1,n
-              !if (x(j)>=zero) then
+              !if (x(j) >= zero) then
                  !deltax(j)=ddx
               !else
                  !deltax(j)=-ddx
@@ -910,18 +910,18 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
            ngc=ngc+gc(i)*gc(i)
          enddo
          ngc=dsqrt(ngc)
-         if (ng>=infty) then
+         if (ng >= infty) then
             if (dispwarn) then
                print *,'SolvOpt error:'
-               print *,'<GRADC> returns infinite vector at the point.'
+               print *,' < GRADC > returns infinite vector at the point.'
                print *,'Choose another starting point.'
             endif
             options(9)=-six
             goto 999
-         else if (ng<ZeroGrad) then
+         else if (ng < ZeroGrad) then
             if (dispwarn) then
                print *,'SolvOpt error:'
-               print *,'<GRADC> returns zero vector at an infeasible point.'
+               print *,' < GRADC > returns zero vector at an infeasible point.'
             endif
             options(9)=-six
             goto 999
@@ -945,10 +945,10 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 ! INITIAL STEPSIZE
       d=zero
       do i=1,n
-        if (d<dabs(x(i))) d=dabs(x(i))
+        if (d < dabs(x(i))) d=dabs(x(i))
       enddo
       h=h1*dsqrt(options(2))*d                  !! smallest possible stepsize
-      if (dabs(options(1))/=one) then
+      if (dabs(options(1)) /= one) then
         h=h1*dmax1(dabs(options(1)),dabs(h))    !! user-supplied stepsize
       else
           h=h1*dmax1(one/dlog(ng+1.1d0),dabs(h)) !! calculated stepsize
@@ -999,23 +999,23 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 
        w=wdef
 ! JUMPING OVER A RAVINE ----{
-       if (dd<low_bound) then
-        if (kj==2) then
+       if (dd < low_bound) then
+        if (kj == 2) then
           do i=1,n
            xx(i)=x(i)
           enddo
         endif
-        if (kj==0) kd=4
+        if (kj == 0) kd=4
         kj=kj+1
         w=-.9d0              !! use large coef. of space dilation
         h=h*two
-        if (kj>2*kd) then
+        if (kj > 2*kd) then
           kd=kd+1
           warnno=1
           endwarn='Premature stop is possible. Try to re-run the routine from the obtained point.'
           do i=1,n
-            if (dabs(x(i)-xx(i))<epsnorm*dabs(x(i))) then
-             if (dispwarn)  then
+            if (dabs(x(i)-xx(i)) < epsnorm*dabs(x(i))) then
+             if (dispwarn) then
                 print *,'SolvOpt warning:'
                 print *,'Ravine with a flat bottom is detected.'
              endif
@@ -1033,7 +1033,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
          nrmz=nrmz+z(i)*z(i)
        enddo
        nrmz=dsqrt(nrmz)
-       if (nrmz>epsnorm*ngt) then
+       if (nrmz > epsnorm*ngt) then
         do i=1,n
          z(i)=z(i)/nrmz
         enddo
@@ -1077,27 +1077,27 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
         enddo
 ! ----}
 ! RESETTING ----{
-        if (kcheck>1) then
+        if (kcheck > 1) then
            numelem=0
            do i=1,n
-              if (dabs(g(i))>ZeroGrad) then
+              if (dabs(g(i)) > ZeroGrad) then
                  numelem=numelem+1
                  idx(numelem)=i
               endif
            enddo
-           if (numelem>0) then
+           if (numelem > 0) then
               grbnd=epsnorm*dble(numelem**2)
               ii=0
               do i=1,numelem
                  j=idx(i)
-                 if (dabs(g1(j))<=dabs(g(j))*grbnd) ii=ii+1
+                 if (dabs(g1(j)) <= dabs(g(j))*grbnd) ii=ii+1
               enddo
-              if (ii==n .or. nrmz==zero) then
+              if (ii == n .or. nrmz == zero) then
                 if (dispwarn) then
                   print *,'SolvOpt warning:'
                   print *,'Normal re-setting of a transformation matrix.'
                 endif
-                if (dabs(fst-f)<dabs(f)*1.d-2) then
+                if (dabs(fst-f) < dabs(f)*1.d-2) then
                    ajp=ajp-10*n
                 else
                    ajp=ajpp
@@ -1137,15 +1137,15 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
          enddo
            ii=0
            do i=1,n
-            if (dabs(x(i)-x1(i))<dabs(x(i))*epsnorm) ii=ii+1
+            if (dabs(x(i)-x1(i)) < dabs(x(i))*epsnorm) ii=ii+1
            enddo
-! FUNCTION VALUE
+! function VALUE
          call fun(x,f,Qref,n/2,n,Kopt,f_min,f_max)
          options(10)=options(10)+one
-         if (h1*f>=infty) then
+         if (h1*f >= infty) then
             if (dispwarn) then
               print *,'SolvOpt error:'
-              print *,'Function is unbounded.'
+              print *,'function is unbounded.'
             endif
             options(9)=-seven
             goto 999
@@ -1154,30 +1154,30 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
            fp=f
            call func(x,fc,n/2,n,theta_min,theta_max)
            options(12)=options(12)+one
-           if (dabs(fc)>=infty) then
+           if (dabs(fc) >= infty) then
                if (dispwarn) then
                   print *,'SolvOpt error:'
-                  print *,'<FUNC> returns infinite value at the point.'
+                  print *,' < FUNC > returns infinite value at the point.'
                   print *,'Choose another starting point.'
                endif
                options(9)=-five
                goto 999
            endif
-           if (fc<=cnteps) then
+           if (fc <= cnteps) then
               FsbPnt=.true.
               fc=zero
            else
               FsbPnt=.false.
               fp_rate=fp-fp1
-              if (fp_rate<-epsnorm) then
-               if (.not.FsbPnt1) then
+              if (fp_rate < -epsnorm) then
+               if (.not. FsbPnt1) then
                 d=zero
                 do i=1,n
                   d=d+(x(i)-x1(i))**2
                 enddo
                 d=dsqrt(d)
                 PenCoefNew=-1.5d1*fp_rate/d
-                if (PenCoefNew>1.2d0*PenCoef) then
+                if (PenCoefNew > 1.2d0*PenCoef) then
                   PenCoef=PenCoefNew
                   Reset=.true.
                   kless=0
@@ -1189,12 +1189,12 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
            endif
            f=f+PenCoef*fc
          endif
-         if (dabs(f)>=infty) then
+         if (dabs(f) >= infty) then
              if (dispwarn) then
                print *,'SolvOpt warning:'
-               print *,'Function equals infinity at the point.'
+               print *,'function equals infinity at the point.'
              endif
-             if (ksm.or.kc>=mxtc) then
+             if (ksm .or. kc >= mxtc) then
                 options(9)=-three
                 goto 999
              else
@@ -1212,9 +1212,9 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                 endif
              endif
 ! STEP SIZE IS ZERO TO THE EXTENT OF EPSNORM
-         else if (ii==n) then
+         else if (ii == n) then
                 stepvanish=stepvanish+1
-                if (stepvanish>=5) then
+                if (stepvanish >= 5) then
                     options(9)=-ten-four
                     if (dispwarn) then
                        print *,'SolvOpt: Termination warning:'
@@ -1234,7 +1234,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                     endif
                 endif
 ! USE SMALLER STEP
-         else if (h1*f<h1*gamma**idint(dsign(one,f1))*f1) then
+         else if (h1*f < h1*gamma**idint(dsign(one,f1))*f1) then
              if (ksm) exit
              k2=k2+1
              k1=0
@@ -1247,19 +1247,19 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                 FsbPnt=FsbPnt1
                 fp=fp1
              endif
-             if (kc>=mxtc) exit
+             if (kc >= mxtc) exit
 ! 1-D OPTIMIZER IS LEFT BEHIND
          else
-             if (h1*f<=h1*f1) exit
+             if (h1*f <= h1*f1) exit
 ! USE LARGER STEP
              k1=k1+1
-             if (k2>0) kc=kc+1
+             if (k2 > 0) kc=kc+1
              k2=0
-             if (k1>=20) then
+             if (k1 >= 20) then
                  hp=du20*hp
-             else if (k1>=10) then
+             else if (k1 >= 10) then
                  hp=du10*hp
-             else if (k1>=3) then
+             else if (k1 >= 3) then
                  hp=du03*hp
              endif
          endif
@@ -1271,8 +1271,8 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
            dx=dx+(xopt(i)-x(i))**2
         enddo
         dx=dsqrt(dx)
-        if (kg<kstore)  kg=kg+1
-        if (kg>=2)  then
+        if (kg < kstore)  kg=kg+1
+        if (kg >= 2) then
            do i=kg,2,-1
              nsteps(i)=nsteps(i-1)
            enddo
@@ -1291,13 +1291,13 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
            kk=kk+nsteps(i)*dd
         enddo
         kk=kk/d
-        if     (kk>des) then
-             if (kg==1) then
+        if (kk > des) then
+             if (kg == 1) then
                 h=h*(kk-des+one)
              else
                 h=h*dsqrt(kk-des+one)
              endif
-        else if (kk<des) then
+        else if (kk < des) then
              h=h*dsqrt(kk/des)
         endif
 
@@ -1306,14 +1306,14 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 ! COMPUTE THE GRADIENT ----{
         if (app) then
           do j=1,n
-            if (g0(j)>=zero) then
+            if (g0(j) >= zero) then
                deltax(j)=h1*ddx
             else
                deltax(j)=-h1*ddx
             endif
           enddo
           obj=.true.
-          !if (constr)  then
+          !if (constr) then
              !call apprgrdn()
           !else
              !call apprgrdn()
@@ -1328,14 +1328,14 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
           ng=ng+g(i)*g(i)
         enddo
         ng=dsqrt(ng)
-        if (ng>=infty) then
+        if (ng >= infty) then
          if (dispwarn) then
            print *,'SolvOpt error:'
            print *,'Gradient equals infinity at the starting point.'
          endif
          options(9)=-four
          goto 999
-        else if (ng<ZeroGrad) then
+        else if (ng < ZeroGrad) then
          if (dispwarn) then
            print *,'SolvOpt warning:'
            print *,'Gradient is zero, but stopping criteria are not fulfilled.'
@@ -1344,10 +1344,10 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
         endif
 ! Constraints:
         if (constr) then
-         if (.not.FsbPnt) then
-           if (ng<1.d-2*PenCoef) then
+         if (.not. FsbPnt) then
+           if (ng < 1.d-2*PenCoef) then
               kless=kless+1
-              if (kless>=20) then
+              if (kless >= 20) then
                  PenCoef=PenCoef/ten
                  Reset=.true.
                  kless=0
@@ -1357,7 +1357,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
            endif
            !if (appconstr) then
                  !do j=1,n
-                   !if (x(j)>=zero) then
+                   !if (x(j) >= zero) then
                       !deltax(j)=ddx
                    !else
                       !deltax(j)=-ddx
@@ -1375,17 +1375,17 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
               ngc=ngc+gc(i)*gc(i)
            enddo
            ngc=dsqrt(ngc)
-           if (ngc>=infty) then
+           if (ngc >= infty) then
                   if (dispwarn) then
                      print *,'SolvOpt error:'
-                     print *,'<GRADC> returns infinite vector at the point.'
+                     print *,' < GRADC > returns infinite vector at the point.'
                   endif
                   options(9)=-six
                   goto 999
-           else if (ngc<ZeroGrad .and. .not.appconstr) then
+           else if (ngc < ZeroGrad .and. .not. appconstr) then
                   if (dispwarn) then
                      print *,'SolvOpt error:'
-                     print *,'<GRADC> returns zero vector at an infeasible point.'
+                     print *,' < GRADC > returns zero vector at an infeasible point.'
                   endif
                   options(9)=-six
                   goto 999
@@ -1410,7 +1410,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
            endif
          endif
         endif
-        if (h1*f>h1*frec) then
+        if (h1*f > h1*frec) then
           frec=f
           do i=1,n
             xrec(i)=x(i)
@@ -1418,9 +1418,9 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
           enddo
         endif
 ! ----}
-       if (ng>ZeroGrad) then
-        if (knorms<10)  knorms=knorms+1
-        if (knorms>=2)  then
+       if (ng > ZeroGrad) then
+        if (knorms < 10)  knorms=knorms+1
+        if (knorms >= 2) then
           do i=knorms,2,-1
            gnorms(i)=gnorms(i-1)
           enddo
@@ -1440,9 +1440,9 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
        nx=dsqrt(nx)
 
 ! DISPLAY THE CURRENT VALUES ----{
-       if (k==ld) then
+       if (k == ld) then
          print *, &
-             'Iteration # ..... Function Value ..... ', &
+             'Iteration # ..... function Value ..... ', &
              'Step Value ..... Gradient Norm'
          print '(5x,i5,7x,g13.5,6x,g13.5,7x,g13.5)', k,f,dx,ng
          ld=k+dispdata
@@ -1451,24 +1451,24 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 ! CHECK THE STOPPING CRITERIA ----{
       termflag=.true.
       if (constr) then
-        if (.not.FsbPnt) termflag=.false.
+        if (.not. FsbPnt) termflag=.false.
       endif
-      if(kcheck<=5.or.kcheck<=12.and.ng>one)termflag=.false.
-      if(kc>=mxtc .or. knan)termflag=.false.
+      if (kcheck <= 5 .or. kcheck <= 12 .and. ng > one)termflag=.false.
+      if (kc >= mxtc .or. knan)termflag=.false.
 ! ARGUMENT
        if (termflag) then
            ii=0
            stopping=.true.
            do i=1,n
-             if (dabs(x(i))>=lowxbound) then
+             if (dabs(x(i)) >= lowxbound) then
                 ii=ii+1
                 idx(ii)=i
-                if (dabs(xopt(i)-x(i))>options(2)*dabs(x(i))) then
+                if (dabs(xopt(i)-x(i)) > options(2)*dabs(x(i))) then
                   stopping=.false.
                 endif
              endif
            enddo
-           if (ii==0 .or. stopping)  then
+           if (ii == 0 .or. stopping) then
                 stopping=.true.
                 termx=termx+1
                 d=zero
@@ -1476,15 +1476,15 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                   d=d+(x(i)-xrec(i))**2
                 enddo
                 d=dsqrt(d)
-! FUNCTION
-                if(dabs(f-frec)>detfr*dabs(f) .and. &
-                  dabs(f-fopt)<=options(3)*dabs(f) .and. &
-                  krerun<=3 .and. .not. constr) then
+! function
+                if (dabs(f-frec) > detfr*dabs(f) .and. &
+                  dabs(f-fopt) <= options(3)*dabs(f) .and. &
+                  krerun <= 3 .and. .not. constr) then
                    stopping=.false.
-                   if (ii>0) then
+                   if (ii > 0) then
                     do i=1,ii
                      j=idx(i)
-                     if (dabs(xrec(j)-x(j))>detxr*dabs(x(j))) then
+                     if (dabs(xrec(j)-x(j)) > detxr*dabs(x(j))) then
                        stopping=.true.
                        exit
                      endif
@@ -1511,28 +1511,28 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                    else
                       h=h*ten
                    endif
-                else if(dabs(f-frec)>options(3)*dabs(f) .and. &
-                  d<options(2)*nx .and. constr) then
+                else if (dabs(f-frec) > options(3)*dabs(f) .and. &
+                  d < options(2)*nx .and. constr) then
                    continue
-                else if  (dabs(f-fopt)<=options(3)*dabs(f) .or. &
-                   dabs(f)<=lowfbound .or. &
-                   (dabs(f-fopt)<=options(3).and. &
-                    termx>=limxterm )) then
+                else if (dabs(f-fopt) <= options(3)*dabs(f) .or. &
+                   dabs(f) <= lowfbound .or. &
+                   (dabs(f-fopt) <= options(3) .and. &
+                    termx >= limxterm )) then
                   if (stopf) then
-                   if (dx<=laststep) then
-                    if (warnno==1 .and. ng<dsqrt(options(3))) then
+                   if (dx <= laststep) then
+                    if (warnno == 1 .and. ng < dsqrt(options(3))) then
                        warnno=0
                     endif
-                    if (.not.app) then
+                    if (.not. app) then
                       do i=1,n
-                       if (dabs(g(i))<=epsnorm2) then
+                       if (dabs(g(i)) <= epsnorm2) then
                          warnno=3
                          endwarn='Result may be inaccurate in the coordinates. The function is flat at the solution.'
                          exit
                        endif
                       enddo
                     endif
-                    if (warnno/=0) then
+                    if (warnno /= 0) then
                        options(9)=-dble(warnno)-ten
                        if (dispwarn) then
                          print *,'SolvOpt: Termination warning:'
@@ -1548,8 +1548,8 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                   else
                    stopf=.true.
                   endif
-                else if (dx<powerm12*dmax1(nx,one) .and. &
-                       termx>=limxterm ) then
+                else if (dx < powerm12*dmax1(nx,one) .and. &
+                       termx >= limxterm ) then
                      options(9)=-four-ten
                      if (dispwarn) then
                        print *,'SolvOpt: Termination warning:'
@@ -1565,7 +1565,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
            endif
        endif
 ! ITERATIONS LIMIT
-            if(k==iterlimit) then
+            if (k == iterlimit) then
                 options(9)=-nine
                 if (dispwarn) then
                   print *,'SolvOpt warning:'
@@ -1576,7 +1576,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 ! ----}
 ! ZERO GRADIENT ----{
           if (constr) then
-            if (ng<=ZeroGrad) then
+            if (ng <= ZeroGrad) then
                 if (dispwarn) then
                   print *,'SolvOpt: Termination warning:'
                   print *,'Gradient is zero, but stopping criteria are not fulfilled.'
@@ -1585,13 +1585,13 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                 goto 999
             endif
           else
-            if (ng<=ZeroGrad) then
+            if (ng <= ZeroGrad) then
              nzero=nzero+1
              if (dispwarn) then
                print *,'SolvOpt warning:'
                print *,'Gradient is zero, but stopping criteria are not fulfilled.'
              endif
-             if (nzero>=3) then
+             if (nzero >= 3) then
                options(9)=-eight
                goto 999
              endif
@@ -1604,17 +1604,17 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                enddo
                call fun(x,f,Qref,n/2,n,Kopt,f_min,f_max)
                options(10)=options(10)+one
-               if (dabs(f)>=infty) then
+               if (dabs(f) >= infty) then
                  if (dispwarn) then
                    print *,'SolvOpt error:'
-                   print *,'Function equals infinity at the point.'
+                   print *,'function equals infinity at the point.'
                  endif
                  options(9)=-three
                  goto 999
                endif
                !if (app) then
                    !do j=1,n
-                     !if (g0(j)>=zero) then
+                     !if (g0(j) >= zero) then
                         !deltax(j)=h1*ddx
                      !else
                         !deltax(j)=-h1*ddx
@@ -1632,7 +1632,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                   ng=ng+g(j)*g(j)
                enddo
                ng=dsqrt(ng)
-               if (ng>=infty) then
+               if (ng >= infty) then
                     if (dispwarn) then
                       print *,'SolvOpt error:'
                       print *,'Gradient equals infinity at the starting point.'
@@ -1640,9 +1640,9 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                     options(9)=-four
                     goto 999
                endif
-               if (ng>ZeroGrad) exit
+               if (ng > ZeroGrad) exit
              enddo
-             if (ng<=ZeroGrad) then
+             if (ng <= ZeroGrad) then
                 if (dispwarn) then
                   print *,'SolvOpt: Termination warning:'
                   print *,'Gradient is zero, but stopping criteria are not fulfilled.'
@@ -1655,19 +1655,19 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
             endif
           endif
 ! ----}
-! FUNCTION IS FLAT AT THE POINT ----{
-          if (.not.constr .and. &
-             dabs(f-fopt)<dabs(fopt)*options(3) .and. &
-             kcheck>5  .and. ng<one ) then
+! function IS FLAT AT THE POINT ----{
+          if (.not. constr .and. &
+             dabs(f-fopt) < dabs(fopt)*options(3) .and. &
+             kcheck > 5 .and. ng < one ) then
 
            ni=0
            do i=1,n
-             if (dabs(g(i))<=epsnorm2) then
+             if (dabs(g(i)) <= epsnorm2) then
                ni=ni+1
                idx(ni)=i
              endif
            enddo
-           if (ni>=1 .and. ni<=n/2 .and. kflat<=3) then
+           if (ni >= 1 .and. ni <= n/2 .and. kflat <= 3) then
              kflat=kflat+1
              if (dispwarn) then
                 print *,'SolvOpt warning:'
@@ -1683,9 +1683,9 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
               j=idx(i)
               f2=fm
               y=x(j)
-              if (y==zero) then
+              if (y == zero) then
                 x1(j)=one
-              else if (dabs(y)<one) then
+              else if (dabs(y) < one) then
                 x1(j)=dsign(one,y)
               else
                 x1(j)=y
@@ -1694,13 +1694,13 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
                x1(j)=x1(j)/1.15d0
                call fun(x1,f1,Qref,n/2,n,Kopt,f_min,f_max)
                options(10)=options(10)+one
-               if (dabs(f1)<infty) then
-                 if (h1*f1>h1*fm) then
+               if (dabs(f1) < infty) then
+                 if (h1*f1 > h1*fm) then
                    y=x1(j)
                    fm=f1
-                 else if (h1*f2>h1*f1) then
+                 else if (h1*f2 > h1*f1) then
                    exit
-                 else if (f2==f1) then
+                 else if (f2 == f1) then
                    x1(j)=x1(j)/1.5d0
                  endif
                  f2=f1
@@ -1708,7 +1708,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
               enddo
               x1(j)=y
              enddo
-             if (h1*fm>h1*f) then
+             if (h1*fm > h1*f) then
               !if (app) then
                 !do j=1,n
                   !deltax(j)=h1*ddx
@@ -1724,7 +1724,7 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
               do i=1,n
                 ngt=ngt+gt(i)*gt(i)
               enddo
-              if (ngt>epsnorm2 .and. ngt<infty) then
+              if (ngt > epsnorm2 .and. ngt < infty) then
                 if (dispwarn) print *,'Trying to recover by shifting insensitive variables.'
                 do i=1,n
                  x(i)=x1(i)
@@ -1748,13 +1748,13 @@ SUBROUTINE solvopt(n,x,f,fun,flg,grad,options,flfc,func,flgc,gradc,Qref,Kopt,the
 ! deallocate working arrays:
       deallocate (idx,deltax,xx,grec,xrec,xopt,x1,z,gc,gt,g1,g0,g,B)
 
-END SUBROUTINE solvopt
+end subroutine solvopt
 
-SUBROUTINE soptions(default)
+subroutine soptions(default)
 ! SOPTIONS returns the default values for the optional parameters
 ! used by SolvOpt.
 
-  IMPLICIT NONE
+  implicit none
 
   double precision default(13)
 
@@ -1772,11 +1772,11 @@ SUBROUTINE soptions(default)
   default(12) = 0.d0
   default(13) = 0.d0
 
-END SUBROUTINE soptions
+end subroutine soptions
 
-SUBROUTINE func_objective(x,res,freq,Qref,N,Nopt)
+subroutine func_objective(x,res,freq,Qref,N,Nopt)
 
-  IMPLICIT NONE
+  implicit none
 
   integer, intent(in) :: N,Nopt
   double precision, intent(in) :: freq,Qref
@@ -1793,13 +1793,13 @@ SUBROUTINE func_objective(x,res,freq,Qref,N,Nopt)
     res = res + num/deno
   enddo
 
-END SUBROUTINE func_objective
+end subroutine func_objective
 
-SUBROUTINE func_mini(x,res,Qref,N,Nopt,K,f_min,f_max)
+subroutine func_mini(x,res,Qref,N,Nopt,K,f_min,f_max)
 
 ! Nopt=2*N : nombre de coefficients a optimiser
 
-  IMPLICIT NONE
+  implicit none
 
 ! pi
   double precision, parameter :: PI = 3.141592653589793d0
@@ -1821,11 +1821,11 @@ SUBROUTINE func_mini(x,res,Qref,N,Nopt,K,f_min,f_max)
     res = res + d*d
   enddo
 
-END SUBROUTINE func_mini
+end subroutine func_mini
 
-SUBROUTINE grad_func_mini(x,grad,Qref,N,Nopt,K,f_min,f_max)
+subroutine grad_func_mini(x,grad,Qref,N,Nopt,K,f_min,f_max)
 
-  IMPLICIT NONE
+  implicit none
 
 ! pi
   double precision, parameter :: PI = 3.141592653589793d0
@@ -1878,11 +1878,11 @@ SUBROUTINE grad_func_mini(x,grad,Qref,N,Nopt,K,f_min,f_max)
     enddo
   enddo
 
-END SUBROUTINE grad_func_mini
+end subroutine grad_func_mini
 
-SUBROUTINE max_residu(x,res,N,Nopt,theta_min,theta_max)
+subroutine max_residu(x,res,N,Nopt,theta_min,theta_max)
 
-  IMPLICIT NONE
+  implicit none
 
   integer, intent(in) :: N,Nopt
   double precision, intent(in) :: theta_min,theta_max
@@ -1901,11 +1901,11 @@ SUBROUTINE max_residu(x,res,N,Nopt,theta_min,theta_max)
     res = max(temp,aux)
   enddo
 
-END SUBROUTINE max_residu
+end subroutine max_residu
 
-SUBROUTINE grad_max_residu(x,grad,N,Nopt,theta_min,theta_max)
+subroutine grad_max_residu(x,grad,N,Nopt,theta_min,theta_max)
 
-  IMPLICIT NONE
+  implicit none
 
   integer, intent(in) :: N,Nopt
   double precision, intent(in) :: theta_min,theta_max
@@ -1928,18 +1928,18 @@ SUBROUTINE grad_max_residu(x,grad,N,Nopt,theta_min,theta_max)
     aux = res
     temp = max(0.d0,point(l)*point(l) - (theta_max-theta_min))
     res = max(temp,aux)
-    if (temp>aux) then
+    if (temp > aux) then
       l0 = l
     endif
   enddo
 
   do l=1,N
     grad(N+l) = 0.d0
-    if (l/=l0) then
+    if (l /= l0) then
       grad(l) = 0.d0
     else
       call max_residu(x,temp2,N,Nopt,theta_min,theta_max)
-      if (temp2==0.d0) then
+      if (temp2 == 0.d0) then
         grad(l0) = 0.d0
       else
         grad(l0) = 2.d0*point(l0)
@@ -1947,11 +1947,11 @@ SUBROUTINE grad_max_residu(x,grad,N,Nopt,theta_min,theta_max)
     endif
   enddo
 
-END SUBROUTINE grad_max_residu
+end subroutine grad_max_residu
 
-SUBROUTINE nonlinear_optimization(N,Qref,f0,point,poids,f_min,f_max)
+subroutine nonlinear_optimization(N,Qref,f0,point,poids,f_min,f_max)
 
-  IMPLICIT NONE
+  implicit none
 
 ! pi
   double precision, parameter :: PI = 3.141592653589793d0
@@ -1996,5 +1996,5 @@ SUBROUTINE nonlinear_optimization(N,Qref,f0,point,poids,f_min,f_max)
     poids(i) = x(N+i)*x(N+i)
   enddo
 
-END SUBROUTINE nonlinear_optimization
+end subroutine nonlinear_optimization
 

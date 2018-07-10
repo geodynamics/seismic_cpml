@@ -5,13 +5,13 @@
 ! Contributor: Dimitri Komatitsch, komatitsch aT lma DOT cnrs-mrs DOT fr
 !
 ! This software is a computer program whose purpose is to solve
-! the two-dimensional heterogeneous acoustic wave equation
+! the two-dimensional heterogeneous isotropic acoustic wave equation
 ! using a finite-difference method with Convolutional Perfectly Matched
 ! Layer (C-PML) conditions.
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
+! the Free Software Foundation; either version 3 of the License, or
 ! (at your option) any later version.
 !
 ! This program is distributed in the hope that it will be useful,
@@ -28,9 +28,9 @@
   program seismic_CPML_2D_pressure
 
 ! 2D acoustic finite-difference code in pressure formulation
-! with Convolutional-PML (C-PML) absorbing conditions for an heterogeneous acoustic medium
+! with Convolutional-PML (C-PML) absorbing conditions for an heterogeneous isotropic acoustic medium
 
-! Dimitri Komatitsch, CNRS, Marseille, September 2015.
+! Dimitri Komatitsch, CNRS, Marseille, July 2018.
 
 ! The pressure wave equation in an inviscid heterogeneous fluid is:
 !
@@ -58,15 +58,84 @@
 !            |         |         |
 !            +---------+---------+  ---> x
 !            p       dp/dx
+!
 
-! pour afficher le resultat 2D sous forme d'image en couleurs :
+! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000).
+! If you use this code for your own research, please cite some (or all) of these
+! articles:
 !
-!   " display image*.gif " ou " gimp image*.gif "
+! @ARTICLE{MaKoEz08,
+! author = {Roland Martin and Dimitri Komatitsch and Abdela\^aziz Ezziani},
+! title = {An unsplit convolutional perfectly matched layer improved at grazing
+! incidence for seismic wave equation in poroelastic media},
+! journal = {Geophysics},
+! year = {2008},
+! volume = {73},
+! pages = {T51-T61},
+! number = {4},
+! doi = {10.1190/1.2939484}}
 !
-!   " montage -geometry +0+3 -tile 1x60 image*.gif allfiles.gif "
-!   puis " display allfiles.gif " ou bien " gimp allfiles.gif "
+! @ARTICLE{MaKo09,
+! author = {Roland Martin and Dimitri Komatitsch},
+! title = {An unsplit convolutional perfectly matched layer technique improved
+! at grazing incidence for the viscoelastic wave equation},
+! journal = {Geophysical Journal International},
+! year = {2009},
+! volume = {179},
+! pages = {333-344},
+! number = {1},
+! doi = {10.1111/j.1365-246X.2009.04278.x}}
 !
-! When compiling with Intel ifort, use " -assume byterecl " option to create temporary binary PNM images
+! @ARTICLE{MaKoGe08,
+! author = {Roland Martin and Dimitri Komatitsch and Stephen D. Gedney},
+! title = {A variational formulation of a stabilized unsplit convolutional perfectly
+! matched layer for the isotropic or anisotropic seismic wave equation},
+! journal = {Computer Modeling in Engineering and Sciences},
+! year = {2008},
+! volume = {37},
+! pages = {274-304},
+! number = {3}}
+!
+! @ARTICLE{KoMa07,
+! author = {Dimitri Komatitsch and Roland Martin},
+! title = {An unsplit convolutional {P}erfectly {M}atched {L}ayer improved
+!          at grazing incidence for the seismic wave equation},
+! journal = {Geophysics},
+! year = {2007},
+! volume = {72},
+! number = {5},
+! pages = {SM155-SM167},
+! doi = {10.1190/1.2757586}}
+!
+! The original CPML technique for Maxwell's equations is described in:
+!
+! @ARTICLE{RoGe00,
+! author = {J. A. Roden and S. D. Gedney},
+! title = {Convolution {PML} ({CPML}): {A}n Efficient {FDTD} Implementation
+!          of the {CFS}-{PML} for Arbitrary Media},
+! journal = {Microwave and Optical Technology Letters},
+! year = {2000},
+! volume = {27},
+! number = {5},
+! pages = {334-339},
+! doi = {10.1002/1098-2760(20001205)27:5 < 334::AID-MOP14>3.0.CO;2-A}}
+
+!
+! To display the 2D results as color images, use:
+!
+!   " display image*.gif " or " gimp image*.gif "
+!
+! or
+!
+!   " montage -geometry +0+3 -rotate 90 -tile 1x21 image*Vx*.gif allfiles_Vx.gif "
+!   " montage -geometry +0+3 -rotate 90 -tile 1x21 image*Vy*.gif allfiles_Vy.gif "
+!   then " display allfiles_Vx.gif " or " gimp allfiles_Vx.gif "
+!   then " display allfiles_Vy.gif " or " gimp allfiles_Vy.gif "
+!
+
+! IMPORTANT : all our CPML codes work fine in single precision as well (which is significantly faster).
+!             If you want you can thus force automatic conversion to single precision at compile time
+!             or change all the declarations and constants in the code from double precision to single.
 
   implicit none
 
@@ -76,50 +145,51 @@
   logical, parameter :: USE_PML_YMIN = .true.
   logical, parameter :: USE_PML_YMAX = .true.
 
+! total number of grid points in each direction of the grid
+  integer, parameter :: NX = 2001
+  integer, parameter :: NY = 2001
+
+! size of a grid cell
+  double precision, parameter :: DELTAX = 1.5d0
+  double precision, parameter :: DELTAY = DELTAX
+
 ! thickness of the PML layer in grid points
   integer, parameter :: NPOINTS_PML = 10
 
-! total number of grid points in each direction of the grid
-  integer, parameter :: NX = 440
-  integer, parameter :: NY = 440
-
-! size of a grid cell
-  double precision, parameter :: DELTAX = 12.5d0, DELTAY = DELTAX
-
-! P-velocity, S-velocity and density
-  double precision, parameter :: cp_value = 2500.d0
-  double precision, parameter :: rho_value = 2200.d0
+! P-velocity and density
+! the unrelaxed value is the value at frequency = 0 (the relaxed value would be the value at frequency = +infinity)
+  double precision, parameter :: cp_unrelaxed = 2000.d0
+  double precision, parameter :: density = 2000.d0
 
 ! total number of time steps
-  integer, parameter :: NSTEP = 1000
+  integer, parameter :: NSTEP = 1500
 
 ! time step in seconds
-  double precision, parameter :: DELTAT = 2.d-3
-
-! rapport DELTAT / DELTAX
-  double precision, parameter :: DELTAT_OVER_DELTAX = DELTAT / DELTAX
+  double precision, parameter :: DELTAT = 5d-4
 
 ! parameters for the source
-! tres peu de dispersion si 8 Hz, correct si 10 Hz, dispersion sur S si 12 Hz
-! mauvais si 16 Hz, tres mauvais si 25 Hz
-  double precision, parameter :: f0 = 8.d0
-! decaler le Ricker en temps pour s'assurer qu'il est nul a t = 0
-  double precision, parameter :: t0 = 1.2d0 / f0
-  double precision, parameter :: factor = 1.d4
+  double precision, parameter :: f0 = 35.d0
+  double precision, parameter :: t0 = 1.20d0 / f0
+  double precision, parameter :: factor = 1.d0
 
-! source in the medium
-  double precision, parameter :: XSOURCE = (NX / 2) * DELTAX
-  double precision, parameter :: YSOURCE = (NY / 2) * DELTAX
+! source
+  integer, parameter :: ISOURCE = NX/2
+  integer, parameter :: JSOURCE = NY/2
+  double precision, parameter :: xsource = (ISOURCE - 1) * DELTAX
+  double precision, parameter :: ysource = (JSOURCE - 1) * DELTAY
 
 ! receivers
-  integer, parameter :: NREC = 11
-  double precision, parameter :: xdeb = 100.d0   ! first receiver x in meters
-  double precision, parameter :: ydeb = 2400.d0  ! first receiver y in meters
-  double precision, parameter :: xfin = 3850.d0  ! last receiver x in meters
-  double precision, parameter :: yfin = 2400.d0  ! last receiver y in meters
+  integer, parameter :: NREC = 1
+  double precision, parameter :: xdeb = 2300.d0   ! first receiver x in meters
+  double precision, parameter :: ydeb = 2300.d0   ! first receiver y in meters
+  double precision, parameter :: xfin = 2300.d0   ! last receiver x in meters
+  double precision, parameter :: yfin = 2300.d0   ! last receiver y in meters
 
-! affichage periodique d'informations a l'ecran
-  integer, parameter :: IT_AFFICHE = 100
+! display information on the screen from time to time
+  integer, parameter :: IT_DISPLAY = 100
+
+! value of PI
+  double precision, parameter :: PI = 3.141592653589793238462643d0
 
 ! zero
   double precision, parameter :: ZERO = 0.d0
@@ -127,11 +197,8 @@
 ! large value for maximum
   double precision, parameter :: HUGEVAL = 1.d+30
 
-! pressure threshold above which we consider the code became unstable
+! threshold above which we consider that the code became unstable
   double precision, parameter :: STABILITY_THRESHOLD = 1.d+25
-
-! valeur de PI
-  double precision, parameter :: PI = 3.141592653589793238462643d0
 
 ! main arrays
   double precision, dimension(NX,NY) :: xgrid,ygrid, &
@@ -215,7 +282,7 @@
   do j=1,NY
     do i=1,NX
       distval = sqrt((xgrid(i,j)-XSOURCE)**2 + (ygrid(i,j)-YSOURCE)**2)
-      if(distval < dist) then
+      if (distval < dist) then
         dist = distval
         i_source = i
         j_source = j
@@ -241,7 +308,7 @@
     do j = 1,NY
     do i = 1,NX
       distval = sqrt((xgrid(i,j)-xrec(irec))**2 + (ygrid(i,j)-yrec(irec))**2)
-      if(distval < dist) then
+      if (distval < dist) then
         dist = distval
         ix_rec(irec) = i
         iy_rec(irec) = j
@@ -262,7 +329,7 @@
   nombre_Courant = maxval(cp) * DELTAT_OVER_DELTAX
   print *,'le nombre de Courant vaut ',nombre_Courant
   print *
-  if(nombre_Courant > 1.d0/sqrt(2.d0)) then
+  if (nombre_Courant > 1.d0/sqrt(2.d0)) then
     stop 'le pas de temps est trop grand, simulation instable'
   endif
 
@@ -289,7 +356,7 @@
   Rcoef = 0.001d0
 
 ! check that NPOWER is okay
-  if(NPOWER < 1) stop 'NPOWER must be greater than 1'
+  if (NPOWER < 1) stop 'NPOWER must be greater than 1'
 
 ! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   d0_x = - (NPOWER + 1) * maxval(cp) * log(Rcoef) / (2.d0 * thickness_PML_x)
@@ -329,11 +396,11 @@
     xval = DELTAX * dble(i-1)
 
 !---------- left edge
-    if(USE_PML_XMIN) then
+    if (USE_PML_XMIN) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = xoriginleft - xval
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -343,7 +410,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = xoriginleft - (xval + DELTAX/2.d0)
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -354,11 +421,11 @@
     endif
 
 !---------- right edge
-    if(USE_PML_XMAX) then
+    if (USE_PML_XMAX) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = xval - xoriginright
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -368,7 +435,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = xval + DELTAX/2.d0 - xoriginright
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -379,15 +446,15 @@
     endif
 
 ! just in case, for -5 at the end
-    if(alpha_prime_x(i) < ZERO) alpha_prime_x(i) = ZERO
-    if(alpha_prime_x_half(i) < ZERO) alpha_prime_x_half(i) = ZERO
+    if (alpha_prime_x(i) < ZERO) alpha_prime_x(i) = ZERO
+    if (alpha_prime_x_half(i) < ZERO) alpha_prime_x_half(i) = ZERO
 
     b_x(i) = exp(- (d_x(i) / K_x(i) + alpha_prime_x(i)) * DELTAT)
     b_x_half(i) = exp(- (d_x_half(i) / K_x_half(i) + alpha_prime_x_half(i)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_x(i)) > 1.d-6) a_x(i) = d_x(i) * (b_x(i) - 1.d0) / (K_x(i) * (d_x(i) + K_x(i) * alpha_prime_x(i)))
-    if(abs(d_x_half(i)) > 1.d-6) a_x_half(i) = d_x_half(i) * &
+    if (abs(d_x(i)) > 1.d-6) a_x(i) = d_x(i) * (b_x(i) - 1.d0) / (K_x(i) * (d_x(i) + K_x(i) * alpha_prime_x(i)))
+    if (abs(d_x_half(i)) > 1.d-6) a_x_half(i) = d_x_half(i) * &
       (b_x_half(i) - 1.d0) / (K_x_half(i) * (d_x_half(i) + K_x_half(i) * alpha_prime_x_half(i)))
 
   enddo
@@ -404,11 +471,11 @@
     yval = DELTAY * dble(j-1)
 
 !---------- bottom edge
-    if(USE_PML_YMIN) then
+    if (USE_PML_YMIN) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = yoriginbottom - yval
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -418,7 +485,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = yoriginbottom - (yval + DELTAY/2.d0)
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -429,11 +496,11 @@
     endif
 
 !---------- top edge
-    if(USE_PML_YMAX) then
+    if (USE_PML_YMAX) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = yval - yorigintop
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -443,7 +510,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = yval + DELTAY/2.d0 - yorigintop
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -457,8 +524,8 @@
     b_y_half(j) = exp(- (d_y_half(j) / K_y_half(j) + alpha_prime_y_half(j)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_y(j)) > 1.d-6) a_y(j) = d_y(j) * (b_y(j) - 1.d0) / (K_y(j) * (d_y(j) + K_y(j) * alpha_prime_y(j)))
-    if(abs(d_y_half(j)) > 1.d-6) a_y_half(j) = d_y_half(j) * &
+    if (abs(d_y(j)) > 1.d-6) a_y(j) = d_y(j) * (b_y(j) - 1.d0) / (K_y(j) * (d_y(j) + K_y(j) * alpha_prime_y(j)))
+    if (abs(d_y_half(j)) > 1.d-6) a_y_half(j) = d_y_half(j) * &
       (b_y_half(j) - 1.d0) / (K_y_half(j) * (d_y_half(j) + K_y_half(j) * alpha_prime_y_half(j)))
 
   enddo
@@ -555,7 +622,7 @@
   enddo
 
 ! output information every IT_AFFICHE time steps, and at time it=5
-  if(mod(it,IT_AFFICHE) == 0 .or. it == 5) then
+  if (mod(it,IT_AFFICHE) == 0 .or. it == 5) then
 
 ! print max absolute value of pressure
     pressure_max_all = maxval(abs(pressurepresent))
@@ -563,7 +630,7 @@
     print *,'max absolute value of pressure is ',pressure_max_all
 
 ! check stability of the code, exit if unstable
-    if(pressure_max_all > STABILITY_THRESHOLD) then
+    if (pressure_max_all > STABILITY_THRESHOLD) then
       stop 'code became unstable and blew up'
     endif
 
@@ -660,7 +727,7 @@
   close(unit=27,status='delete')
 
 ! ouvrir le fichier
-  if(BINARY_FILE) then
+  if (BINARY_FILE) then
 
     open(unit=27,file=nom_fichier,status='unknown',access='direct',recl=1)
     write(27,rec=1) 'P'
@@ -684,19 +751,19 @@
 
     unites = reste
 
-    if(dixmilliers == 0) then
+    if (dixmilliers == 0) then
       write(27,rec=4) ' '
     else
       write(27,rec=4) char(dixmilliers + ascii_code_of_zero)
     endif
 
-    if(dixmilliers == 0 .and. milliers == 0) then
+    if (dixmilliers == 0 .and. milliers == 0) then
       write(27,rec=5) ' '
     else
       write(27,rec=5) char(milliers + ascii_code_of_zero)
     endif
 
-    if(dixmilliers == 0 .and. milliers == 0 .and. centaines == 0) then
+    if (dixmilliers == 0 .and. milliers == 0 .and. centaines == 0) then
       write(27,rec=6) ' '
     else
       write(27,rec=6) char(centaines + ascii_code_of_zero)
@@ -723,19 +790,19 @@
 
     unites = reste
 
-    if(dixmilliers == 0) then
+    if (dixmilliers == 0) then
       write(27,rec=10) ' '
     else
       write(27,rec=10) char(dixmilliers + ascii_code_of_zero)
     endif
 
-    if(dixmilliers == 0 .and. milliers == 0) then
+    if (dixmilliers == 0 .and. milliers == 0) then
       write(27,rec=11) ' '
     else
       write(27,rec=11) char(milliers + ascii_code_of_zero)
     endif
 
-    if(dixmilliers == 0 .and. milliers == 0 .and. centaines == 0) then
+    if (dixmilliers == 0 .and. milliers == 0 .and. centaines == 0) then
       write(27,rec=12) ' '
     else
       write(27,rec=12) char(centaines + ascii_code_of_zero)
@@ -771,7 +838,7 @@
     do ix=1,NX
 
 ! supprimer les petites amplitudes considerees comme du bruit
-      if(abs(donnees_image_color_2D(ix,iy)) < amplitude_max * CUTVECT) then
+      if (abs(donnees_image_color_2D(ix,iy)) < amplitude_max * CUTVECT) then
 
 ! use black background where amplitude is negligible
           R = 0
@@ -786,15 +853,15 @@
         valeur_normalisee = donnees_image_color_2D(ix,iy) / amplitude_max
 
 ! supprimer valeurs en dehors de [-1:+1]
-        if(valeur_normalisee < -1.d0) then
+        if (valeur_normalisee < -1.d0) then
           valeur_normalisee = -1.d0
         endif
-        if(valeur_normalisee > 1.d0) then
+        if (valeur_normalisee > 1.d0) then
           valeur_normalisee = 1.d0
         endif
 
 ! utiliser rouge si champ positif, bleu si negatif, pas de vert
-        if(valeur_normalisee >= 0.d0) then
+        if (valeur_normalisee >= 0.d0) then
           R = nint(255.d0*valeur_normalisee**POWER_DISPLAY_COLOR)
           G = 0
           B = 0
@@ -807,7 +874,7 @@
      endif
 
 ! ecrire l'image en couleur
-      if(BINARY_FILE) then
+      if (BINARY_FILE) then
 
 ! first write red
         write(27,rec=current_rec) char(R)
@@ -830,8 +897,11 @@
     enddo
   enddo
 
-! fermer le fichier
+! close file
   close(27)
+
+! call the system to convert image to Gif (can be commented out if "call system" is missing in your compiler)
+! call system(system_command)
 
   end subroutine create_color_image
 

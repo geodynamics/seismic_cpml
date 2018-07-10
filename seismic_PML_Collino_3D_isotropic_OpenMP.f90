@@ -12,7 +12,7 @@
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
+! the Free Software Foundation; either version 3 of the License, or
 ! (at your option) any later version.
 !
 ! This program is distributed in the hope that it will be useful,
@@ -145,14 +145,14 @@
   double precision, parameter :: STABILITY_THRESHOLD = 1.d+25
 
 ! main arrays
-  double precision, dimension(NX,NY,NZ) :: vx_1,vx_2,vx_3,&
-                                           vy_1,vy_2,vy_3,&
-                                           vz_1,vz_2,vz_3,&
-                                           sigmaxx_1,sigmaxx_2,sigmaxx_3,&
-                                           sigmayy_1,sigmayy_2,sigmayy_3,&
-                                           sigmazz_1,sigmazz_2,sigmazz_3,&
-                                           sigmaxy_1,sigmaxy_2,&
-                                           sigmaxz_1,sigmaxz_3,&
+  double precision, dimension(NX,NY,NZ) :: vx_1,vx_2,vx_3, &
+                                           vy_1,vy_2,vy_3, &
+                                           vz_1,vz_2,vz_3, &
+                                           sigmaxx_1,sigmaxx_2,sigmaxx_3, &
+                                           sigmayy_1,sigmayy_2,sigmayy_3, &
+                                           sigmazz_1,sigmazz_2,sigmazz_3, &
+                                           sigmaxy_1,sigmaxy_2, &
+                                           sigmaxz_1,sigmaxz_3, &
                                            sigmayz_2,sigmayz_3
 
   double precision, dimension(NX) :: dx_over_two,dx_half_over_two
@@ -219,11 +219,11 @@
 
   xval = h*dble(i-1)
 
-  if(xval < xoriginleft) then
+  if (xval < xoriginleft) then
     dx_over_two(i) = d0 * ((xoriginleft-xval)/delta)**2
     dx_half_over_two(i) = d0 * ((xoriginleft-xval-h/2.d0)/delta)**2
 ! fix problem with dx_half_over_two() exactly on the edge
-  else if(xval >= 0.9999d0*xoriginright) then
+  else if (xval >= 0.9999d0*xoriginright) then
     dx_over_two(i) = d0 * ((xval-xoriginright)/delta)**2
     dx_half_over_two(i) = d0 * ((xval+h/2.d0-xoriginright)/delta)**2
   else
@@ -245,11 +245,11 @@
 
   xval = h*dble(j-1)
 
-  if(xval < xoriginleft) then
+  if (xval < xoriginleft) then
     dy_over_two(j) = d0 * ((xoriginleft-xval)/delta)**2
     dy_half_over_two(j) = d0 * ((xoriginleft-xval-h/2.d0)/delta)**2
 ! fix problem with dy_half_over_two() exactly on the edge
-  else if(xval >= 0.9999d0*xoriginright) then
+  else if (xval >= 0.9999d0*xoriginright) then
     dy_over_two(j) = d0 * ((xval-xoriginright)/delta)**2
     dy_half_over_two(j) = d0 * ((xval+h/2.d0-xoriginright)/delta)**2
   else
@@ -271,11 +271,11 @@
 
   xval = h*dble(k-1)
 
-  if(xval < xoriginleft) then
+  if (xval < xoriginleft) then
     dz_over_two(k) = d0 * ((xoriginleft-xval)/delta)**2
     dz_half_over_two(k) = d0 * ((xoriginleft-xval-h/2.d0)/delta)**2
 ! fix problem with dy_half_over_two() exactly on the edge
-  else if(xval >= 0.9999d0*xoriginright) then
+  else if (xval >= 0.9999d0*xoriginright) then
     dz_over_two(k) = d0 * ((xval-xoriginright)/delta)**2
     dz_half_over_two(k) = d0 * ((xval+h/2.d0-xoriginright)/delta)**2
   else
@@ -318,7 +318,7 @@
     do j = 1,NY
     do i = 1,NX
       distval = sqrt((h*dble(i-1) - xrec(irec))**2 + (h*dble(j-1) - yrec(irec))**2 + (h*dble(k-1) - zrec(irec))**2)
-      if(distval < dist) then
+      if (distval < dist) then
         dist = distval
         ix_rec(irec) = i
         iy_rec(irec) = j
@@ -337,7 +337,7 @@
   Courant_number = cp * DELTAT / h
   print *,'Courant number is ',Courant_number
   print *
-  if(Courant_number > 1.d0/sqrt(3.d0)) stop 'time step is too large, simulation will be unstable'
+  if (Courant_number > 1.d0/sqrt(3.d0)) stop 'time step is too large, simulation will be unstable'
 
 ! suppress old files (can be commented out if "call system" is missing in your compiler)
 ! call system('rm -f Vx_*.dat Vy_*.dat Vz_*.dat image*.pnm image*.gif timestamp*')
@@ -808,7 +808,7 @@ do k = 1,NZ-1
   total_energy(it) = total_energy_kinetic + total_energy_potential
 
 ! output information
-  if(mod(it,IT_DISPLAY) == 0 .or. it == 5) then
+  if (mod(it,IT_DISPLAY) == 0 .or. it == 5) then
 
       Vsolidnorm = maxval(sqrt((vx_1 + vx_2 + vx_3)**2 + (vy_1 + vy_2 + vy_3)**2+(vz_1 + vz_2 + vz_3)**2))
 
@@ -817,7 +817,7 @@ do k = 1,NZ-1
       print *,'Max norm velocity vector V (m/s) = ',Vsolidnorm
       print *,'Total energy = ',total_energy(it)
 ! check stability of the code, exit if unstable
-      if(Vsolidnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
+      if (Vsolidnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
     iplane=1
 
 ! count elapsed wall-clock time
@@ -1020,10 +1020,10 @@ do k = 1,NZ-1
 
 ! open image file and create system command to convert image to more convenient format
 ! use the "convert" command from ImageMagick http://www.imagemagick.org
-  if(field_number == 1) then
+  if (field_number == 1) then
     write(file_name,"('image',i6.6,'_Vx.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vx.pnm image',i6.6,'_Vx.gif ; rm image',i6.6,'_Vx.pnm')") it,it,it
-  else if(field_number == 2) then
+  else if (field_number == 2) then
     write(file_name,"('image',i6.6,'_Vy.pnm')") it
     write(system_command,"('convert image',i6.6,'_Vy.pnm image',i6.6,'_Vy.gif ; rm image',i6.6,'_Vy.pnm')") it,it,it
   endif
@@ -1047,11 +1047,11 @@ do k = 1,NZ-1
     normalized_value = image_data_2D(ix,iy) / max_amplitude
 
 ! suppress values that are outside [-1:+1] to avoid small edge effects
-    if(normalized_value < -1.d0) normalized_value = -1.d0
-    if(normalized_value > 1.d0) normalized_value = 1.d0
+    if (normalized_value < -1.d0) normalized_value = -1.d0
+    if (normalized_value > 1.d0) normalized_value = 1.d0
 
 ! draw an orange cross to represent the source
-    if((ix >= ISOURCE - width_cross .and. ix <= ISOURCE + width_cross .and. &
+    if ((ix >= ISOURCE - width_cross .and. ix <= ISOURCE + width_cross .and. &
         iy >= JSOURCE - thickness_cross .and. iy <= JSOURCE + thickness_cross) .or. &
        (ix >= ISOURCE - thickness_cross .and. ix <= ISOURCE + thickness_cross .and. &
         iy >= JSOURCE - width_cross .and. iy <= JSOURCE + width_cross)) then
@@ -1060,13 +1060,13 @@ do k = 1,NZ-1
       B = 0
 
 ! display two-pixel-thick black frame around the image
-  else if(ix <= 2 .or. ix >= NX-1 .or. iy <= 2 .or. iy >= NY-1) then
+  else if (ix <= 2 .or. ix >= NX-1 .or. iy <= 2 .or. iy >= NY-1) then
       R = 0
       G = 0
       B = 0
 
 ! display edges of the PML layers
-  else if((USE_PML_XMIN .and. ix == NPOINTS_PML) .or. &
+  else if ((USE_PML_XMIN .and. ix == NPOINTS_PML) .or. &
           (USE_PML_XMAX .and. ix == NX - NPOINTS_PML) .or. &
           (USE_PML_YMIN .and. iy == NPOINTS_PML) .or. &
           (USE_PML_YMAX .and. iy == NY - NPOINTS_PML)) then
@@ -1075,10 +1075,10 @@ do k = 1,NZ-1
       B = 0
 
 ! suppress all the values that are below the threshold
-    else if(abs(image_data_2D(ix,iy)) <= max_amplitude * cutvect) then
+    else if (abs(image_data_2D(ix,iy)) <= max_amplitude * cutvect) then
 
 ! use a black or white background for points that are below the threshold
-      if(WHITE_BACKGROUND) then
+      if (WHITE_BACKGROUND) then
         R = 255
         G = 255
         B = 255
@@ -1089,7 +1089,7 @@ do k = 1,NZ-1
       endif
 
 ! represent regular image points using red if value is positive, blue if negative
-    else if(normalized_value >= 0.d0) then
+    else if (normalized_value >= 0.d0) then
       R = nint(255.d0*normalized_value**POWER_DISPLAY)
       G = 0
       B = 0
@@ -1101,7 +1101,7 @@ do k = 1,NZ-1
 
 ! draw a green square to represent the receivers
   do irec = 1,nrec
-    if((ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
+    if ((ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
         iy >= iy_rec(irec) - size_square .and. iy <= iy_rec(irec) + size_square) .or. &
        (ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
         iy >= iy_rec(irec) - size_square .and. iy <= iy_rec(irec) + size_square)) then
@@ -1121,7 +1121,7 @@ do k = 1,NZ-1
 ! close file
   close(27)
 
-! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
+! call the system to convert image to Gif (can be commented out if "call system" is missing in your compiler)
 ! call system(system_command)
 
   end subroutine create_color_image

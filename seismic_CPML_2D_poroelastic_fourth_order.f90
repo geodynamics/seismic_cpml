@@ -12,7 +12,7 @@
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
+! the Free Software Foundation; either version 3 of the License, or
 ! (at your option) any later version.
 !
 ! This program is distributed in the hope that it will be useful,
@@ -116,7 +116,7 @@
 ! volume = {27},
 ! number = {5},
 ! pages = {334-339},
-! doi = {10.1002/1098-2760(20001205)27:5<334::AID-MOP14>3.0.CO;2-A}}
+! doi = {10.1002/1098-2760(20001205)27:5 < 334::AID-MOP14>3.0.CO;2-A}}
 
 ! To display the results as color images in the selected 2D cut plane, use:
 !
@@ -294,8 +294,8 @@
   double precision, dimension(0:NX+1,0:NY+1) :: xi_1,xi_2
 
   double precision, dimension(0:NX+1,0:NY+1) :: &
-     memory_dx_vx1,memory_dx_vx2,memory_dy_vx,memory_dx_vy,memory_dy_vy1,memory_dy_vy2,&
-     memory_dx_sigmaxx,memory_dx_sigmayy,memory_dx_sigmaxy,&
+     memory_dx_vx1,memory_dx_vx2,memory_dy_vx,memory_dx_vy,memory_dy_vy1,memory_dy_vy2, &
+     memory_dx_sigmaxx,memory_dx_sigmayy,memory_dx_sigmaxy, &
      memory_dx_sigma2vx,memory_dx_sigma2vxf,memory_dy_sigma2vy,memory_dy_sigma2vyf, &
      memory_dy_sigmaxx,memory_dy_sigmayy,memory_dy_sigmaxy
 
@@ -389,10 +389,10 @@
   Rcoef = 0.001d0
 
 ! check that NPOWER is okay
-  if(NPOWER < 1) stop 'NPOWER must be greater than 1'
+  if (NPOWER < 1) stop 'NPOWER must be greater than 1'
 
 ! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
-  if(HETEROGENEOUS_MODEL) then
+  if (HETEROGENEOUS_MODEL) then
     d0_x = - (NPOWER + 1) * max(cp_bottom,cp_top) * log(Rcoef) / (2.d0 * thickness_PML_x)
     d0_y = - (NPOWER + 1) * max(cp_bottom,cp_top) * log(Rcoef) / (2.d0 * thickness_PML_y)
   else
@@ -437,11 +437,11 @@
     xval = DELTAX * dble(i-1)
 
 !!!! ---------- left edge
-    if(USE_PML_LEFT) then
+    if (USE_PML_LEFT) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = xoriginleft - xval
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -451,7 +451,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = xoriginleft - (xval + DELTAX/2.d0)
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_half_x(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -462,11 +462,11 @@
     endif
 
 !!!! ---------- right edge
-    if(USE_PML_RIGHT) then
+    if (USE_PML_RIGHT) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = xval - xoriginright
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -476,7 +476,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = xval + DELTAX/2.d0 - xoriginright
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_half_x(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -487,16 +487,16 @@
     endif
 
 ! just in case, for -5 at the end
-    if(alpha_x(i) < ZERO) alpha_x(i) = ZERO
-    if(alpha_x_half_x(i) < ZERO) alpha_x_half_x(i) = ZERO
+    if (alpha_x(i) < ZERO) alpha_x(i) = ZERO
+    if (alpha_x_half_x(i) < ZERO) alpha_x_half_x(i) = ZERO
 
     b_x(i) = exp(- (d_x(i) / K_x(i) + alpha_x(i)) * DELTAT)
     b_x_half_x(i) = exp(- (d_x_half_x(i) / K_x_half_x(i) + alpha_x_half_x(i)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_x(i)) > 1.d-6) a_x(i) = d_x(i) * (b_x(i) - 1.d0) /&
+    if (abs(d_x(i)) > 1.d-6) a_x(i) = d_x(i) * (b_x(i) - 1.d0) /&
       (K_x(i) * (d_x(i) + K_x(i) * alpha_x(i)))
-    if(abs(d_x_half_x(i)) > 1.d-6) a_x_half_x(i) = d_x_half_x(i)&
+    if (abs(d_x_half_x(i)) > 1.d-6) a_x_half_x(i) = d_x_half_x(i)&
      * (b_x_half_x(i) - 1.d0) / (K_x_half_x(i) * (d_x_half_x(i) + K_x_half_x(i) * alpha_x_half_x(i)))
 
   enddo
@@ -513,11 +513,11 @@
     yval = DELTAY * dble(j-1)
 
 !!!! ---------- bottom edge
-    if(USE_PML_BOTTOM) then
+    if (USE_PML_BOTTOM) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = yoriginbottom - yval
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -527,7 +527,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = yoriginbottom - (yval + DELTAY/2.d0)
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_half_y(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -538,11 +538,11 @@
     endif
 
 !!!! ---------- top edge
-    if(USE_PML_TOP) then
+    if (USE_PML_TOP) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = yval - yorigintop
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -552,7 +552,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = yval + DELTAY/2.d0 - yorigintop
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_half_y(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -563,16 +563,16 @@
     endif
 
 ! just in case, for -5 at the end
-!   if(alpha_y(j) < ZERO) alpha_y(j) = ZERO
-!   if(alpha_y_half_y(j) < ZERO) alpha_y_half_y(j) = ZERO
+!   if (alpha_y(j) < ZERO) alpha_y(j) = ZERO
+!   if (alpha_y_half_y(j) < ZERO) alpha_y_half_y(j) = ZERO
 
     b_y(j) = exp(- (d_y(j) / K_y(j) + alpha_y(j)) * DELTAT)
     b_y_half_y(j) = exp(- (d_y_half_y(j) / K_y_half_y(j) + alpha_y_half_y(j)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_y(j)) > 1.d-6) a_y(j) = d_y(j) * (b_y(j) - 1.d0) &
+    if (abs(d_y(j)) > 1.d-6) a_y(j) = d_y(j) * (b_y(j) - 1.d0) &
      / (K_y(j) * (d_y(j) + K_y(j) * alpha_y(j)))
-    if(abs(d_y_half_y(j)) > 1.d-6) a_y_half_y(j) = d_y_half_y(j)&
+    if (abs(d_y_half_y(j)) > 1.d-6) a_y_half_y(j) = d_y_half_y(j)&
       * (b_y_half_y(j) - 1.d0) / (K_y_half_y(j) * (d_y_half_y(j) + K_y_half_y(j) * alpha_y_half_y(j)))
 
   enddo
@@ -580,7 +580,7 @@
 ! compute the Lame parameters and density
   do j = 0,NY+1
     do i = 0,NX+1
-      if(HETEROGENEOUS_MODEL .and. DELTAY*dble(j-1) > INTERFACE_HEIGHT) then
+      if (HETEROGENEOUS_MODEL .and. DELTAY*dble(j-1) > INTERFACE_HEIGHT) then
          rho(i,j)= rho_top
          rhof(i,j) = rhof_top
          rsm(i,j) = rsm_top
@@ -629,7 +629,7 @@
     do j = 1,NY
     do i = 1,NX
       distval = sqrt((DELTAX*dble(i-1) - xrec(irec))**2 + (DELTAY*dble(j-1) - yrec(irec))**2)
-      if(distval < dist) then
+      if (distval < dist) then
         dist = distval
         ix_rec(irec) = i
         iy_rec(irec) = j
@@ -648,15 +648,15 @@
   print *,'Courant number at the bottom is ',Courant_number_bottom
   print *,'Dispersion number at the bottom is ',Dispersion_number_bottom
   print *
-  if(Courant_number_bottom > 1.d0/sqrt(2.d0)) stop 'time step is too large, simulation will be unstable'
+  if (Courant_number_bottom > 1.d0/sqrt(2.d0)) stop 'time step is too large, simulation will be unstable'
 
-  if(HETEROGENEOUS_MODEL) then
+  if (HETEROGENEOUS_MODEL) then
     Courant_number_top = max(cp_top,cp_bottom) * DELTAT / min(DELTAX,DELTAY)
     Dispersion_number_top=min(cs_top,cs_bottom,cps_bottom,cps_top)/(2.5d0*f0*max(DELTAX,DELTAY))
     print *,'Courant number at the top is ',Courant_number_top
     print *
     print *,'Dispersion number at the top is ',Dispersion_number_top
-    if(Courant_number_top > 6.d0/7.d0/sqrt(2.d0)) stop 'time step is too large, simulation will be unstable'
+    if (Courant_number_top > 6.d0/7.d0/sqrt(2.d0)) stop 'time step is too large, simulation will be unstable'
   endif
 
 ! suppress old files
@@ -949,7 +949,7 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
   enddo
 
 ! output information
-  if(mod(it,IT_DISPLAY) == 0 .or. it == 5) then
+  if (mod(it,IT_DISPLAY) == 0 .or. it == 5) then
 
 ! print maximum of norm of velocity
     velocnorm_all = maxval(sqrt(vx(:,:)**2 + vy(:,:)**2))
@@ -960,16 +960,16 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
     print *
 
 ! check stability of the code, exit if unstable
-    if(velocnorm_all > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
+    if (velocnorm_all > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
 
     vnorm(:,:)=sqrt(vx(:,:)**2+vy(:,:)**2)
 
   call create_color_image(vx,NX+2,NY+2,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
-  NPOINTS_PML,USE_PML_LEFT,USE_PML_RIGHT,USE_PML_BOTTOM,&
+  NPOINTS_PML,USE_PML_LEFT,USE_PML_RIGHT,USE_PML_BOTTOM, &
   USE_PML_TOP,1,max_amplitude,JINTERFACE)
 
   call create_color_image(vy,NX+2,NY+2,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
-  NPOINTS_PML,USE_PML_LEFT,USE_PML_RIGHT,USE_PML_BOTTOM,&
+  NPOINTS_PML,USE_PML_LEFT,USE_PML_RIGHT,USE_PML_BOTTOM, &
   USE_PML_TOP,2,max_amplitude,JINTERFACE)
 
 ! save temporary partial seismograms to monitor the behavior of the simulation
@@ -1142,15 +1142,15 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
 
 ! open image file and create system command to convert image to more convenient format
 ! use the "convert" command from ImageMagick http://www.imagemagick.org
-  if(field_number == 1) then
+  if (field_number == 1) then
     write(file_name,"('image',i5.5,'_Vx.pnm')") it
     write(system_command,"('convert image',i5.5,'_Vx.pnm image',i5.5,'_Vx.gif ; rm image',i5.5,'_Vx.pnm')") it,it,it
   endif
-  if(field_number == 2) then
+  if (field_number == 2) then
     write(file_name,"('image',i5.5,'_Vy.pnm')") it
     write(system_command,"('convert image',i5.5,'_Vy.pnm image',i5.5,'_Vy.gif ; rm image',i5.5,'_Vy.pnm')") it,it,it
   endif
-  if(field_number == 3) then
+  if (field_number == 3) then
     write(file_name,"('image',i5.5,'_Vnorm.pnm')") it
     write(system_command,"('convert image',i5.5,'_Vnorm.pnm image',i5.5,'_Vnorm.gif ; rm image',i5.5,'_Vnorm.pnm')") it,it,it
   endif
@@ -1174,11 +1174,11 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
     normalized_value = image_data_2D(ix,iy) / max_amplitude
 
 ! suppress values that are outside [-1:+1] to avoid small edge effects
-    if(normalized_value < -1.d0) normalized_value = -1.d0
-    if(normalized_value > 1.d0) normalized_value = 1.d0
+    if (normalized_value < -1.d0) normalized_value = -1.d0
+    if (normalized_value > 1.d0) normalized_value = 1.d0
 
 ! draw an orange cross to represent the source
-    if((ix >= ISOURCE - width_cross .and. ix <= ISOURCE + width_cross .and. &
+    if ((ix >= ISOURCE - width_cross .and. ix <= ISOURCE + width_cross .and. &
         iy >= JSOURCE - thickness_cross .and. iy <= JSOURCE + thickness_cross) .or. &
        (ix >= ISOURCE - thickness_cross .and. ix <= ISOURCE + thickness_cross .and. &
         iy >= JSOURCE - width_cross .and. iy <= JSOURCE + width_cross)) then
@@ -1187,28 +1187,28 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
       B = 0
 
 ! display two-pixel-thick black frame around the image
-  else if(ix <= 2 .or. ix >= NX-1 .or. iy <= 2 .or. iy >= NY-1) then
+  else if (ix <= 2 .or. ix >= NX-1 .or. iy <= 2 .or. iy >= NY-1) then
       R = 0
       G = 0
       B = 0
 
 ! display edges of the PML layers
-  else if((USE_PML_LEFT .and. ix == NPOINTS_PML) .or. &
+  else if ((USE_PML_LEFT .and. ix == NPOINTS_PML) .or. &
           (USE_PML_RIGHT .and. ix == NX - NPOINTS_PML) .or. &
           (USE_PML_BOTTOM .and. iy == NPOINTS_PML) .or. &
           (USE_PML_TOP .and. iy == NY - NPOINTS_PML)) then
       R = 255
       G = 150
       B = 0
- else if(iy==JINTERFACE) then
+ else if (iy == JINTERFACE) then
         R = 0
         G = 0
         B = 0
 ! suppress all the values that are below the threshold
-    else if(abs(image_data_2D(ix,iy)) <= max_amplitude * cutvect) then
+    else if (abs(image_data_2D(ix,iy)) <= max_amplitude * cutvect) then
 
 ! use a black or white background for points that are below the threshold
-      if(WHITE_BACKGROUND) then
+      if (WHITE_BACKGROUND) then
         R = 255
         G = 255
         B = 255
@@ -1219,7 +1219,7 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
       endif
 
 ! represent regular image points using red if value is positive, blue if negative
-    else if(normalized_value >= 0.d0) then
+    else if (normalized_value >= 0.d0) then
       R = nint(255.d0*normalized_value**POWER_DISPLAY)
       G = 0
       B = 0
@@ -1231,7 +1231,7 @@ sum(rho(NPOINTS_PML:NX-NPOINTS_PML+1,NPOINTS_PML:NY-NPOINTS_PML+1)&
 
 ! draw a green square to represent the receivers
   do irec = 1,nrec
-    if((ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
+    if ((ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
         iy >= iy_rec(irec) - size_square .and. iy <= iy_rec(irec) + size_square) .or. &
        (ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
         iy >= iy_rec(irec) - size_square .and. iy <= iy_rec(irec) + size_square)) then

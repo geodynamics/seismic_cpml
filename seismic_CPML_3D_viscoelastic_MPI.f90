@@ -22,7 +22,7 @@
 !
 ! This program is free software; you can redistribute it and/or modify
 ! it under the terms of the GNU General Public License as published by
-! the Free Software Foundation; either version 2 of the License, or
+! the Free Software Foundation; either version 3 of the License, or
 ! (at your option) any later version.
 !
 ! This program is distributed in the hope that it will be useful,
@@ -125,7 +125,7 @@
 ! volume = {27},
 ! number = {5},
 ! pages = {334-339},
-! doi = {10.1002/1098-2760(20001205)27:5<334::AID-MOP14>3.0.CO;2-A}}
+! doi = {10.1002/1098-2760(20001205)27:5 < 334::AID-MOP14>3.0.CO;2-A}}
 
 !
 ! To display the results as color images in the selected 2D cut plane, use:
@@ -442,7 +442,7 @@
     call compute_attenuation_coeffs(N_SLS,QMu_att,f0_attenuation,f_min_attenuation,f_max_attenuation, &
                                   tau_epsilon_nu2,tau_sigma_nu2)
 
-  if(rank == 0) then
+  if (rank == 0) then
     print *
     print *,'with new SolvOpt routine for attenuation:'
     print *
@@ -479,7 +479,7 @@
 ! slice number for the cut plane in the middle of the mesh
   rank_cut_plane = nb_procs/2 - 1
 
-  if(rank == rank_cut_plane) then
+  if (rank == rank_cut_plane) then
 
   print *
   print *,'3D elastic finite-difference code in velocity and stress formulation with C-PML'
@@ -512,20 +512,20 @@
   endif
 
 ! check that code was compiled with the right number of slices
-  if(nb_procs /= NPROC) then
+  if (nb_procs /= NPROC) then
     print *,'error in MPI number of slices: nb_procs,NPROC = ',nb_procs,NPROC,' but they should be equal'
     stop 'nb_procs must be equal to NPROC'
   endif
 
 ! we restrict ourselves to an even number of slices
 ! in order to have a cut plane in the middle of the mesh for visualization purposes
-  if(mod(nb_procs,2) /= 0) stop 'nb_procs must be even'
+  if (mod(nb_procs,2) /= 0) stop 'nb_procs must be even'
 
 ! check that we can cut along Z in an exact number of slices
-  if(mod(NZ,nb_procs) /= 0) stop 'NZ must be a multiple of nb_procs'
+  if (mod(NZ,nb_procs) /= 0) stop 'NZ must be a multiple of nb_procs'
 
 ! check that a slice is at least as thick as a PML layer
-  if(NZ_LOCAL < NPOINTS_PML) stop 'NZ_LOCAL must be greater than NPOINTS_PML'
+  if (NZ_LOCAL < NPOINTS_PML) stop 'NZ_LOCAL must be greater than NPOINTS_PML'
 
 ! offset of this slice when we cut along Z
   offset_k = rank * NZ_LOCAL
@@ -541,14 +541,14 @@
   Rcoef = 0.0001d0
 
 ! check that NPOWER is okay
-  if(NPOWER < 1) stop 'NPOWER must be greater than 1'
+  if (NPOWER < 1) stop 'NPOWER must be greater than 1'
 
 ! compute d0 from INRIA report section 6.1 http://hal.inria.fr/docs/00/07/32/19/PDF/RR-3471.pdf
   d0_x = - (NPOWER + 1) * cp *dsqrt(taumax)* log(Rcoef) / (2.d0 * thickness_PML_x)
   d0_y = - (NPOWER + 1) * cp *dsqrt(taumax)* log(Rcoef) / (2.d0 * thickness_PML_y)
   d0_z = - (NPOWER + 1) * cp *dsqrt(taumax)* log(Rcoef) / (2.d0 * thickness_PML_z)
 
-  if(rank == rank_cut_plane) then
+  if (rank == rank_cut_plane) then
     print *
     print *,'d0_x = ',d0_x
     print *,'d0_y = ',d0_y
@@ -595,11 +595,11 @@
     xval = DELTAX * dble(i-1)
 
 !---------- xmin edge
-    if(USE_PML_XMIN) then
+    if (USE_PML_XMIN) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = xoriginleft - xval
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -609,7 +609,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = xoriginleft - (xval + DELTAX/2.d0)
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -620,11 +620,11 @@
     endif
 
 !---------- xmax edge
-    if(USE_PML_XMAX) then
+    if (USE_PML_XMAX) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = xval - xoriginright
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -634,7 +634,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = xval + DELTAX/2.d0 - xoriginright
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_x
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -645,15 +645,15 @@
     endif
 
 ! just in case, for -5 at the end
-    if(alpha_x(i) < ZERO) alpha_x(i) = ZERO
-    if(alpha_x_half(i) < ZERO) alpha_x_half(i) = ZERO
+    if (alpha_x(i) < ZERO) alpha_x(i) = ZERO
+    if (alpha_x_half(i) < ZERO) alpha_x_half(i) = ZERO
 
     b_x(i) = exp(- (d_x(i) / K_x(i) + alpha_x(i)) * DELTAT)
     b_x_half(i) = exp(- (d_x_half(i) / K_x_half(i) + alpha_x_half(i)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_x(i)) > 1.d-6) a_x(i) = d_x(i) * (b_x(i) - 1.d0) / (K_x(i) * (d_x(i) + K_x(i) * alpha_x(i)))
-    if(abs(d_x_half(i)) > 1.d-6) a_x_half(i) = d_x_half(i) * &
+    if (abs(d_x(i)) > 1.d-6) a_x(i) = d_x(i) * (b_x(i) - 1.d0) / (K_x(i) * (d_x(i) + K_x(i) * alpha_x(i)))
+    if (abs(d_x_half(i)) > 1.d-6) a_x_half(i) = d_x_half(i) * &
       (b_x_half(i) - 1.d0) / (K_x_half(i) * (d_x_half(i) + K_x_half(i) * alpha_x_half(i)))
 
   enddo
@@ -670,11 +670,11 @@
     yval = DELTAY * dble(j-1)
 
 !---------- ymin edge
-    if(USE_PML_YMIN) then
+    if (USE_PML_YMIN) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = yoriginbottom - yval
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -684,7 +684,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = yoriginbottom - (yval + DELTAY/2.d0)
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -695,11 +695,11 @@
     endif
 
 !---------- ymax edge
-    if(USE_PML_YMAX) then
+    if (USE_PML_YMAX) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = yval - yorigintop
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -709,7 +709,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = yval + DELTAY/2.d0 - yorigintop
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_y
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -723,8 +723,8 @@
     b_y_half(j) = exp(- (d_y_half(j) / K_y_half(j) + alpha_y_half(j)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_y(j)) > 1.d-6) a_y(j) = d_y(j) * (b_y(j) - 1.d0) / (K_y(j) * (d_y(j) + K_y(j) * alpha_y(j)))
-    if(abs(d_y_half(j)) > 1.d-6) a_y_half(j) = d_y_half(j) * &
+    if (abs(d_y(j)) > 1.d-6) a_y(j) = d_y(j) * (b_y(j) - 1.d0) / (K_y(j) * (d_y(j) + K_y(j) * alpha_y(j)))
+    if (abs(d_y_half(j)) > 1.d-6) a_y_half(j) = d_y_half(j) * &
       (b_y_half(j) - 1.d0) / (K_y_half(j) * (d_y_half(j) + K_y_half(j) * alpha_y_half(j)))
 
   enddo
@@ -741,11 +741,11 @@
     zval = DELTAZ * dble(k-1)
 
 !---------- zmin edge
-    if(USE_PML_ZMIN) then
+    if (USE_PML_ZMIN) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = zoriginbottom - zval
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_z
         d_z(k) = d0_z * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -755,7 +755,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = zoriginbottom - (zval + DELTAZ/2.d0)
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_z
         d_z_half(k) = d0_z * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -766,11 +766,11 @@
     endif
 
 !---------- zmax edge
-    if(USE_PML_ZMAX) then
+    if (USE_PML_ZMAX) then
 
 ! define damping profile at the grid points
       abscissa_in_PML = zval - zorigintop
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_z
         d_z(k) = d0_z * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -780,7 +780,7 @@
 
 ! define damping profile at half the grid points
       abscissa_in_PML = zval + DELTAZ/2.d0 - zorigintop
-      if(abscissa_in_PML >= ZERO) then
+      if (abscissa_in_PML >= ZERO) then
         abscissa_normalized = abscissa_in_PML / thickness_PML_z
         d_z_half(k) = d0_z * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
@@ -794,13 +794,13 @@
     b_z_half(k) = exp(- (d_z_half(k) / K_z_half(k) + alpha_z_half(k)) * DELTAT)
 
 ! this to avoid division by zero outside the PML
-    if(abs(d_z(k)) > 1.d-6) a_z(k) = d_z(k) * (b_z(k) - 1.d0) / (K_z(k) * (d_z(k) + K_z(k) * alpha_z(k)))
-    if(abs(d_z_half(k)) > 1.d-6) a_z_half(k) = d_z_half(k) * &
+    if (abs(d_z(k)) > 1.d-6) a_z(k) = d_z(k) * (b_z(k) - 1.d0) / (K_z(k) * (d_z(k) + K_z(k) * alpha_z(k)))
+    if (abs(d_z_half(k)) > 1.d-6) a_z_half(k) = d_z_half(k) * &
       (b_z_half(k) - 1.d0) / (K_z_half(k) * (d_z_half(k) + K_z_half(k) * alpha_z_half(k)))
 
   enddo
 
-  if(rank == rank_cut_plane) then
+  if (rank == rank_cut_plane) then
 
 ! print position of the source
   print *
@@ -835,7 +835,7 @@
     do j = 1,NY
     do i = 1,NX
       distval = sqrt((DELTAX*dble(i) - xrec(irec))**2 + (DELTAY*dble(j) - yrec(irec))**2)
-      if(distval < dist) then
+      if (distval < dist) then
         dist = distval
         ix_rec(irec) = i
         iy_rec(irec) = j
@@ -852,11 +852,11 @@
 ! check the Courant stability condition for the explicit time scheme
 ! R. Courant et K. O. Friedrichs et H. Lewy (1928)
   Courant_number = cp * dsqrt(taumax)* DELTAT * sqrt(1.d0/DELTAX**2 + 1.d0/DELTAY**2 + 1.d0/DELTAZ**2)
-  if(rank == rank_cut_plane) then
+  if (rank == rank_cut_plane) then
     print *,'Courant number is ',Courant_number
     print *,'Vpmax=',cp*dsqrt(taumax)
   endif
-  if(Courant_number > 1.d0) stop 'time step is too large, simulation will be unstable'
+  if (Courant_number > 1.d0) stop 'time step is too large, simulation will be unstable'
   print *, "Number of points per wavelength =",cs*dsqrt(taumin)/(2.5d0*f0)/DELTAX,'Vsmin=',cs*dsqrt(taumin)
 
 ! erase main arrays
@@ -924,10 +924,10 @@
   receiver_right_shift = rank + 1
 
 ! if we are the first process, there is no neighbor on the left
-  if(rank == 0) sender_right_shift = MPI_PROC_NULL
+  if (rank == 0) sender_right_shift = MPI_PROC_NULL
 
 ! if we are the last process, there is no neighbor on the right
-  if(rank == nb_procs - 1) receiver_right_shift = MPI_PROC_NULL
+  if (rank == nb_procs - 1) receiver_right_shift = MPI_PROC_NULL
 
 !---
 
@@ -936,16 +936,16 @@
   receiver_left_shift = rank - 1
 
 ! if we are the first process, there is no neighbor on the left
-  if(rank == 0) receiver_left_shift = MPI_PROC_NULL
+  if (rank == 0) receiver_left_shift = MPI_PROC_NULL
 
 ! if we are the last process, there is no neighbor on the right
-  if(rank == nb_procs - 1) sender_left_shift = MPI_PROC_NULL
+  if (rank == nb_procs - 1) sender_left_shift = MPI_PROC_NULL
 
   k2begin = 1
-  if(rank == 0) k2begin = 2
+  if (rank == 0) k2begin = 2
 
   kminus1end = NZ_LOCAL
-  if(rank == nb_procs - 1) kminus1end = NZ_LOCAL - 1
+  if (rank == nb_procs - 1) kminus1end = NZ_LOCAL - 1
 
 !---
 !---  beginning of time loop
@@ -953,7 +953,7 @@
 
   do it = 1,NSTEP
 
-    if(rank == rank_cut_plane .and. mod(it,20)==0) print *,'it = ',it
+    if (rank == rank_cut_plane .and. mod(it,20) == 0) print *,'it = ',it
 
 !----------------------
 ! compute stress sigma
@@ -1307,7 +1307,7 @@
     enddo
   enddo
 
-  if(rank == rank_cut_plane) then
+  if (rank == rank_cut_plane) then
 
 ! add the source (force vector located at a given grid point)
   a = pi*pi*f0*f0
@@ -1357,21 +1357,21 @@
   vz(:,NY:NY+1,:) = ZERO
 
 ! zmin
-  if(rank == 0) then
+  if (rank == 0) then
     vx(:,:,0:1) = ZERO
     vy(:,:,0:1) = ZERO
     vz(:,:,0:1) = ZERO
   endif
 
 ! zmax
-  if(rank == nb_procs-1) then
+  if (rank == nb_procs-1) then
     vx(:,:,NZ_LOCAL:NZ_LOCAL+1) = ZERO
     vy(:,:,NZ_LOCAL:NZ_LOCAL+1) = ZERO
     vz(:,:,NZ_LOCAL:NZ_LOCAL+1) = ZERO
   endif
 
 ! store seismograms
-  if(rank == rank_cut_plane) then
+  if (rank == rank_cut_plane) then
     do irec = 1,NREC
       sisvx(it,irec) = vx(ix_rec(irec),iy_rec(irec),NZ_LOCAL)
       sisvy(it,irec) = vy(ix_rec(irec),iy_rec(irec),NZ_LOCAL)
@@ -1384,8 +1384,8 @@
 
   kmin = 1
   kmax = NZ_LOCAL
-  if(rank == 0) kmin = NPOINTS_PML
-  if(rank == nb_procs-1) kmax = NZ_LOCAL-NPOINTS_PML+1
+  if (rank == 0) kmin = NPOINTS_PML
+  if (rank == nb_procs-1) kmax = NZ_LOCAL-NPOINTS_PML+1
 
   do k = kmin,kmax
     do j = NPOINTS_PML, NY-NPOINTS_PML+1
@@ -1430,19 +1430,19 @@
                           MPI_DOUBLE_PRECISION,MPI_SUM,rank_cut_plane,MPI_COMM_WORLD,code)
 
 ! output information
-  if(mod(it,IT_DISPLAY) == 0 .or. it == 5) then
+  if (mod(it,IT_DISPLAY) == 0 .or. it == 5) then
 
     call MPI_REDUCE(maxval(sqrt(vx(:,:,1:NZ_LOCAL)**2 + vy(:,:,1:NZ_LOCAL)**2 + &
         vz(:,:,1:NZ_LOCAL)**2)),Vsolidnorm,1,MPI_DOUBLE_PRECISION,MPI_MAX,rank_cut_plane,MPI_COMM_WORLD,code)
 
-    if(rank == rank_cut_plane) then
+    if (rank == rank_cut_plane) then
 
       print *,'Time step # ',it,' out of ',NSTEP,' out of ',NSTEP
       print *,'Time: ',sngl((it-1)*DELTAT),' seconds'
       print *,'Max norm velocity vector V (m/s) = ',Vsolidnorm
       print *,'Total energy = ',total_energy(it)
 ! check stability of the code, exit if unstable
-      if(Vsolidnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up in solid'
+      if (Vsolidnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up in solid'
 
 ! count elapsed wall-clock time
     call date_and_time(datein,timein,zone,time_values)
@@ -1481,7 +1481,7 @@
 ! save energy
     open(unit=21,file='energy.dat',status='unknown')
       do it2=1,NSTEP
-     write(21,*) sngl(dble(it2-1)*DELTAT),sngl(total_energy_kinetic(it2)),&
+     write(21,*) sngl(dble(it2-1)*DELTAT),sngl(total_energy_kinetic(it2)), &
         sngl(total_energy_potential(it2)),sngl(total_energy(it2))
       enddo
      close(21)
@@ -1502,7 +1502,7 @@
 ! --- end of time loop
   enddo
 
-  if(rank == rank_cut_plane) then
+  if (rank == rank_cut_plane) then
 
 ! save seismograms
   call write_seismograms(sisvx,sisvy,NSTEP,NREC,DELTAT,t0)
@@ -1657,10 +1657,10 @@
 
 ! open image file and create system command to convert image to more convenient format
 ! use the "convert" command from ImageMagick http://www.imagemagick.org
-  if(field_number == 1) then
+  if (field_number == 1) then
     write(file_name,"('image',i6.6,'_Vx.pnm')") it
 !    write(system_command,"('convert image',i6.6,'_Vx.pnm image',i6.6,'_Vx.gif ; rm image',i6.6,'_Vx.pnm')") it,it,it
-  else if(field_number == 2) then
+  else if (field_number == 2) then
     write(file_name,"('image',i6.6,'_Vy.pnm')") it
 !    write(system_command,"('convert image',i6.6,'_Vy.pnm image',i6.6,'_Vy.gif ; rm image',i6.6,'_Vy.pnm')") it,it,it
   endif
@@ -1673,7 +1673,7 @@
   write(27,*) '255' ! maximum value of each pixel color
 
 ! compute maximum amplitude
- if(it<=2301) max_amplitude = maxval(abs(image_data_2D))
+ if (it <= 2301) max_amplitude = maxval(abs(image_data_2D))
 
 ! image starts in upper-left corner in PNM format
   do iy=NY,1,-1
@@ -1684,11 +1684,11 @@
     normalized_value = image_data_2D(ix,iy) / max_amplitude
 
 ! suppress values that are outside [-1:+1] to avoid small edge effects
-    if(normalized_value < -1.d0) normalized_value = -1.d0
-    if(normalized_value > 1.d0) normalized_value = 1.d0
+    if (normalized_value < -1.d0) normalized_value = -1.d0
+    if (normalized_value > 1.d0) normalized_value = 1.d0
 
 ! draw an orange cross to represent the source
-    if((ix >= ISOURCE - width_cross .and. ix <= ISOURCE + width_cross .and. &
+    if ((ix >= ISOURCE - width_cross .and. ix <= ISOURCE + width_cross .and. &
         iy >= JSOURCE - thickness_cross .and. iy <= JSOURCE + thickness_cross) .or. &
        (ix >= ISOURCE - thickness_cross .and. ix <= ISOURCE + thickness_cross .and. &
         iy >= JSOURCE - width_cross .and. iy <= JSOURCE + width_cross)) then
@@ -1697,13 +1697,13 @@
       B = 0
 
 ! display two-pixel-thick black frame around the image
-  else if(ix <= 2 .or. ix >= NX-1 .or. iy <= 2 .or. iy >= NY-1) then
+  else if (ix <= 2 .or. ix >= NX-1 .or. iy <= 2 .or. iy >= NY-1) then
       R = 0
       G = 0
       B = 0
 
 ! display edges of the PML layers
-  else if((USE_PML_XMIN .and. ix == NPOINTS_PML) .or. &
+  else if ((USE_PML_XMIN .and. ix == NPOINTS_PML) .or. &
           (USE_PML_XMAX .and. ix == NX - NPOINTS_PML) .or. &
           (USE_PML_YMIN .and. iy == NPOINTS_PML) .or. &
           (USE_PML_YMAX .and. iy == NY - NPOINTS_PML)) then
@@ -1712,10 +1712,10 @@
       B = 0
 
 ! suppress all the values that are below the threshold
-    else if(abs(image_data_2D(ix,iy)) <= max_amplitude * cutvect) then
+    else if (abs(image_data_2D(ix,iy)) <= max_amplitude * cutvect) then
 
 ! use a black or white background for points that are below the threshold
-      if(WHITE_BACKGROUND) then
+      if (WHITE_BACKGROUND) then
         R = 255
         G = 255
         B = 255
@@ -1726,7 +1726,7 @@
       endif
 
 ! represent regular image points using red if value is positive, blue if negative
-    else if(normalized_value >= 0.d0) then
+    else if (normalized_value >= 0.d0) then
       R = nint(255.d0*normalized_value**POWER_DISPLAY)
       G = 0
       B = 0
@@ -1738,7 +1738,7 @@
 
 ! draw a green square to represent the receivers
   do irec = 1,nrec
-    if((ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
+    if ((ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
         iy >= iy_rec(irec) - size_square .and. iy <= iy_rec(irec) + size_square) .or. &
        (ix >= ix_rec(irec) - size_square .and. ix <= ix_rec(irec) + size_square .and. &
         iy >= iy_rec(irec) - size_square .and. iy <= iy_rec(irec) + size_square)) then
@@ -1758,7 +1758,7 @@
 ! close file
   close(27)
 
-! call the system to convert image to GIF (can be commented out if "call system" is missing in your compiler)
+! call the system to convert image to Gif (can be commented out if "call system" is missing in your compiler)
 ! call system(system_command)
 
   end subroutine create_color_image
