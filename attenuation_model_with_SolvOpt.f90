@@ -154,17 +154,17 @@ subroutine compute_attenuation_coeffs(N,Qref,f0,f_min,f_max,tau_epsilon,tau_sigm
 ! enddo
 ! print *
 
-! print *,'tau_epsilon = '
-! do i = 1,N
-!   print *,tau_epsilon(i)
-! enddo
-! print *
+  print *,'tau_epsilon computed by SolvOpt() = '
+  do i = 1,N
+    print *,tau_epsilon(i)
+  enddo
+  print *
 
-! print *,'tau_sigma = '
-! do i = 1,N
-!   print *,tau_sigma(i)
-! enddo
-! print *
+  print *,'tau_sigma computed by SolvOpt() = '
+  do i = 1,N
+    print *,tau_sigma(i)
+  enddo
+  print *
 
 end subroutine compute_attenuation_coeffs
 
