@@ -199,7 +199,7 @@
 ! display information on the screen from time to time
   integer, parameter :: IT_DISPLAY = 100
 
-! pre-compute some constants once and for all for the fourth-order spatial scheme
+! compute some constants once and for all for the fourth-order spatial scheme
 ! These coefficients are given for instance by Levander, Geophysics, vol. 53(11), p. 1436, equation (A-2)
   double precision, parameter :: NINE_OVER_8_DELTAX = 9.d0 / (8.d0*DELTAX)
   double precision, parameter :: NINE_OVER_8_DELTAY = 9.d0 / (8.d0*DELTAY)
