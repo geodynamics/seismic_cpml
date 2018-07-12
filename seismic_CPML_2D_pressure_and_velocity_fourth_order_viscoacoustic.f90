@@ -25,14 +25,14 @@
 !
 ! The full text of the license is available in file "LICENSE".
 
-  program seismic_CPML_2D_viscoacoust_second
+  program seismic_CPML_2D_viscoacoust_fourth
 
 ! 2D finite-difference code in velocity and pressure formulation
 ! with Convolutional-PML (C-PML) absorbing conditions for an heterogeneous isotropic viscoacoustic medium
 
 ! Dimitri Komatitsch, CNRS, Marseille, July 2018.
 
-! The second-order staggered-grid formulation of Madariaga (1976) and Virieux (1986) is used:
+! A fourth-order spatially-staggered grid formulation is used:
 !
 !            ^ y
 !            |
@@ -161,8 +161,10 @@
 ! Time step in seconds.
 ! The CFL stability number for the O(2,2) algorithm is 1 / sqrt(2) = 0.707
 ! i.e. one must choose  cp * deltat / deltax < 0.707.
+! For the O(2,4) algorithm used here it is a bit more restrictive,
+! it is cp * deltat / deltax < 0.606  (see Levander 1988 eq (7)).
 ! However this only ensures that the scheme is stable. To have a scheme that is both stable and accurate,
-! some numerical tests show that one needs to take about half of that,
+! for O(2,4) some numerical tests show that one needs to take about half of that,
 ! i.e. choose deltat so that cp * deltat / deltax is equal to about 0.30 or so. (or any value below; but not above).
 ! Since the time scheme is only second order, this also depends on how many time steps are performed in total
 ! (i.e. what the value of NSTEP below is); for large values of NSTEP, of course numerical errors will start to accumulate.
@@ -197,9 +199,12 @@
 ! display information on the screen from time to time
   integer, parameter :: IT_DISPLAY = 100
 
-! compute some constants once and for all for the second-order spatial scheme
-  double precision, parameter :: ONE_OVER_DELTAX = 1.d0 / DELTAX
-  double precision, parameter :: ONE_OVER_DELTAY = 1.d0 / DELTAY
+! pre-compute some constants once and for all for the fourth-order spatial scheme
+! These coefficients are given for instance by Levander, Geophysics, vol. 53(11), p. 1436, equation (A-2)
+  double precision, parameter :: NINE_OVER_8_DELTAX = 9.d0 / (8.d0*DELTAX)
+  double precision, parameter :: NINE_OVER_8_DELTAY = 9.d0 / (8.d0*DELTAY)
+  double precision, parameter :: ONE_OVER_24_DELTAX = 1.d0 / (24.d0*DELTAX)
+  double precision, parameter :: ONE_OVER_24_DELTAY = 1.d0 / (24.d0*DELTAY)
 
 ! value of PI
   double precision, parameter :: PI = 3.141592653589793238462643d0
@@ -214,7 +219,9 @@
   double precision, parameter :: STABILITY_THRESHOLD = 1.d+25
 
 ! main arrays
-  double precision, dimension(NX,NY) :: vx,vy,pressure,kappa_unrelaxed,kappa_relaxed,rho
+! in order to be able to use a fourth-order spatial operator on the edges of the model
+! here we define the arrays with size (0:NX+1,0:NY+1) instead of size (NX,NY) as in the second-order case
+  double precision, dimension(0:NX+1,0:NY+1) :: vx,vy,pressure,kappa_unrelaxed,kappa_relaxed,rho
 
 ! to interpolate material parameters or velocity at the right location in the staggered grid cell
   double precision kappa_half_x,rho_half_x_half_y,vy_interpolated
@@ -601,14 +608,15 @@
 
 ! check the Courant stability condition for the explicit time scheme
 ! R. Courant, K. O. Friedrichs and H. Lewy (1928)
-! For this O(2,2) scheme, when DELTAX == DELTAY the Courant number is 1/sqrt(2) = 0.707
+! For this O(2,4) scheme, when DELTAX == DELTAY the Courant number is given by Levander, Geophysics, vol. 53(11), p. 1427,
+! equation (7) and is equal to 0.606 (it is thus smaller than that of the O(2,2) scheme, which is 1/sqrt(2) = 0.707,
+! i.e. when switching to a fourth-order spatial scheme one needs a time step that is about 0.707 / 0.606 = 1.167 times smaller.
   if (DELTAX == DELTAY) then
     Courant_number = cp_unrelaxed * DELTAT / DELTAX
     print *,'Courant number is ',Courant_number
-    print *,' (the maximum possible value is 1/sqrt(2) = 0.707; &
-                  &in practice for accuracy reasons a value not larger than 0.30 is recommended)'
+    print *,' (the maximum possible value is 0.606; in practice for accuracy reasons a value not larger than 0.30 is recommended)'
     print *
-    if (Courant_number > 1.d0/sqrt(2.d0)) stop 'time step is too large, simulation will be unstable'
+    if (Courant_number > 0.606) stop 'time step is too large, simulation will be unstable'
   endif
 
 ! suppress old files (can be commented out if "call system" is missing in your compiler)
@@ -666,8 +674,8 @@
 ! interpolate material parameters at the right location in the staggered grid cell
         kappa_half_x = 0.5d0 * (kappa_unrelaxed(i+1,j) + kappa_unrelaxed(i,j))
 
-        value_dvx_dx = (vx(i+1,j) - vx(i,j)) * ONE_OVER_DELTAX
-        value_dvy_dy = (vy(i,j) - vy(i,j-1)) * ONE_OVER_DELTAY
+        value_dvx_dx = (vx(i+1,j) - vx(i,j)) * NINE_OVER_8_DELTAX + (vx(i-1,j) - vx(i+2,j)) * ONE_OVER_24_DELTAX
+        value_dvy_dy = (vy(i,j) - vy(i,j-1)) * NINE_OVER_8_DELTAY + (vy(i,j-2) - vy(i,j+1)) * ONE_OVER_24_DELTAY
 
         memory_dvx_dx(i,j) = b_x_half(i) * memory_dvx_dx(i,j) + a_x_half(i) * value_dvx_dx
         memory_dvy_dy(i,j) = b_y(j) * memory_dvy_dy(i,j) + a_y(j) * value_dvy_dy
@@ -693,8 +701,8 @@
 ! interpolate material parameters at the right location in the staggered grid cell
         kappa_half_x = 0.5d0 * (kappa_unrelaxed(i+1,j) + kappa_unrelaxed(i,j))
 
-        value_dvx_dx = (vx(i+1,j) - vx(i,j)) * ONE_OVER_DELTAX
-        value_dvy_dy = (vy(i,j) - vy(i,j-1)) * ONE_OVER_DELTAY
+        value_dvx_dx = (vx(i+1,j) - vx(i,j)) * NINE_OVER_8_DELTAX + (vx(i-1,j) - vx(i+2,j)) * ONE_OVER_24_DELTAX
+        value_dvy_dy = (vy(i,j) - vy(i,j-1)) * NINE_OVER_8_DELTAY + (vy(i,j-2) - vy(i,j+1)) * ONE_OVER_24_DELTAY
 
         memory_dvx_dx(i,j) = b_x_half(i) * memory_dvx_dx(i,j) + a_x_half(i) * value_dvx_dx
         memory_dvy_dy(i,j) = b_y(j) * memory_dvy_dy(i,j) + a_y(j) * value_dvy_dy
@@ -756,7 +764,8 @@
   do j = 2,NY
     do i = 2,NX
 
-      value_dpressure_dx = (pressure(i,j) - pressure(i-1,j)) * ONE_OVER_DELTAX
+      value_dpressure_dx = (pressure(i,j) - pressure(i-1,j)) * NINE_OVER_8_DELTAX + &
+                                   (pressure(i-2,j) - pressure(i+1,j)) * ONE_OVER_24_DELTAX
 
       memory_dpressure_dx(i,j) = b_x(i) * memory_dpressure_dx(i,j) + a_x(i) * value_dpressure_dx
 
@@ -773,7 +782,8 @@
 !     interpolate density at the right location in the staggered grid cell
       rho_half_x_half_y = 0.25d0 * (rho(i,j) + rho(i+1,j) + rho(i+1,j+1) + rho(i,j+1))
 
-      value_dpressure_dy = (pressure(i,j+1) - pressure(i,j)) * ONE_OVER_DELTAY
+      value_dpressure_dy = (pressure(i,j+1) - pressure(i,j)) * NINE_OVER_8_DELTAY + &
+                                   (pressure(i,j-1) - pressure(i,j+2)) * ONE_OVER_24_DELTAY
 
       memory_dpressure_dy(i,j) = b_y_half(j) * memory_dpressure_dy(i,j) + a_y_half(j) * value_dpressure_dy
 
@@ -924,7 +934,7 @@
   print *,'End of the simulation'
   print *
 
-  end program seismic_CPML_2D_viscoacoust_second
+  end program seismic_CPML_2D_viscoacoust_fourth
 
 !----
 !----  save the seismograms in ASCII text format
@@ -1005,7 +1015,9 @@
   integer NX,NY,it,field_number,ISOURCE,JSOURCE,NPOINTS_PML,nrec
   logical USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX
 
-  double precision, dimension(NX,NY) :: image_data_2D
+! in order to be able to use a fourth-order spatial operator on the edges of the model
+! here we define the array with size (0:NX+1,0:NY+1) instead of size (NX,NY) as in the second-order case
+  double precision, dimension(0:NX+1,0:NY+1) :: image_data_2D
 
   integer, dimension(nrec) :: ix_rec,iy_rec
 
