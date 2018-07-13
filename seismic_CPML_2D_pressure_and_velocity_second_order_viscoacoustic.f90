@@ -735,6 +735,10 @@
 ! Ricker source time function (second derivative of a Gaussian)
 ! pressure_source_term = factor * (1.d0 - 2.d0*a*(t-t0)**2)*exp(-a*(t-t0)**2)
 
+! to get the right amplitude of the force, we need to divide by the area of a grid cell
+! (we checked that against the analytical solution in a homogeneous medium for a pressure source)
+  pressure_source_term = pressure_source_term / (DELTAX * DELTAY)
+
 ! define location of the source
   i = ISOURCE
   j = JSOURCE
