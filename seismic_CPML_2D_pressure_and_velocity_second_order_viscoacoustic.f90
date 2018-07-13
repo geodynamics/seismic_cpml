@@ -176,7 +176,7 @@
   double precision, parameter :: t0 = 1.20d0 / f0
   double precision, parameter :: factor = 1.d0
 
-! source (in pressure, thus at a gridpoint rather than half a grid cell away)
+! source (in pressure)
   double precision, parameter :: xsource = 1500.d0
   double precision, parameter :: ysource = 1500.d0
   integer, parameter :: ISOURCE = xsource / DELTAX + 1
@@ -296,7 +296,7 @@
 !---
 
   print *
-  print *,'2D acoustic finite-difference code in velocity and pressure formulation with C-PML'
+  print *,'2D viscoacoustic finite-difference code in velocity and pressure formulation with C-PML'
   print *
 
 ! display size of the model
