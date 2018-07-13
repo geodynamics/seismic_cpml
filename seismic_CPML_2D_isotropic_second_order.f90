@@ -172,7 +172,7 @@
   integer, parameter :: JSOURCE = 2 * NY / 3 + 1
   double precision, parameter :: xsource = (ISOURCE - 1) * DELTAX
   double precision, parameter :: ysource = (JSOURCE - 1) * DELTAY
-! angle of source force clockwise with respect to vertical (Y) axis
+! angle of source force in degrees and clockwise, with respect to the vertical (Y) axis
   double precision, parameter :: ANGLE_FORCE = 135.d0
 
 ! receivers
@@ -201,13 +201,13 @@
   double precision, parameter :: STABILITY_THRESHOLD = 1.d+25
 
 ! main arrays
-  double precision, dimension(NX,NY) :: vx,vy,sigmaxx,sigmayy,sigmaxy,lambda,mu,rho
+  double precision, dimension(NX,NY) :: vx,vy,sigma_xx,sigma_yy,sigma_xy,lambda,mu,rho
 
 ! to interpolate material parameters at the right location in the staggered grid cell
   double precision lambda_half_x,mu_half_x,lambda_plus_two_mu_half_x,mu_half_y,rho_half_x_half_y
 
 ! for evolution of total energy in the medium
-  double precision epsilon_xx,epsilon_yy,epsilon_xy
+  double precision :: epsilon_xx,epsilon_yy,epsilon_xy
   double precision, dimension(NSTEP) :: total_energy_kinetic,total_energy_potential
 
 ! power to compute d0 profile
@@ -224,20 +224,20 @@
       memory_dvx_dy, &
       memory_dvy_dx, &
       memory_dvy_dy, &
-      memory_dsigmaxx_dx, &
-      memory_dsigmayy_dy, &
-      memory_dsigmaxy_dx, &
-      memory_dsigmaxy_dy
+      memory_dsigma_xx_dx, &
+      memory_dsigma_yy_dy, &
+      memory_dsigma_xy_dx, &
+      memory_dsigma_xy_dy
 
   double precision :: &
       value_dvx_dx, &
       value_dvx_dy, &
       value_dvy_dx, &
       value_dvy_dy, &
-      value_dsigmaxx_dx, &
-      value_dsigmayy_dy, &
-      value_dsigmaxy_dx, &
-      value_dsigmaxy_dy
+      value_dsigma_xx_dx, &
+      value_dsigma_yy_dy, &
+      value_dsigma_xy_dx, &
+      value_dsigma_xy_dy
 
 ! 1D arrays for the damping profiles
   double precision, dimension(NX) :: d_x,K_x,alpha_x,a_x,b_x,d_x_half,K_x_half,alpha_x_half,a_x_half,b_x_half
@@ -521,19 +521,19 @@
 ! initialize arrays
   vx(:,:) = ZERO
   vy(:,:) = ZERO
-  sigmaxx(:,:) = ZERO
-  sigmayy(:,:) = ZERO
-  sigmaxy(:,:) = ZERO
+  sigma_xx(:,:) = ZERO
+  sigma_yy(:,:) = ZERO
+  sigma_xy(:,:) = ZERO
 
 ! PML
   memory_dvx_dx(:,:) = ZERO
   memory_dvx_dy(:,:) = ZERO
   memory_dvy_dx(:,:) = ZERO
   memory_dvy_dy(:,:) = ZERO
-  memory_dsigmaxx_dx(:,:) = ZERO
-  memory_dsigmayy_dy(:,:) = ZERO
-  memory_dsigmaxy_dx(:,:) = ZERO
-  memory_dsigmaxy_dy(:,:) = ZERO
+  memory_dsigma_xx_dx(:,:) = ZERO
+  memory_dsigma_yy_dy(:,:) = ZERO
+  memory_dsigma_xy_dx(:,:) = ZERO
+  memory_dsigma_xy_dy(:,:) = ZERO
 
 ! initialize seismograms
   sisvx(:,:) = ZERO
@@ -570,10 +570,10 @@
       value_dvx_dx = value_dvx_dx / K_x_half(i) + memory_dvx_dx(i,j)
       value_dvy_dy = value_dvy_dy / K_y(j) + memory_dvy_dy(i,j)
 
-      sigmaxx(i,j) = sigmaxx(i,j) + &
+      sigma_xx(i,j) = sigma_xx(i,j) + &
          (lambda_plus_two_mu_half_x * value_dvx_dx + lambda_half_x * value_dvy_dy) * DELTAT
 
-      sigmayy(i,j) = sigmayy(i,j) + &
+      sigma_yy(i,j) = sigma_yy(i,j) + &
          (lambda_half_x * value_dvx_dx + lambda_plus_two_mu_half_x * value_dvy_dy) * DELTAT
 
     enddo
@@ -594,7 +594,7 @@
       value_dvy_dx = value_dvy_dx / K_x(i) + memory_dvy_dx(i,j)
       value_dvx_dy = value_dvx_dy / K_y_half(j) + memory_dvx_dy(i,j)
 
-      sigmaxy(i,j) = sigmaxy(i,j) + mu_half_y * (value_dvy_dx + value_dvx_dy) * DELTAT
+      sigma_xy(i,j) = sigma_xy(i,j) + mu_half_y * (value_dvy_dx + value_dvx_dy) * DELTAT
 
     enddo
   enddo
@@ -606,16 +606,16 @@
   do j = 2,NY
     do i = 2,NX
 
-      value_dsigmaxx_dx = (sigmaxx(i,j) - sigmaxx(i-1,j)) / DELTAX
-      value_dsigmaxy_dy = (sigmaxy(i,j) - sigmaxy(i,j-1)) / DELTAY
+      value_dsigma_xx_dx = (sigma_xx(i,j) - sigma_xx(i-1,j)) / DELTAX
+      value_dsigma_xy_dy = (sigma_xy(i,j) - sigma_xy(i,j-1)) / DELTAY
 
-      memory_dsigmaxx_dx(i,j) = b_x(i) * memory_dsigmaxx_dx(i,j) + a_x(i) * value_dsigmaxx_dx
-      memory_dsigmaxy_dy(i,j) = b_y(j) * memory_dsigmaxy_dy(i,j) + a_y(j) * value_dsigmaxy_dy
+      memory_dsigma_xx_dx(i,j) = b_x(i) * memory_dsigma_xx_dx(i,j) + a_x(i) * value_dsigma_xx_dx
+      memory_dsigma_xy_dy(i,j) = b_y(j) * memory_dsigma_xy_dy(i,j) + a_y(j) * value_dsigma_xy_dy
 
-      value_dsigmaxx_dx = value_dsigmaxx_dx / K_x(i) + memory_dsigmaxx_dx(i,j)
-      value_dsigmaxy_dy = value_dsigmaxy_dy / K_y(j) + memory_dsigmaxy_dy(i,j)
+      value_dsigma_xx_dx = value_dsigma_xx_dx / K_x(i) + memory_dsigma_xx_dx(i,j)
+      value_dsigma_xy_dy = value_dsigma_xy_dy / K_y(j) + memory_dsigma_xy_dy(i,j)
 
-      vx(i,j) = vx(i,j) + (value_dsigmaxx_dx + value_dsigmaxy_dy) * DELTAT / rho(i,j)
+      vx(i,j) = vx(i,j) + (value_dsigma_xx_dx + value_dsigma_xy_dy) * DELTAT / rho(i,j)
 
     enddo
   enddo
@@ -626,16 +626,16 @@
 ! interpolate density at the right location in the staggered grid cell
       rho_half_x_half_y = 0.25d0 * (rho(i,j) + rho(i+1,j) + rho(i+1,j+1) + rho(i,j+1))
 
-      value_dsigmaxy_dx = (sigmaxy(i+1,j) - sigmaxy(i,j)) / DELTAX
-      value_dsigmayy_dy = (sigmayy(i,j+1) - sigmayy(i,j)) / DELTAY
+      value_dsigma_xy_dx = (sigma_xy(i+1,j) - sigma_xy(i,j)) / DELTAX
+      value_dsigma_yy_dy = (sigma_yy(i,j+1) - sigma_yy(i,j)) / DELTAY
 
-      memory_dsigmaxy_dx(i,j) = b_x_half(i) * memory_dsigmaxy_dx(i,j) + a_x_half(i) * value_dsigmaxy_dx
-      memory_dsigmayy_dy(i,j) = b_y_half(j) * memory_dsigmayy_dy(i,j) + a_y_half(j) * value_dsigmayy_dy
+      memory_dsigma_xy_dx(i,j) = b_x_half(i) * memory_dsigma_xy_dx(i,j) + a_x_half(i) * value_dsigma_xy_dx
+      memory_dsigma_yy_dy(i,j) = b_y_half(j) * memory_dsigma_yy_dy(i,j) + a_y_half(j) * value_dsigma_yy_dy
 
-      value_dsigmaxy_dx = value_dsigmaxy_dx / K_x_half(i) + memory_dsigmaxy_dx(i,j)
-      value_dsigmayy_dy = value_dsigmayy_dy / K_y_half(j) + memory_dsigmayy_dy(i,j)
+      value_dsigma_xy_dx = value_dsigma_xy_dx / K_x_half(i) + memory_dsigma_xy_dx(i,j)
+      value_dsigma_yy_dy = value_dsigma_yy_dy / K_y_half(j) + memory_dsigma_yy_dy(i,j)
 
-      vy(i,j) = vy(i,j) + (value_dsigmaxy_dx + value_dsigmayy_dy) * DELTAT / rho_half_x_half_y
+      vy(i,j) = vy(i,j) + (value_dsigma_xy_dx + value_dsigma_yy_dy) * DELTAT / rho_half_x_half_y
 
     enddo
   enddo
@@ -702,13 +702,13 @@
   total_energy_potential(it) = ZERO
   do j = NPOINTS_PML+1, NY-NPOINTS_PML
     do i = NPOINTS_PML+1, NX-NPOINTS_PML
-      epsilon_xx = ((lambda(i,j) + 2.d0*mu(i,j)) * sigmaxx(i,j) - lambda(i,j) * &
-        sigmayy(i,j)) / (4.d0 * mu(i,j) * (lambda(i,j) + mu(i,j)))
-      epsilon_yy = ((lambda(i,j) + 2.d0*mu(i,j)) * sigmayy(i,j) - lambda(i,j) * &
-        sigmaxx(i,j)) / (4.d0 * mu(i,j) * (lambda(i,j) + mu(i,j)))
-      epsilon_xy = sigmaxy(i,j) / (2.d0 * mu(i,j))
+      epsilon_xx = ((lambda(i,j) + 2.d0*mu(i,j)) * sigma_xx(i,j) - lambda(i,j) * &
+        sigma_yy(i,j)) / (4.d0 * mu(i,j) * (lambda(i,j) + mu(i,j)))
+      epsilon_yy = ((lambda(i,j) + 2.d0*mu(i,j)) * sigma_yy(i,j) - lambda(i,j) * &
+        sigma_xx(i,j)) / (4.d0 * mu(i,j) * (lambda(i,j) + mu(i,j)))
+      epsilon_xy = sigma_xy(i,j) / (2.d0 * mu(i,j))
       total_energy_potential(it) = total_energy_potential(it) + &
-        0.5d0 * (epsilon_xx * sigmaxx(i,j) + epsilon_yy * sigmayy(i,j) + 2.d0 * epsilon_xy * sigmaxy(i,j))
+        0.5d0 * (epsilon_xx * sigma_xx(i,j) + epsilon_yy * sigma_yy(i,j) + 2.d0 * epsilon_xy * sigma_xy(i,j))
     enddo
   enddo
 

@@ -172,7 +172,7 @@
   double precision, parameter :: t0 = 1.20d0 / f0
   double precision, parameter :: factor = 1.d0
 
-! source (in pressure, thus at a gridpoint rather than half a grid cell away)
+! source (in pressure)
   double precision, parameter :: xsource = 1500.d0
   double precision, parameter :: ysource = 1500.d0
   integer, parameter :: ISOURCE = xsource / DELTAX + 1
@@ -330,7 +330,7 @@
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
+        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -340,7 +340,7 @@
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x_half(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
+        alpha_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -355,7 +355,7 @@
         d_x(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
+        alpha_x(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -365,7 +365,7 @@
         d_x_half(i) = d0_x * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_x_half(i) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
+        alpha_x_half(i) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -405,7 +405,7 @@
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
+        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -415,7 +415,7 @@
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y_half(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
+        alpha_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -430,7 +430,7 @@
         d_y(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
+        alpha_y(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
 ! define damping profile at half the grid points
@@ -440,7 +440,7 @@
         d_y_half(j) = d0_y * abscissa_normalized**NPOWER
 ! from Stephen Gedney's unpublished class notes for class EE699, lecture 8, slide 8-2
         K_y_half(j) = 1.d0 + (K_MAX_PML - 1.d0) * abscissa_normalized**NPOWER
-        alpha_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized) + 0.1d0 * ALPHA_MAX_PML
+        alpha_y_half(j) = ALPHA_MAX_PML * (1.d0 - abscissa_normalized)
       endif
 
     endif
@@ -654,7 +654,7 @@
   pressure_past(:,:) = pressure_present(:,:)
   pressure_present(:,:) = pressure_future(:,:)
 
-  enddo   ! end of time loop
+  enddo   ! end of the time loop
 
 ! save seismograms
   call write_seismograms(sispressure,NSTEP,NREC,DELTAT,t0)
