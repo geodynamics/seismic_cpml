@@ -1,6 +1,10 @@
 
   program analytical_solution
 
+!! DK DK to compare to our finite-difference codes from SEISMIC_CPML or SOUNDVIEW,
+!! DK DK we divide the source by 4 * PI * cp^2 to get the right amplitude (our convention being to use a source of amplitude 1,
+!! DK DK while the convention used by Carcione in his 1988 paper is to use a source of amplitude 4 * PI * cp^2
+
 ! this program implements the analytical solution for a viscoacoustic medium
 ! from Carcione et al., Wave propagation simulation in a linear viscoacoustic medium,
 ! Geophysical Journal, vol. 93, p. 393-407 (1988)
@@ -23,7 +27,7 @@
 !! instead of the unrelaxed ones (by default omega -> + infinity)
   logical, parameter :: FIX_ATTENUATION_CAUSALITY = .true.
 
-  integer, parameter :: iratio = 64 ! 32
+  integer, parameter :: iratio = 64
 
   integer, parameter :: nfreq = 524288
   integer, parameter :: nt = iratio * nfreq
@@ -163,6 +167,11 @@
 
 ! definir le spectre d'un Ricker classique (centre en t0)
       fomega(ifreq) = dsqrt(pi) * cdexp(comparg) * omega**2 * dexp(-omega**2/(4.d0*a)) / (2.d0 * dsqrt(a**3))
+
+!! DK DK to compare to our finite-difference codes from SEISMIC_CPML or SOUNDVIEW,
+!! DK DK we divide the source by 4 * PI * cp^2 to get the right amplitude (our convention being to use a source of amplitude 1,
+!! DK DK while the convention used by Carcione in his 1988 paper is to use a source of amplitude 4 * PI * cp^2
+      fomega(ifreq) = fomega(ifreq) / (4.d0 * PI * vp**2)
 
       ra(ifreq) = dreal(fomega(ifreq))
       rb(ifreq) = dimag(fomega(ifreq))
