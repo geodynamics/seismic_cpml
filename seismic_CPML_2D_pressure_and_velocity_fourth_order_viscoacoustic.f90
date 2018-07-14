@@ -286,14 +286,14 @@
   integer, parameter :: N_SLS = 3
 
 ! attenuation constants
-  double precision, dimension(N_SLS) :: tau_epsilon_nu1,tau_sigma_nu1,one_over_tau_sigma_nu1,HALF_DELTA_over_tau_sigma_nu1, &
-                                           multiplication_factor_tau_sigma_nu1
+  double precision, dimension(N_SLS) :: tau_epsilon_kappa,tau_sigma_kappa,one_over_tau_sigma_kappa, &
+                           HALF_DELTA_over_tau_sigma_kappa,multiplication_factor_tau_sigma_kappa
 
 ! memory variable and other arrays for attenuation
   double precision, dimension(NX,NY,N_SLS) :: memory_variable_R_dot,memory_variable_R_dot_old
   double precision, dimension(NX,NY,N_SLS) :: DELTAT_deltaKappa_over_tau_sigma
   integer :: i_sls
-  double precision :: sum_of_memory_variables
+  double precision :: sum_of_memory_variables_kappa
 
 ! this defines the typical frequency range in which we use optimization to find the tau values that fit a given Q in that band
   double precision :: f_min_attenuation,f_max_attenuation
@@ -330,21 +330,21 @@
   f_max_attenuation = 12.d0 * f_min_attenuation
 
 ! call the SolvOpt() nonlinear optimization routine to compute the tau_epsilon and tau_sigma values from a given Q factor
-  call compute_attenuation_coeffs(N_SLS,QKappa,f0,f_min_attenuation,f_max_attenuation,tau_epsilon_nu1,tau_sigma_nu1)
+  call compute_attenuation_coeffs(N_SLS,QKappa,f0,f_min_attenuation,f_max_attenuation,tau_epsilon_kappa,tau_sigma_kappa)
 
   else
 
 ! dummy values in the non-dissipative case
-    tau_epsilon_nu1(:) = 1.d0
-    tau_sigma_nu1(:) = 1.d0
+    tau_epsilon_kappa(:) = 1.d0
+    tau_sigma_kappa(:) = 1.d0
 
   endif
 
 ! precompute the inverse once and for all, to save computation time in the time loop below
 ! (on computers, a multiplication is very significantly cheaper than a division)
-  one_over_tau_sigma_nu1(:) = 1.d0 / tau_sigma_nu1(:)
-  HALF_DELTA_over_tau_sigma_nu1(:) = 0.5d0 * DELTAT / tau_sigma_nu1(:)
-  multiplication_factor_tau_sigma_nu1(:) = 1.d0 / (1.d0 + 0.5d0 * DELTAT * one_over_tau_sigma_nu1(:))
+  one_over_tau_sigma_kappa(:) = 1.d0 / tau_sigma_kappa(:)
+  HALF_DELTA_over_tau_sigma_kappa(:) = 0.5d0 * DELTAT / tau_sigma_kappa(:)
+  multiplication_factor_tau_sigma_kappa(:) = 1.d0 / (1.d0 + 0.5d0 * DELTAT * one_over_tau_sigma_kappa(:))
 
 !--- define profile of absorption in PML region
 
@@ -543,7 +543,7 @@
       rho(i,j) = density
       kappa_unrelaxed(i,j) = density*cp_unrelaxed*cp_unrelaxed
       if (VISCOACOUSTIC_ATTENUATION) then
-        kappa_relaxed(i,j) = kappa_unrelaxed(i,j) * N_SLS / sum(tau_epsilon_nu1(:) / tau_sigma_nu1(:))
+        kappa_relaxed(i,j) = kappa_unrelaxed(i,j) * N_SLS / sum(tau_epsilon_kappa(:) / tau_sigma_kappa(:))
       else
         kappa_relaxed(i,j) = kappa_unrelaxed(i,j)
       endif
@@ -556,7 +556,7 @@
       do i = 1,NX
         do i_sls = 1,N_SLS
           DELTAT_deltaKappa_over_tau_sigma(i,j,i_sls) = DELTAT * kappa_relaxed(i,j) * &
-                      (tau_epsilon_nu1(i_sls)/tau_sigma_nu1(i_sls) - 1.d0) / dble(N_SLS * tau_sigma_nu1(i_sls))
+                      (tau_epsilon_kappa(i_sls)/tau_sigma_kappa(i_sls) - 1.d0) / dble(N_SLS * tau_sigma_kappa(i_sls))
         enddo
       enddo
     enddo
@@ -709,21 +709,21 @@
 
 ! use the Auxiliary Differential Equation form, which is second-order accurate in time if implemented following
 ! eq (14) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994), which is what we do here
-        sum_of_memory_variables = 0.d0
+        sum_of_memory_variables_kappa = 0.d0
         do i_sls = 1,N_SLS
 ! this average of the two terms comes from eq (14) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994)
           memory_variable_R_dot(i,j,i_sls) = (memory_variable_R_dot_old(i,j,i_sls) + &
                   (value_dvx_dx + value_dvy_dy) * DELTAT_deltaKappa_over_tau_sigma(i,j,i_sls) - &
-                  memory_variable_R_dot_old(i,j,i_sls) * HALF_DELTA_over_tau_sigma_nu1(i_sls)) &
-                     * multiplication_factor_tau_sigma_nu1(i_sls)
+                  memory_variable_R_dot_old(i,j,i_sls) * HALF_DELTA_over_tau_sigma_kappa(i_sls)) &
+                     * multiplication_factor_tau_sigma_kappa(i_sls)
 
-          sum_of_memory_variables = sum_of_memory_variables + &
+          sum_of_memory_variables_kappa = sum_of_memory_variables_kappa + &
                      memory_variable_R_dot(i,j,i_sls) + memory_variable_R_dot_old(i,j,i_sls)
         enddo
 
         pressure(i,j) = pressure(i,j) + (- kappa_half_x * (value_dvx_dx + value_dvy_dy) + &
 ! this average of the two terms comes from eq (13) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994)
-                     0.5d0 * sum_of_memory_variables) * DELTAT
+                     0.5d0 * sum_of_memory_variables_kappa) * DELTAT
 
       enddo
     enddo
