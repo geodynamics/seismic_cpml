@@ -699,6 +699,9 @@
         memory_dvx_dx(i,j) = b_x_half(i) * memory_dvx_dx(i,j) + a_x_half(i) * value_dvx_dx
         memory_dvy_dy(i,j) = b_y(j) * memory_dvy_dy(i,j) + a_y(j) * value_dvy_dy
 
+        value_dvx_dx = value_dvx_dx * one_over_K_x_half(i) + memory_dvx_dx(i,j)
+        value_dvy_dy = value_dvy_dy * one_over_K_y(j) + memory_dvy_dy(i,j)
+
 ! use the Auxiliary Differential Equation form, which is second-order accurate in time if implemented following
 ! eq (14) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994), which is what we do here
         sum_of_memory_variables_kappa = 0.d0
