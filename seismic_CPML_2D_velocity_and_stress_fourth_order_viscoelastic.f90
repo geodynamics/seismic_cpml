@@ -310,8 +310,8 @@
 ! attenuation quality factors Qp and Qs to use
 ! BEWARE: we use Qp and Qs here, not QKappa and Qmu.
 ! BEWARE: While Qmu is always equal to Qs, QKappa is not equal to Qp,
-! BEWARE: to convert from one to the other if your input data have Qkappa and Qmu
-! BEWARE: you can use the program conversion_from_Qp_Qs_to_Qkappa_Qmu_from_Dahlen_Tromp_959_960_in_3D_and_in_2D.f90
+! BEWARE: to convert from one to the other if your input data have Qkappa and Qmu you can use
+! BEWARE: the program conversion_between_Qp_Qs_and_Qkappa_Qmu_from_Dahlen_Tromp_959_960_in_3D_and_in_2D_plane_strain.f90
 ! BEWARE: that is included in this software package.
   double precision, parameter :: Qp = 65.d0
   double precision, parameter :: Qs = 55.d0
