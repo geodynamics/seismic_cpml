@@ -215,7 +215,7 @@
   double precision, parameter :: STABILITY_THRESHOLD = 1.d+25
 
 ! main arrays
-  double precision, dimension(NX,NY) :: vx,vy,pressure,kappa_unrelaxed,kappa_relaxed,rho
+  double precision, dimension(NX,NY) :: vx,vy,pressure,kappa_unrelaxed,rho
 
 ! to interpolate material parameters or velocity at the right location in the staggered grid cell
   double precision kappa_half_x,rho_half_x_half_y,vy_interpolated
@@ -281,7 +281,7 @@
 
 ! attenuation constants
   double precision, dimension(N_SLS) :: tau_epsilon_kappa,tau_sigma_kappa,one_over_tau_sigma_kappa, &
-                  HALF_DELTAT_over_tau_sigma_kappa,multiplication_factor_tau_sigma_kappa,DELTAT_delta_over_tau_sigma_without_Kappa
+         HALF_DELTAT_over_tau_sigma_kappa,multiplication_factor_tau_sigma_kappa,DELTAT_delta_relaxed_over_tau_sigma_without_Kappa
 
 ! memory variable for attenuation
   double precision, dimension(NX,NY,N_SLS) :: memory_variable_R_dot,memory_variable_R_dot_old
@@ -339,12 +339,13 @@
   HALF_DELTAT_over_tau_sigma_kappa(:) = 0.5d0 * DELTAT / tau_sigma_kappa(:)
   multiplication_factor_tau_sigma_kappa(:) = 1.d0 / (1.d0 + 0.5d0 * DELTAT * one_over_tau_sigma_kappa(:))
 
-! compute DELTAT_delta_over_tau_sigma_without_Kappa, which is a term needed to compute the evolution of the viscoacoustic memory variables
+! compute DELTAT_delta_relaxed_over_tau_sigma_without_Kappa, which is a term
+! needed to compute the evolution of the viscoacoustic memory variables
   if (VISCOACOUSTIC_ATTENUATION) then
-    DELTAT_delta_over_tau_sigma_without_Kappa(:) = DELTAT * &
-                (tau_epsilon_kappa(:)/tau_sigma_kappa(:) - 1.d0) / dble(N_SLS * tau_sigma_kappa(:))
+    DELTAT_delta_relaxed_over_tau_sigma_without_Kappa(:) = (DELTAT / sum(tau_epsilon_kappa(:) / tau_sigma_kappa(:))) * &
+                        (tau_epsilon_kappa(:)/tau_sigma_kappa(:) - 1.d0) / tau_sigma_kappa(:)
   else
-    DELTAT_delta_over_tau_sigma_without_Kappa(:) = ZERO
+    DELTAT_delta_relaxed_over_tau_sigma_without_Kappa(:) = ZERO
   endif
 
 !--- define profile of absorption in PML region
@@ -543,11 +544,6 @@
     do i = 1,NX
       rho(i,j) = density
       kappa_unrelaxed(i,j) = density*cp_unrelaxed*cp_unrelaxed
-      if (VISCOACOUSTIC_ATTENUATION) then
-        kappa_relaxed(i,j) = kappa_unrelaxed(i,j) * N_SLS / sum(tau_epsilon_kappa(:) / tau_sigma_kappa(:))
-      else
-        kappa_relaxed(i,j) = kappa_unrelaxed(i,j)
-      endif
     enddo
   enddo
 
@@ -702,8 +698,8 @@
         do i_sls = 1,N_SLS
 ! this average of the two terms comes from eq (14) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994)
           memory_variable_R_dot(i,j,i_sls) = (memory_variable_R_dot_old(i,j,i_sls) + &
-                  (value_dvx_dx + value_dvy_dy) * kappa_relaxed(i,j) * DELTAT_delta_over_tau_sigma_without_Kappa(i_sls) - &
-                  memory_variable_R_dot_old(i,j,i_sls) * HALF_DELTAT_over_tau_sigma_kappa(i_sls)) &
+               (value_dvx_dx + value_dvy_dy) * kappa_unrelaxed(i,j) * DELTAT_delta_relaxed_over_tau_sigma_without_Kappa(i_sls) - &
+               memory_variable_R_dot_old(i,j,i_sls) * HALF_DELTAT_over_tau_sigma_kappa(i_sls)) &
                      * multiplication_factor_tau_sigma_kappa(i_sls)
 
           sum_of_memory_variables_kappa = sum_of_memory_variables_kappa + &
