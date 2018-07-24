@@ -287,7 +287,7 @@
 
 ! attenuation constants
   double precision, dimension(N_SLS) :: tau_epsilon_kappa,tau_sigma_kappa,one_over_tau_sigma_kappa, &
-                           HALF_DELTA_over_tau_sigma_kappa,multiplication_factor_tau_sigma_kappa
+                           HALF_DELTAT_over_tau_sigma_kappa,multiplication_factor_tau_sigma_kappa
 
 ! memory variable and other arrays for attenuation
   double precision, dimension(NX,NY,N_SLS) :: memory_variable_R_dot,memory_variable_R_dot_old
@@ -343,7 +343,7 @@
 ! precompute the inverse once and for all, to save computation time in the time loop below
 ! (on computers, a multiplication is very significantly cheaper than a division)
   one_over_tau_sigma_kappa(:) = 1.d0 / tau_sigma_kappa(:)
-  HALF_DELTA_over_tau_sigma_kappa(:) = 0.5d0 * DELTAT / tau_sigma_kappa(:)
+  HALF_DELTAT_over_tau_sigma_kappa(:) = 0.5d0 * DELTAT / tau_sigma_kappa(:)
   multiplication_factor_tau_sigma_kappa(:) = 1.d0 / (1.d0 + 0.5d0 * DELTAT * one_over_tau_sigma_kappa(:))
 
 !--- define profile of absorption in PML region
@@ -717,7 +717,7 @@
 ! this average of the two terms comes from eq (14) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994)
           memory_variable_R_dot(i,j,i_sls) = (memory_variable_R_dot_old(i,j,i_sls) + &
                   (value_dvx_dx + value_dvy_dy) * DELTAT_deltaKappa_over_tau_sigma(i,j,i_sls) - &
-                  memory_variable_R_dot_old(i,j,i_sls) * HALF_DELTA_over_tau_sigma_kappa(i_sls)) &
+                  memory_variable_R_dot_old(i,j,i_sls) * HALF_DELTAT_over_tau_sigma_kappa(i_sls)) &
                      * multiplication_factor_tau_sigma_kappa(i_sls)
 
           sum_of_memory_variables_kappa = sum_of_memory_variables_kappa + &

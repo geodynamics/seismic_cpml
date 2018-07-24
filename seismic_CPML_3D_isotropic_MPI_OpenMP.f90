@@ -166,6 +166,15 @@
   integer, parameter :: NPOINTS_PML = 10
 
 ! source
+! here in this demo code we put the source in the middle of the model in the Z direction,
+! i.e. in NZ/2, which means putting it in the cut plane (i.e. only the processor for which
+! rank == rank_cut_plane will do it, and it will put it in its last point along Z, in NZ_LOCAL.
+! if one wants to put the source at another location, one can invert the formulas below
+! and define the grid point (ISOURCE, JSOURCE) to use as:
+! double precision, parameter :: xsource = ...put here the coordinate you want...
+! double precision, parameter :: ysource = ...put here the coordinate you want...
+! integer, parameter :: ISOURCE = xsource / DELTAX + 1
+! integer, parameter :: JSOURCE = ysource / DELTAY + 1
   integer, parameter :: ISOURCE = NX - 2*NPOINTS_PML - 1
   integer, parameter :: JSOURCE = 2 * NY / 3 + 1
   double precision, parameter :: xsource = (ISOURCE - 1) * DELTAX
@@ -1062,6 +1071,9 @@
   i = ISOURCE
   j = JSOURCE
 
+! here in this demo code we put the source in the middle of the model in the Z direction,
+! i.e. in NZ/2, which means putting it in the cut plane (i.e. only the processor for which
+! rank == rank_cut_plane will do it, and it will put it in its last point along Z, in NZ_LOCAL
   vx(i,j,NZ_LOCAL) = vx(i,j,NZ_LOCAL) + force_x * DELTAT / rho
   vy(i,j,NZ_LOCAL) = vy(i,j,NZ_LOCAL) + force_y * DELTAT / rho
 
