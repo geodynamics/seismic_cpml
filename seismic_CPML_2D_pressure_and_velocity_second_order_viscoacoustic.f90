@@ -195,7 +195,7 @@
   logical, parameter :: COMPUTE_ENERGY = .false.
 
 ! display information on the screen from time to time
-  integer, parameter :: IT_DISPLAY = 100
+  integer, parameter :: IT_DISPLAY = 200
 
 ! compute some constants once and for all for the second-order spatial scheme
   double precision, parameter :: ONE_OVER_DELTAX = 1.d0 / DELTAX
@@ -806,6 +806,7 @@
 
 ! store seismograms
   do irec = 1,NREC
+
 ! beware here that the two components of the velocity vector are not defined at the same point
 ! in a staggered grid, and thus the two components of the velocity vector are recorded at slightly different locations,
 ! vy is staggered by half a grid cell along X and along Y with respect to vx
@@ -860,6 +861,9 @@
 !                        NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,2)
     call create_color_image(pressure,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,3)
+
+! save the part of the seismograms that has been computed so far, so that users can monitor the progress of the simulation
+    call write_seismograms(sisvx,sisvy,sispressure,NSTEP,NREC,DELTAT,t0)
 
   endif
 
