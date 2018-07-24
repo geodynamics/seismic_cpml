@@ -47,8 +47,8 @@
     print *
   endif
 
-! enter the cp and cs velocities of the medium here, at the frequency at which you want this conversion to be performed
-  print *,'enter the cp and cs velocities of the medium here, at the frequency at which you want this conversion to be performed:'
+! enter the cp and cs velocities of the medium, at the frequency at which you want this conversion to be performed
+  print *,'enter the cp and cs velocities of the medium, at the frequency at which you want this conversion to be performed:'
   print *,'enter cp:'
   read(*,*) cp
   print *,'enter cs:'
@@ -57,10 +57,10 @@
 
   if (iconversion_type == 1) then
 
-! Qs is always the same as Qmu
+! Qmu is always the same as Qs
     Qmu = Qs
 
-! for Qp the formula is more complex
+! for QKappa the formula is more complex
     inverse_of_Qp = 1.d0 / Qp
     inverse_of_Qmu = 1.d0 / Qmu
 
@@ -74,7 +74,7 @@
 
   else ! if (iconversion_type == 2) then
 
-! Qs is the same as Qmu
+! Qs is always the same as Qmu
     Qs = Qmu
 
 ! for Qp the formula is more complex
