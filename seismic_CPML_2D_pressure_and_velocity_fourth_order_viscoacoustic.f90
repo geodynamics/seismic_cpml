@@ -52,6 +52,7 @@
 !            |         |         |
 !            +---------+---------+  ---> x
 !           v_x    pressure
+!                  R_dot (viscoacoustic memory variable)
 !
 
 ! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000).
