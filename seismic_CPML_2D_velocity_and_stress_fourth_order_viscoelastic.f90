@@ -5,7 +5,7 @@
 ! Contributor: Dimitri Komatitsch, komatitsch aT lma DOT cnrs-mrs DOT fr
 !
 ! This software is a computer program whose purpose is to solve
-! the two-dimensional heterogeneous isotropic viscoacoustic wave equation
+! the two-dimensional heterogeneous isotropic viscoelastic wave equation
 ! using a finite-difference method with Convolutional Perfectly Matched
 ! Layer (C-PML) conditions.
 !
@@ -25,14 +25,14 @@
 !
 ! The full text of the license is available in file "LICENSE".
 
-  program seismic_CPML_2D_viscoacoust_second
+  program seismic_CPML_2D_viscoelast_fourth
 
-! 2D finite-difference code in velocity and pressure formulation
-! with Convolutional-PML (C-PML) absorbing conditions for an heterogeneous isotropic viscoacoustic medium
+! 2D finite-difference code in velocity and stress formulation
+! with Convolutional-PML (C-PML) absorbing conditions for an heterogeneous isotropic viscoelastic medium
 
 ! Dimitri Komatitsch, CNRS, Marseille, July 2018.
 
-! The second-order staggered-grid formulation of Madariaga (1976) and Virieux (1986) is used:
+! A fourth-order spatially-staggered grid formulation is used:
 !
 !            ^ y
 !            |
@@ -44,14 +44,17 @@
 !            |                   |
 !            |                   |
 !            |        v_y        |
-!            +---------+         |
-!            |         |         |
+!   sigma_xy +---------+         |
+!        e13 |         |         |
 !            |         |         |
 !            |         |         |
 !            |         |         |
 !            |         |         |
 !            +---------+---------+  ---> x
-!           v_x    pressure
+!           v_x    sigma_xx
+!                  sigma_yy
+!                  e1
+!                  e11
 !
 
 ! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000).
@@ -133,8 +136,8 @@
 
   implicit none
 
-! include viscoacoustic attenuation or not
-  logical, parameter :: VISCOACOUSTIC_ATTENUATION = .true.
+! include viscoelastic attenuation or not
+  logical, parameter :: VISCOELASTIC_ATTENUATION = .true.
 
 ! flags to add PML layers to the edges of the grid
   logical, parameter :: USE_PML_XMIN = .true.
@@ -156,31 +159,36 @@
 ! P-velocity and density
 ! the unrelaxed value is the value at frequency = 0 (the relaxed value would be the value at frequency = +infinity)
   double precision, parameter :: cp_unrelaxed = 2000.d0
+  double precision, parameter :: cs_unrelaxed = cp_unrelaxed / 1.732d0
   double precision, parameter :: density = 2000.d0
 
 ! Time step in seconds.
 ! The CFL stability number for the O(2,2) algorithm is 1 / sqrt(2) = 0.707
 ! i.e. one must choose  cp * deltat / deltax < 0.707.
+! For the O(2,4) algorithm used here it is a bit more restrictive,
+! it is cp * deltat / deltax < 0.606  (see Levander 1988 eq (7)).
 ! However this only ensures that the scheme is stable. To have a scheme that is both stable and accurate,
-! some numerical tests show that one needs to take about half of that,
+! for O(2,4) some numerical tests show that one needs to take about half of that,
 ! i.e. choose deltat so that cp * deltat / deltax is equal to about 0.30 or so. (or any value below; but not above).
 ! Since the time scheme is only second order, this also depends on how many time steps are performed in total
 ! (i.e. what the value of NSTEP below is); for large values of NSTEP, of course numerical errors will start to accumulate.
   double precision, parameter :: DELTAT = 2.2d-4
 
 ! total number of time steps
-  integer, parameter :: NSTEP = 3600
+  integer, parameter :: NSTEP = 5200
 
 ! parameters for the source
   double precision, parameter :: f0 = 35.d0
   double precision, parameter :: t0 = 1.20d0 / f0
   double precision, parameter :: factor = 1.d0
 
-! source (in pressure, thus at a gridpoint rather than half a grid cell away)
+! source (force)
   double precision, parameter :: xsource = 1500.d0
   double precision, parameter :: ysource = 1500.d0
   integer, parameter :: ISOURCE = xsource / DELTAX + 1
   integer, parameter :: JSOURCE = ysource / DELTAY + 1
+! angle of source force in degrees and clockwise, with respect to the vertical (Y) axis
+  double precision, parameter :: ANGLE_FORCE = 0.d0
 
 ! receivers
   integer, parameter :: NREC = 1
@@ -197,15 +205,23 @@
 ! display information on the screen from time to time
   integer, parameter :: IT_DISPLAY = 200
 
-! compute some constants once and for all for the second-order spatial scheme
-  double precision, parameter :: ONE_OVER_DELTAX = 1.d0 / DELTAX
-  double precision, parameter :: ONE_OVER_DELTAY = 1.d0 / DELTAY
+! compute some constants once and for all for the fourth-order spatial scheme
+! These coefficients are given for instance by Levander, Geophysics, vol. 53(11), p. 1436, equation (A-2)
+  double precision, parameter :: NINE_OVER_8_DELTAX = 9.d0 / (8.d0*DELTAX)
+  double precision, parameter :: NINE_OVER_8_DELTAY = 9.d0 / (8.d0*DELTAY)
+  double precision, parameter :: ONE_OVER_24_DELTAX = 1.d0 / (24.d0*DELTAX)
+  double precision, parameter :: ONE_OVER_24_DELTAY = 1.d0 / (24.d0*DELTAY)
 
 ! value of PI
   double precision, parameter :: PI = 3.141592653589793238462643d0
 
+! conversion from degrees to radians
+  double precision, parameter :: DEGREES_TO_RADIANS = PI / 180.d0
+
 ! zero
   double precision, parameter :: ZERO = 0.d0
+
+  double precision, parameter :: TWO_THIRDS = 2.d0 / 3.d0
 
 ! large value for maximum
   double precision, parameter :: HUGEVAL = 1.d+30
@@ -214,12 +230,16 @@
   double precision, parameter :: STABILITY_THRESHOLD = 1.d+25
 
 ! main arrays
-  double precision, dimension(NX,NY) :: vx,vy,pressure,kappa_unrelaxed,kappa_relaxed,rho
+! in order to be able to use a fourth-order spatial operator on the edges of the model
+! here we define the arrays with size (0:NX+1,0:NY+1) instead of size (NX,NY) as in the second-order case
+  double precision, dimension(0:NX+1,0:NY+1) :: vx,vy,sigma_xx,sigma_yy,sigma_xy,lambda_unrelaxed,mu_unrelaxed,rho
 
 ! to interpolate material parameters or velocity at the right location in the staggered grid cell
-  double precision kappa_half_x,rho_half_x_half_y,vy_interpolated
+  double precision :: lambda_half_x,mu_half_x,lambda_plus_mu_half_x,lambda_plus_two_mu_half_x,mu_half_y
+  double precision :: rho_half_x_half_y,vy_interpolated
 
 ! for evolution of total energy in the medium
+  double precision :: epsilon_xx,epsilon_yy,epsilon_xy
   double precision, dimension(NSTEP) :: total_energy_kinetic,total_energy_potential
 
 ! power to compute d0 profile
@@ -236,14 +256,20 @@
       memory_dvx_dy, &
       memory_dvy_dx, &
       memory_dvy_dy, &
-      memory_dpressure_dx, &
-      memory_dpressure_dy
+      memory_dsigma_xx_dx, &
+      memory_dsigma_yy_dy, &
+      memory_dsigma_xy_dx, &
+      memory_dsigma_xy_dy
 
   double precision :: &
       value_dvx_dx, &
+      value_dvx_dy, &
+      value_dvy_dx, &
       value_dvy_dy, &
-      value_dpressure_dx, &
-      value_dpressure_dy
+      value_dsigma_xx_dx, &
+      value_dsigma_yy_dy, &
+      value_dsigma_xy_dx, &
+      value_dsigma_xy_dy
 
 ! 1D arrays for the damping profiles
   double precision, dimension(NX) :: d_x,K_x,alpha_x,a_x,b_x,d_x_half,K_x_half,alpha_x_half,a_x_half,b_x_half, &
@@ -255,7 +281,7 @@
   double precision :: Rcoef,d0_x,d0_y,xval,yval,abscissa_in_PML,abscissa_normalized
 
 ! for the source
-  double precision :: a,t,pressure_source_term
+  double precision :: a,t,force_x,force_y,force_source_term
 
 ! for receivers
   double precision xspacerec,yspacerec,distval,dist
@@ -268,25 +294,34 @@
 
   integer :: i,j,it,irec
 
-  double precision :: Courant_number,velocnorm,pressurenorm
+  double precision :: Courant_number,velocnorm
 
-! for attenuation (viscoacousticity)
+! for attenuation (viscoelasticity)
 
-! attenuation quality factor Qkappa to use
-  double precision, parameter :: QKappa = 65.d0
+! attenuation quality factors Qp and Qs to use
+! BEWARE: we use Qp and Qs here, not QKappa and Qmu.
+! BEWARE: While Qmu is always equal to Qs, QKappa is not equal to Qp,
+! BEWARE: to convert from one to the other if your input data have Qkappa and Qmu
+! BEWARE: you can use the program conversion_from_Qp_Qs_to_Qkappa_Qmu_from_Dahlen_Tromp_959_960_in_3D_and_in_2D.f90
+! BEWARE: that is included in this software package.
+  double precision, parameter :: Qp = 65.d0
+  double precision, parameter :: Qs = 55.d0
 
 ! number of Zener standard linear solids in parallel
   integer, parameter :: N_SLS = 3
 
 ! attenuation constants
-  double precision, dimension(N_SLS) :: tau_epsilon_kappa,tau_sigma_kappa,one_over_tau_sigma_kappa, &
-                           HALF_DELTAT_over_tau_sigma_kappa,multiplication_factor_tau_sigma_kappa
+  double precision, dimension(N_SLS) :: tau_epsilon_nu1,tau_sigma_nu1,one_over_tau_sigma_nu1, &
+                           HALF_DELTAT_over_tau_sigma_nu1,multiplication_factor_tau_sigma_nu1,DELTAT_phi_nu1
+  double precision, dimension(N_SLS) :: tau_epsilon_nu2,tau_sigma_nu2,one_over_tau_sigma_nu2, &
+                           HALF_DELTAT_over_tau_sigma_nu2,multiplication_factor_tau_sigma_nu2,DELTAT_phi_nu2
 
 ! memory variable and other arrays for attenuation
-  double precision, dimension(NX,NY,N_SLS) :: memory_variable_R_dot,memory_variable_R_dot_old
-  double precision, dimension(NX,NY,N_SLS) :: DELTAT_deltaKappa_over_tau_sigma
+  double precision, dimension(NX,NY,N_SLS) :: memory_variable_R_e1_dot,memory_variable_R_e1_dot_old
+  double precision, dimension(NX,NY,N_SLS) :: memory_variable_R_e11_dot,memory_variable_R_e11_dot_old
+  double precision, dimension(NX,NY,N_SLS) :: memory_variable_R_e13_dot,memory_variable_R_e13_dot_old
   integer :: i_sls
-  double precision :: sum_of_memory_variables_kappa
+  double precision :: sum_of_memory_variables_e1,sum_of_memory_variables_e11,sum_of_memory_variables_e13
 
 ! this defines the typical frequency range in which we use optimization to find the tau values that fit a given Q in that band
   double precision :: f_min_attenuation,f_max_attenuation
@@ -296,7 +331,7 @@
 !---
 
   print *
-  print *,'2D viscoacoustic finite-difference code in velocity and pressure formulation with C-PML'
+  print *,'2D viscoelastic finite-difference code in velocity and stress formulation with C-PML'
   print *
 
 ! display size of the model
@@ -310,11 +345,12 @@
   print *,'Total number of grid points = ',NX * NY
   print *
 
-! for attenuation (viscoacousticity)
-  if (VISCOACOUSTIC_ATTENUATION) then
+! for attenuation (viscoelasticity)
+  if (VISCOELASTIC_ATTENUATION) then
 
-  print *,'QKappa quality factor used for attenuation = ',QKappa
-  print *,'Number of Zener standard linear solids used to mimic the viscoacoustic behavior (N_SLS) = ',N_SLS
+  print *,'Qp quality factor used for attenuation = ',Qp
+  print *,'Qs quality factor used for attenuation = ',Qs
+  print *,'Number of Zener standard linear solids used to mimic the viscoelastic behavior (N_SLS) = ',N_SLS
   print *
 
 ! this defines the typical frequency range in which we use optimization to find the tau values that fit a given Q in that band
@@ -323,21 +359,38 @@
   f_max_attenuation = 12.d0 * f_min_attenuation
 
 ! call the SolvOpt() nonlinear optimization routine to compute the tau_epsilon and tau_sigma values from a given Q factor
-  call compute_attenuation_coeffs(N_SLS,QKappa,f0,f_min_attenuation,f_max_attenuation,tau_epsilon_kappa,tau_sigma_kappa)
+  print *,'Values for Qp:'
+  print *
+  call compute_attenuation_coeffs(N_SLS,Qp,f0,f_min_attenuation,f_max_attenuation,tau_epsilon_nu1,tau_sigma_nu1)
+  print *,'Values for Qs:'
+  print *
+  call compute_attenuation_coeffs(N_SLS,Qs,f0,f_min_attenuation,f_max_attenuation,tau_epsilon_nu2,tau_sigma_nu2)
 
   else
 
 ! dummy values in the non-dissipative case
-    tau_epsilon_kappa(:) = 1.d0
-    tau_sigma_kappa(:) = 1.d0
+    tau_epsilon_nu1(:) = 1.d0
+    tau_sigma_nu1(:) = 1.d0
+
+    tau_epsilon_nu2(:) = 1.d0
+    tau_sigma_nu2(:) = 1.d0
 
   endif
 
 ! precompute the inverse once and for all, to save computation time in the time loop below
 ! (on computers, a multiplication is very significantly cheaper than a division)
-  one_over_tau_sigma_kappa(:) = 1.d0 / tau_sigma_kappa(:)
-  HALF_DELTAT_over_tau_sigma_kappa(:) = 0.5d0 * DELTAT / tau_sigma_kappa(:)
-  multiplication_factor_tau_sigma_kappa(:) = 1.d0 / (1.d0 + 0.5d0 * DELTAT * one_over_tau_sigma_kappa(:))
+  one_over_tau_sigma_nu1(:) = 1.d0 / tau_sigma_nu1(:)
+  one_over_tau_sigma_nu2(:) = 1.d0 / tau_sigma_nu2(:)
+
+  HALF_DELTAT_over_tau_sigma_nu1(:) = 0.5d0 * DELTAT / tau_sigma_nu1(:)
+  HALF_DELTAT_over_tau_sigma_nu2(:) = 0.5d0 * DELTAT / tau_sigma_nu2(:)
+
+  multiplication_factor_tau_sigma_nu1(:) = 1.d0 / (1.d0 + 0.5d0 * DELTAT * one_over_tau_sigma_nu1(:))
+  multiplication_factor_tau_sigma_nu2(:) = 1.d0 / (1.d0 + 0.5d0 * DELTAT * one_over_tau_sigma_nu2(:))
+
+  ! use the right formula with 1/N included
+  DELTAT_phi_nu1(:) = DELTAT * (1.d0 - tau_epsilon_nu1(:)/tau_sigma_nu1(:)) / tau_sigma_nu1(:) / sum(tau_epsilon_nu1/tau_sigma_nu1)
+  DELTAT_phi_nu2(:) = DELTAT * (1.d0 - tau_epsilon_nu2(:)/tau_sigma_nu2(:)) / tau_sigma_nu2(:) / sum(tau_epsilon_nu2/tau_sigma_nu2)
 
 !--- define profile of absorption in PML region
 
@@ -534,28 +587,10 @@
   do j = 1,NY
     do i = 1,NX
       rho(i,j) = density
-      kappa_unrelaxed(i,j) = density*cp_unrelaxed*cp_unrelaxed
-      if (VISCOACOUSTIC_ATTENUATION) then
-        kappa_relaxed(i,j) = kappa_unrelaxed(i,j) * N_SLS / sum(tau_epsilon_kappa(:) / tau_sigma_kappa(:))
-      else
-        kappa_relaxed(i,j) = kappa_unrelaxed(i,j)
-      endif
+      mu_unrelaxed(i,j) = density*cs_unrelaxed*cs_unrelaxed
+      lambda_unrelaxed(i,j) = density*cp_unrelaxed*cp_unrelaxed - 2.d0*mu_unrelaxed(i,j)
     enddo
   enddo
-
-! compute DELTAT_deltaKappa_over_tau_sigma, which is a term needed to compute the evolution of the viscoacoustic memory variables
-  if (VISCOACOUSTIC_ATTENUATION) then
-    do j = 1,NY
-      do i = 1,NX
-        do i_sls = 1,N_SLS
-          DELTAT_deltaKappa_over_tau_sigma(i,j,i_sls) = DELTAT * kappa_relaxed(i,j) * &
-                      (tau_epsilon_kappa(i_sls)/tau_sigma_kappa(i_sls) - 1.d0) / dble(N_SLS * tau_sigma_kappa(i_sls))
-        enddo
-      enddo
-    enddo
-  else
-    DELTAT_deltaKappa_over_tau_sigma(:,:,:) = ZERO
-  endif
 
 ! print position of the source
   print *,'Position of the source:'
@@ -601,33 +636,42 @@
 
 ! check the Courant stability condition for the explicit time scheme
 ! R. Courant, K. O. Friedrichs and H. Lewy (1928)
-! For this O(2,2) scheme, when DELTAX == DELTAY the Courant number is 1/sqrt(2) = 0.707
+! For this O(2,4) scheme, when DELTAX == DELTAY the Courant number is given by Levander, Geophysics, vol. 53(11), p. 1427,
+! equation (7) and is equal to 0.606 (it is thus smaller than that of the O(2,2) scheme, which is 1/sqrt(2) = 0.707,
+! i.e. when switching to a fourth-order spatial scheme one needs a time step that is about 0.707 / 0.606 = 1.167 times smaller.
   if (DELTAX == DELTAY) then
     Courant_number = cp_unrelaxed * DELTAT / DELTAX
     print *,'Courant number is ',Courant_number
-    print *,' (the maximum possible value is 1/sqrt(2) = 0.707; &
-                  &in practice for accuracy reasons a value not larger than 0.30 is recommended)'
+    print *,' (the maximum possible value is 0.606; in practice for accuracy reasons a value not larger than 0.30 is recommended)'
     print *
-    if (Courant_number > 1.d0/sqrt(2.d0)) stop 'time step is too large, simulation will be unstable'
+    if (Courant_number > 0.606) stop 'time step is too large, simulation will be unstable'
   endif
 
 ! suppress old files (can be commented out if "call system" is missing in your compiler)
-  call system('rm -f Vx_*.dat Vy_*.dat image*.pnm image*.gif')
+  call system('rm -f Vx_file*.dat Vy_file*.dat image*.pnm image*.gif')
 
 ! initialize arrays
   vx(:,:) = ZERO
   vy(:,:) = ZERO
-  pressure(:,:) = ZERO
-  memory_variable_R_dot(:,:,:) = ZERO
-  memory_variable_R_dot_old(:,:,:) = ZERO
+  sigma_xx(:,:) = ZERO
+  sigma_yy(:,:) = ZERO
+  sigma_xy(:,:) = ZERO
+  memory_variable_R_e1_dot(:,:,:) = ZERO
+  memory_variable_R_e1_dot_old(:,:,:) = ZERO
+  memory_variable_R_e11_dot(:,:,:) = ZERO
+  memory_variable_R_e11_dot_old(:,:,:) = ZERO
+  memory_variable_R_e13_dot(:,:,:) = ZERO
+  memory_variable_R_e13_dot_old(:,:,:) = ZERO
 
 ! PML
   memory_dvx_dx(:,:) = ZERO
   memory_dvx_dy(:,:) = ZERO
   memory_dvy_dx(:,:) = ZERO
   memory_dvy_dy(:,:) = ZERO
-  memory_dpressure_dx(:,:) = ZERO
-  memory_dpressure_dy(:,:) = ZERO
+  memory_dsigma_xx_dx(:,:) = ZERO
+  memory_dsigma_yy_dy(:,:) = ZERO
+  memory_dsigma_xy_dx(:,:) = ZERO
+  memory_dsigma_xy_dy(:,:) = ZERO
 
 ! initialize seismograms
   sisvx(:,:) = ZERO
@@ -638,10 +682,10 @@
   total_energy_kinetic(:) = ZERO
   total_energy_potential(:) = ZERO
 
-  if (VISCOACOUSTIC_ATTENUATION) then
-    print *,'adding VISCOACOUSTIC_ATTENUATION (i.e., running a viscoacoustic simulation)'
+  if (VISCOELASTIC_ATTENUATION) then
+    print *,'adding VISCOELASTIC_ATTENUATION (i.e., running a viscoelastic simulation)'
   else
-    print *,'not adding VISCOACOUSTIC_ATTENUATION (i.e., running a purely acoustic simulation)'
+    print *,'not adding VISCOELASTIC_ATTENUATION (i.e., running a purely elastic simulation)'
   endif
   print *
 
@@ -652,30 +696,54 @@
   do it = 1,NSTEP
 
 !-----------------------------------------------------------------------
-! compute pressure and update memory variables for C-PML
-! also update memory variables for viscoacoustic attenuation if needed
+! compute the stress tensor and update memory variables for C-PML
+! also update memory variables for viscoelastic attenuation if needed
 !-----------------------------------------------------------------------
 
 ! we purposely leave this "if" test outside of the loops to make sure the compiler can optimize these loops;
 ! with an "if" test inside most compilers cannot
-  if (.not. VISCOACOUSTIC_ATTENUATION) then
+  if (.not. VISCOELASTIC_ATTENUATION) then
 
     do j = 2,NY
       do i = 1,NX-1
 
 ! interpolate material parameters at the right location in the staggered grid cell
-        kappa_half_x = 0.5d0 * (kappa_unrelaxed(i+1,j) + kappa_unrelaxed(i,j))
+      lambda_half_x = 0.5d0 * (lambda_unrelaxed(i+1,j) + lambda_unrelaxed(i,j))
+      mu_half_x = 0.5d0 * (mu_unrelaxed(i+1,j) + mu_unrelaxed(i,j))
+      lambda_plus_two_mu_half_x = lambda_half_x + 2.d0 * mu_half_x
 
-        value_dvx_dx = (vx(i+1,j) - vx(i,j)) * ONE_OVER_DELTAX
-        value_dvy_dy = (vy(i,j) - vy(i,j-1)) * ONE_OVER_DELTAY
+      value_dvx_dx = (vx(i+1,j) - vx(i,j)) * NINE_OVER_8_DELTAX + (vx(i-1,j) - vx(i+2,j)) * ONE_OVER_24_DELTAX
+      value_dvy_dy = (vy(i,j) - vy(i,j-1)) * NINE_OVER_8_DELTAY + (vy(i,j-2) - vy(i,j+1)) * ONE_OVER_24_DELTAY
 
-        memory_dvx_dx(i,j) = b_x_half(i) * memory_dvx_dx(i,j) + a_x_half(i) * value_dvx_dx
-        memory_dvy_dy(i,j) = b_y(j) * memory_dvy_dy(i,j) + a_y(j) * value_dvy_dy
+      memory_dvx_dx(i,j) = b_x_half(i) * memory_dvx_dx(i,j) + a_x_half(i) * value_dvx_dx
+      memory_dvy_dy(i,j) = b_y(j) * memory_dvy_dy(i,j) + a_y(j) * value_dvy_dy
 
-        value_dvx_dx = value_dvx_dx * one_over_K_x_half(i) + memory_dvx_dx(i,j)
-        value_dvy_dy = value_dvy_dy * one_over_K_y(j) + memory_dvy_dy(i,j)
+      value_dvx_dx = value_dvx_dx / K_x_half(i) + memory_dvx_dx(i,j)
+      value_dvy_dy = value_dvy_dy / K_y(j) + memory_dvy_dy(i,j)
 
-        pressure(i,j) = pressure(i,j) - kappa_half_x * (value_dvx_dx + value_dvy_dy) * DELTAT
+      sigma_xx(i,j) = sigma_xx(i,j) + (lambda_plus_two_mu_half_x * value_dvx_dx + lambda_half_x * value_dvy_dy) * DELTAT
+
+      sigma_yy(i,j) = sigma_yy(i,j) + (lambda_half_x * value_dvx_dx + lambda_plus_two_mu_half_x * value_dvy_dy) * DELTAT
+
+      enddo
+    enddo
+
+    do j = 1,NY-1
+      do i = 2,NX
+
+! interpolate material parameters at the right location in the staggered grid cell
+        mu_half_y = 0.5d0 * (mu_unrelaxed(i,j+1) + mu_unrelaxed(i,j))
+
+        value_dvy_dx = (vy(i,j) - vy(i-1,j)) * NINE_OVER_8_DELTAX + (vy(i-2,j) - vy(i+1,j)) * ONE_OVER_24_DELTAX
+        value_dvx_dy = (vx(i,j+1) - vx(i,j)) * NINE_OVER_8_DELTAY + (vx(i,j-1) - vx(i,j+2)) * ONE_OVER_24_DELTAY
+
+        memory_dvy_dx(i,j) = b_x(i) * memory_dvy_dx(i,j) + a_x(i) * value_dvy_dx
+        memory_dvx_dy(i,j) = b_y_half(j) * memory_dvx_dy(i,j) + a_y_half(j) * value_dvx_dy
+
+        value_dvy_dx = value_dvy_dx / K_x(i) + memory_dvy_dx(i,j)
+        value_dvx_dy = value_dvx_dy / K_y_half(j) + memory_dvx_dy(i,j)
+
+        sigma_xy(i,j) = sigma_xy(i,j) + mu_half_y * (value_dvy_dx + value_dvx_dy) * DELTAT
 
       enddo
     enddo
@@ -685,76 +753,107 @@
 ! the present becomes the past for the memory variables.
 ! in C or C++ we could replace this with an exchange of pointers on the arrays
 ! in order to avoid a memory copy of the whole array.
-    memory_variable_R_dot_old(:,:,:) = memory_variable_R_dot(:,:,:)
+    memory_variable_R_e1_dot_old(:,:,:) = memory_variable_R_e1_dot(:,:,:)
+    memory_variable_R_e11_dot_old(:,:,:) = memory_variable_R_e11_dot(:,:,:)
+    memory_variable_R_e13_dot_old(:,:,:) = memory_variable_R_e13_dot(:,:,:)
 
     do j = 2,NY
       do i = 1,NX-1
 
 ! interpolate material parameters at the right location in the staggered grid cell
-        kappa_half_x = 0.5d0 * (kappa_unrelaxed(i+1,j) + kappa_unrelaxed(i,j))
+        lambda_half_x = 0.5d0 * (lambda_unrelaxed(i+1,j) + lambda_unrelaxed(i,j))
+        mu_half_x = 0.5d0 * (mu_unrelaxed(i+1,j) + mu_unrelaxed(i,j))
+        lambda_plus_mu_half_x = lambda_half_x + mu_half_x
+        lambda_plus_two_mu_half_x = lambda_half_x + 2.d0 * mu_half_x
 
-        value_dvx_dx = (vx(i+1,j) - vx(i,j)) * ONE_OVER_DELTAX
-        value_dvy_dy = (vy(i,j) - vy(i,j-1)) * ONE_OVER_DELTAY
+        value_dvx_dx = (vx(i+1,j) - vx(i,j)) * NINE_OVER_8_DELTAX + (vx(i-1,j) - vx(i+2,j)) * ONE_OVER_24_DELTAX
+        value_dvy_dy = (vy(i,j) - vy(i,j-1)) * NINE_OVER_8_DELTAY + (vy(i,j-2) - vy(i,j+1)) * ONE_OVER_24_DELTAY
 
         memory_dvx_dx(i,j) = b_x_half(i) * memory_dvx_dx(i,j) + a_x_half(i) * value_dvx_dx
         memory_dvy_dy(i,j) = b_y(j) * memory_dvy_dy(i,j) + a_y(j) * value_dvy_dy
 
-        value_dvx_dx = value_dvx_dx * one_over_K_x_half(i) + memory_dvx_dx(i,j)
-        value_dvy_dy = value_dvy_dy * one_over_K_y(j) + memory_dvy_dy(i,j)
+        value_dvx_dx = value_dvx_dx / K_x_half(i) + memory_dvx_dx(i,j)
+        value_dvy_dy = value_dvy_dy / K_y(j) + memory_dvy_dy(i,j)
 
 ! use the Auxiliary Differential Equation form, which is second-order accurate in time if implemented following
 ! eq (14) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994), which is what we do here
-        sum_of_memory_variables_kappa = 0.d0
+        sum_of_memory_variables_e1 = 0.d0
+        sum_of_memory_variables_e11 = 0.d0
         do i_sls = 1,N_SLS
 ! this average of the two terms comes from eq (14) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994)
-          memory_variable_R_dot(i,j,i_sls) = (memory_variable_R_dot_old(i,j,i_sls) + &
-                  (value_dvx_dx + value_dvy_dy) * DELTAT_deltaKappa_over_tau_sigma(i,j,i_sls) - &
-                  memory_variable_R_dot_old(i,j,i_sls) * HALF_DELTAT_over_tau_sigma_kappa(i_sls)) &
-                     * multiplication_factor_tau_sigma_kappa(i_sls)
+          memory_variable_R_e1_dot(i,j,i_sls) = (memory_variable_R_e1_dot_old(i,j,i_sls) + &
+                   (value_dvx_dx + value_dvy_dy) * DELTAT_phi_nu1(i_sls) - &
+                   memory_variable_R_e1_dot_old(i,j,i_sls) * HALF_DELTAT_over_tau_sigma_nu1(i_sls)) &
+                      * multiplication_factor_tau_sigma_nu1(i_sls)
 
-          sum_of_memory_variables_kappa = sum_of_memory_variables_kappa + &
-                     memory_variable_R_dot(i,j,i_sls) + memory_variable_R_dot_old(i,j,i_sls)
+          memory_variable_R_e11_dot(i,j,i_sls) = (memory_variable_R_e11_dot_old(i,j,i_sls) + &
+                   0.5d0 * (value_dvx_dx - value_dvy_dy) * DELTAT_phi_nu2(i_sls) - &
+                   memory_variable_R_e11_dot_old(i,j,i_sls) * HALF_DELTAT_over_tau_sigma_nu2(i_sls)) &
+                      * multiplication_factor_tau_sigma_nu2(i_sls)
+
+          sum_of_memory_variables_e1 = sum_of_memory_variables_e1 + &
+                      memory_variable_R_e1_dot(i,j,i_sls) + memory_variable_R_e1_dot_old(i,j,i_sls)
+
+          sum_of_memory_variables_e11 = sum_of_memory_variables_e11 + &
+                      memory_variable_R_e11_dot(i,j,i_sls) + memory_variable_R_e11_dot_old(i,j,i_sls)
         enddo
 
-        pressure(i,j) = pressure(i,j) + (- kappa_half_x * (value_dvx_dx + value_dvy_dy) + &
+        sigma_xx(i,j) = sigma_xx(i,j) + &
+           (lambda_plus_two_mu_half_x * value_dvx_dx + lambda_half_x * value_dvy_dy &
+! use the right formula with 1/N included
+! i.e. use the unrelaxed moduli here (see Carcione's book, third edition, equation (3.189))
 ! this average of the two terms comes from eq (13) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994)
-                     0.5d0 * sum_of_memory_variables_kappa) * DELTAT
+          + (0.5d0 * lambda_plus_mu_half_x * sum_of_memory_variables_e1 + mu_half_x * sum_of_memory_variables_e11)) * DELTAT
+
+        sigma_yy(i,j) = sigma_yy(i,j) + &
+           (lambda_half_x * value_dvx_dx + lambda_plus_two_mu_half_x * value_dvy_dy &
+! use the right formula with 1/N included
+! i.e. use the unrelaxed moduli here (see Carcione's book, third edition, equation (3.189))
+! this average of the two terms comes from eq (13) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994)
+          + (0.5d0 * lambda_plus_mu_half_x * sum_of_memory_variables_e1 - mu_half_x * sum_of_memory_variables_e11)) * DELTAT
+
+      enddo
+    enddo
+
+    do j = 1,NY-1
+      do i = 2,NX
+
+! interpolate material parameters at the right location in the staggered grid cell
+        mu_half_y = 0.5d0 * (mu_unrelaxed(i,j+1) + mu_unrelaxed(i,j))
+
+        value_dvy_dx = (vy(i,j) - vy(i-1,j)) * NINE_OVER_8_DELTAX + (vy(i-2,j) - vy(i+1,j)) * ONE_OVER_24_DELTAX
+        value_dvx_dy = (vx(i,j+1) - vx(i,j)) * NINE_OVER_8_DELTAY + (vx(i,j-1) - vx(i,j+2)) * ONE_OVER_24_DELTAY
+
+        memory_dvy_dx(i,j) = b_x(i) * memory_dvy_dx(i,j) + a_x(i) * value_dvy_dx
+        memory_dvx_dy(i,j) = b_y_half(j) * memory_dvx_dy(i,j) + a_y_half(j) * value_dvx_dy
+
+        value_dvy_dx = value_dvy_dx / K_x(i) + memory_dvy_dx(i,j)
+        value_dvx_dy = value_dvx_dy / K_y_half(j) + memory_dvx_dy(i,j)
+
+! use the Auxiliary Differential Equation form, which is second-order accurate in time if implemented following
+! eq (14) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994), which is what we do here
+        sum_of_memory_variables_e13 = 0.d0
+        do i_sls = 1,N_SLS
+! this average of the two terms comes from eq (14) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994)
+          memory_variable_R_e13_dot(i,j,i_sls) = (memory_variable_R_e13_dot_old(i,j,i_sls) + &
+                   (value_dvy_dx + value_dvx_dy) * DELTAT_phi_nu2(i_sls) - &
+                   memory_variable_R_e13_dot_old(i,j,i_sls) * HALF_DELTAT_over_tau_sigma_nu2(i_sls)) &
+                      * multiplication_factor_tau_sigma_nu2(i_sls)
+
+          sum_of_memory_variables_e13 = sum_of_memory_variables_e13 + &
+                      memory_variable_R_e13_dot(i,j,i_sls) + memory_variable_R_e13_dot_old(i,j,i_sls)
+        enddo
+
+        sigma_xy(i,j) = sigma_xy(i,j) + mu_half_y * (value_dvy_dx + value_dvx_dy &
+! use the right formula with 1/N included
+! i.e. use the unrelaxed moduli here (see Carcione's book, third edition, equation (3.189))
+! this average of the two terms comes from eq (13) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994)
+                                      + 0.5d0 * sum_of_memory_variables_e13) * DELTAT
 
       enddo
     enddo
 
   endif
-
-! add the source (pressure located at a given grid point)
-  a = pi*pi*f0*f0
-  t = dble(it-1)*DELTAT
-
-! Gaussian
-! pressure_source_term = - factor * exp(-a*(t-t0)**2) / (2.d0 * a)
-
-! first derivative of a Gaussian
-  pressure_source_term = factor * (t-t0)*exp(-a*(t-t0)**2)
-
-! Ricker source time function (second derivative of a Gaussian)
-! pressure_source_term = factor * (1.d0 - 2.d0*a*(t-t0)**2)*exp(-a*(t-t0)**2)
-
-! to get the right amplitude of the force, we need to divide by the area of a grid cell
-! (we checked that against the analytical solution in a homogeneous medium for a pressure source)
-  pressure_source_term = pressure_source_term / (DELTAX * DELTAY)
-
-! define location of the source
-  i = ISOURCE
-  j = JSOURCE
-
-! the pressure source is added to d(pressure)/dt in this split pressure / velocity scheme
-! and that is why we need to select the first derivative of a Gaussian as a source time wavelet
-! above instead of a Ricker (i.e. a second derivative) added to d2(pressure)/dt2
-! as in the unsplit equation written in pressure only.
-! Since the formula is d(pressure)/dt = (pressure_new - pressure_old) / DELTAT = pressure_source_term
-! we also need to multiply by DELTAT here to avoid having an amplitude of the seismogram
-! that varies when one changes the time step, i.e. we write:
-! pressure_new = pressure_old + pressure_source_term * DELTAT at the source grid point
-  pressure(i,j) = pressure(i,j) + pressure_source_term * DELTAT
 
 !--------------------------------------------------------
 ! compute velocity and update memory variables for C-PML
@@ -763,13 +862,18 @@
   do j = 2,NY
     do i = 2,NX
 
-      value_dpressure_dx = (pressure(i,j) - pressure(i-1,j)) * ONE_OVER_DELTAX
+      value_dsigma_xx_dx = (sigma_xx(i,j) - sigma_xx(i-1,j)) * NINE_OVER_8_DELTAX + &
+                                   (sigma_xx(i-2,j) - sigma_xx(i+1,j)) * ONE_OVER_24_DELTAX
+      value_dsigma_xy_dy = (sigma_xy(i,j) - sigma_xy(i,j-1)) * NINE_OVER_8_DELTAY + &
+                                   (sigma_xy(i,j-2) - sigma_xy(i,j+1)) * ONE_OVER_24_DELTAY
 
-      memory_dpressure_dx(i,j) = b_x(i) * memory_dpressure_dx(i,j) + a_x(i) * value_dpressure_dx
+      memory_dsigma_xx_dx(i,j) = b_x(i) * memory_dsigma_xx_dx(i,j) + a_x(i) * value_dsigma_xx_dx
+      memory_dsigma_xy_dy(i,j) = b_y(j) * memory_dsigma_xy_dy(i,j) + a_y(j) * value_dsigma_xy_dy
 
-      value_dpressure_dx = value_dpressure_dx * one_over_K_x(i) + memory_dpressure_dx(i,j)
+      value_dsigma_xx_dx = value_dsigma_xx_dx / K_x(i) + memory_dsigma_xx_dx(i,j)
+      value_dsigma_xy_dy = value_dsigma_xy_dy / K_y(j) + memory_dsigma_xy_dy(i,j)
 
-      vx(i,j) = vx(i,j) - value_dpressure_dx * DELTAT / rho(i,j)
+      vx(i,j) = vx(i,j) + (value_dsigma_xx_dx + value_dsigma_xy_dy) * DELTAT / rho(i,j)
 
     enddo
   enddo
@@ -777,19 +881,65 @@
   do j = 1,NY-1
     do i = 1,NX-1
 
-!     interpolate density at the right location in the staggered grid cell
+! interpolate density at the right location in the staggered grid cell
       rho_half_x_half_y = 0.25d0 * (rho(i,j) + rho(i+1,j) + rho(i+1,j+1) + rho(i,j+1))
 
-      value_dpressure_dy = (pressure(i,j+1) - pressure(i,j)) * ONE_OVER_DELTAY
+      value_dsigma_xy_dx = (sigma_xy(i+1,j) - sigma_xy(i,j)) * NINE_OVER_8_DELTAX + &
+                                   (sigma_xy(i-1,j) - sigma_xy(i+2,j)) * ONE_OVER_24_DELTAX
 
-      memory_dpressure_dy(i,j) = b_y_half(j) * memory_dpressure_dy(i,j) + a_y_half(j) * value_dpressure_dy
+      value_dsigma_yy_dy = (sigma_yy(i,j+1) - sigma_yy(i,j)) * NINE_OVER_8_DELTAY + &
+                                   (sigma_yy(i,j-1) - sigma_yy(i,j+2)) * ONE_OVER_24_DELTAY
 
-      value_dpressure_dy = value_dpressure_dy * one_over_K_y_half(j) + memory_dpressure_dy(i,j)
+      memory_dsigma_xy_dx(i,j) = b_x_half(i) * memory_dsigma_xy_dx(i,j) + a_x_half(i) * value_dsigma_xy_dx
+      memory_dsigma_yy_dy(i,j) = b_y_half(j) * memory_dsigma_yy_dy(i,j) + a_y_half(j) * value_dsigma_yy_dy
 
-      vy(i,j) = vy(i,j) - value_dpressure_dy * DELTAT / rho_half_x_half_y
+      value_dsigma_xy_dx = value_dsigma_xy_dx / K_x_half(i) + memory_dsigma_xy_dx(i,j)
+      value_dsigma_yy_dy = value_dsigma_yy_dy / K_y_half(j) + memory_dsigma_yy_dy(i,j)
+
+      vy(i,j) = vy(i,j) + (value_dsigma_xy_dx + value_dsigma_yy_dy) * DELTAT / rho_half_x_half_y
 
     enddo
   enddo
+
+! add the source (force vector located at a given grid point)
+  a = pi*pi*f0*f0
+  t = dble(it-1)*DELTAT
+
+! Gaussian
+! force_source_term = - factor * exp(-a*(t-t0)**2) / (2.d0 * a)
+
+! first derivative of a Gaussian
+! force_source_term = factor * (t-t0)*exp(-a*(t-t0)**2)
+
+! Ricker source time function (second derivative of a Gaussian)
+  force_source_term = factor * (1.d0 - 2.d0*a*(t-t0)**2)*exp(-a*(t-t0)**2)
+
+! to get the right amplitude of the force, we need to divide by the area of a grid cell
+! (we checked that against the analytical solution in a homogeneous medium for a force source)
+  force_source_term = force_source_term / (DELTAX * DELTAY)
+
+! define location of the source
+  i = ISOURCE
+  j = JSOURCE
+
+  force_x = sin(ANGLE_FORCE * DEGREES_TO_RADIANS) * force_source_term
+  force_y = cos(ANGLE_FORCE * DEGREES_TO_RADIANS) * force_source_term
+
+! interpolate density at the right location in the staggered grid cell
+  rho_half_x_half_y = 0.25d0 * (rho(i,j) + rho(i+1,j) + rho(i+1,j+1) + rho(i,j+1))
+
+! we want seismograms to be representing velocity, for the case of the seismic wave equation
+! representing displacement for a Ricker (i.e., second derivative of a Gaussian) source in displacement.
+! Since the force source is added to d(velocity)/dt in this split velocity and stress scheme
+! we need to select the second derivative of a Gaussian as a source time wavelet
+! by analogy with a Ricker (i.e. a second derivative) added to d2(displacement)/dt2
+! as in the unsplit equation written in displacement only.
+! Since the formula is d(velocity)/dt = (velocity_new - velocity_old) / DELTAT = force_source_term
+! we also need to multiply by DELTAT here to avoid having an amplitude of the seismogram
+! that varies when one changes the time step, i.e. we write:
+! velocity_new = velocity_old + force_source_term * DELTAT at the source grid point
+  vx(i,j) = vx(i,j) + force_x * DELTAT / rho(i,j)
+  vy(i,j) = vy(i,j) + force_y * DELTAT / rho_half_x_half_y
 
 ! Dirichlet conditions (rigid boundaries) on the edges or at the bottom of the PML layers
   vx(1,:) = ZERO
@@ -812,7 +962,45 @@
 ! vy is staggered by half a grid cell along X and along Y with respect to vx
     sisvx(it,irec) = vx(ix_rec(irec),iy_rec(irec))
     sisvy(it,irec) = vy(ix_rec(irec),iy_rec(irec))
-    sispressure(it,irec) = pressure(ix_rec(irec),iy_rec(irec))
+
+! from L. S. Bennethum, Compressibility Moduli for Porous Materials Incorporating Volume Fraction,
+! J. Engrg. Mech., vol. 132(11), p. 1205-1214 (2006), below equation (5):
+! for a 3D isotropic solid, pressure is defined in terms of the trace of the stress tensor as
+! p = -1/3 (t11 + t22 + t33) where t is the Cauchy stress tensor.
+
+! to compute pressure in 3D in an elastic solid, one uses pressure = - trace(sigma) / 3
+! sigma_ij = lambda delta_ij trace(epsilon) + 2 mu epsilon_ij
+!          = lambda (epsilon_xx + epsilon_yy + epsilon_zz) + 2 mu epsilon_ij
+! sigma_xx = lambda (epsilon_xx + epsilon_yy + epsilon_zz) + 2 mu epsilon_xx
+! sigma_yy = lambda (epsilon_xx + epsilon_yy + epsilon_zz) + 2 mu epsilon_yy
+! sigma_zz = lambda (epsilon_xx + epsilon_yy + epsilon_zz) + 2 mu epsilon_zz
+! pressure = - trace(sigma) / 3 = - (lambda + 2/3 mu) trace(epsilon) = - kappa * trace(epsilon)
+!
+! to compute pressure in 2D in an elastic solid in the plane strain convention i.e. in the P-SV case,
+! one still uses pressure = - trace(sigma) / 3 but taking into account the fact
+! that the off-plane strain epsilon_zz is zero by definition of the plane strain convention
+! but thus the off-plane stress sigma_zz is not equal to zero,
+! one has instead:  sigma_zz = lambda * (epsilon_xx + epsilon_yy), thus
+! sigma_ij = lambda delta_ij trace(epsilon) + 2 mu epsilon_ij
+!          = lambda (epsilon_xx + epsilon_yy) + 2 mu epsilon_ij
+! sigma_xx = lambda (epsilon_xx + epsilon_yy) + 2 mu epsilon_xx
+! sigma_yy = lambda (epsilon_xx + epsilon_yy) + 2 mu epsilon_yy
+! sigma_zz = lambda * (epsilon_xx + epsilon_yy)
+! pressure = - trace(sigma) / 3 = - (lambda + 2*mu/3) (epsilon_xx + epsilon_yy)
+
+    i = ix_rec(irec)
+    j = iy_rec(irec)
+
+! interpolate material parameters at the right location in the staggered grid cell
+    lambda_half_x = 0.5d0 * (lambda_unrelaxed(i+1,j) + lambda_unrelaxed(i,j))
+    mu_half_x = 0.5d0 * (mu_unrelaxed(i+1,j) + mu_unrelaxed(i,j))
+    epsilon_xx = ((lambda_half_x + 2.d0*mu_half_x) * sigma_xx(i,j) - lambda_half_x * &
+      sigma_yy(i,j)) / (4.d0 * mu_half_x * (lambda_half_x + mu_half_x))
+    epsilon_yy = ((lambda_half_x + 2.d0*mu_half_x) * sigma_yy(i,j) - lambda_half_x * &
+      sigma_xx(i,j)) / (4.d0 * mu_half_x * (lambda_half_x + mu_half_x))
+
+    sispressure(it,irec) = - (lambda_half_x + TWO_THIRDS*mu_half_x) * (epsilon_xx + epsilon_yy)
+
   enddo
 
 ! compute total energy in the medium (without the PML layers)
@@ -828,13 +1016,21 @@
       enddo
     enddo
 
-! add potential energy, defined as 1/2 pressure^2 / Kappa
+! add potential energy, defined as 1/2 epsilon_ij sigma_ij
     total_energy_potential(it) = ZERO
     do j = NPOINTS_PML+1, NY-NPOINTS_PML
       do i = NPOINTS_PML+1, NX-NPOINTS_PML
 ! interpolate material parameters at the right location in the staggered grid cell
-        kappa_half_x = 0.5d0 * (kappa_unrelaxed(i+1,j) + kappa_unrelaxed(i,j))
-        total_energy_potential(it) = total_energy_potential(it) + 0.5d0 * pressure(i,j)**2 / kappa_half_x
+        lambda_half_x = 0.5d0 * (lambda_unrelaxed(i+1,j) + lambda_unrelaxed(i,j))
+        mu_half_x = 0.5d0 * (mu_unrelaxed(i+1,j) + mu_unrelaxed(i,j))
+        mu_half_y = 0.5d0 * (mu_unrelaxed(i,j+1) + mu_unrelaxed(i,j))
+        epsilon_xx = ((lambda_half_x + 2.d0*mu_half_x) * sigma_xx(i,j) - lambda_half_x * &
+          sigma_yy(i,j)) / (4.d0 * mu_half_x * (lambda_half_x + mu_half_x))
+        epsilon_yy = ((lambda_half_x + 2.d0*mu_half_x) * sigma_yy(i,j) - lambda_half_x * &
+          sigma_xx(i,j)) / (4.d0 * mu_half_x * (lambda_half_x + mu_half_x))
+        epsilon_xy = sigma_xy(i,j) / (2.d0 * mu_half_y)
+        total_energy_potential(it) = total_energy_potential(it) + &
+          0.5d0 * (epsilon_xx * sigma_xx(i,j) + epsilon_yy * sigma_yy(i,j) + 2.d0 * epsilon_xy * sigma_xy(i,j))
       enddo
     enddo
 
@@ -843,24 +1039,20 @@
 ! output information
   if (mod(it,IT_DISPLAY) == 0 .or. it == 5) then
 
-! print maximum of pressure and of norm of velocity
-    pressurenorm = maxval(abs(pressure))
+! print maximum of norm of velocity
     velocnorm = maxval(sqrt(vx**2 + vy**2))
     print *,'Time step # ',it,' out of ',NSTEP
     print *,'Time: ',sngl((it-1)*DELTAT),' seconds'
-    print *,'Max absolute value of pressure = ',pressurenorm
     print *,'Max norm velocity vector V (m/s) = ',velocnorm
     if (COMPUTE_ENERGY) print *,'total energy = ',total_energy_kinetic(it) + total_energy_potential(it)
     print *
 ! check stability of the code, exit if unstable
-    if (pressurenorm > STABILITY_THRESHOLD .or. velocnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
+    if (velocnorm > STABILITY_THRESHOLD) stop 'code became unstable and blew up'
 
-!   call create_color_image(vx,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
-!                        NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,1)
-!   call create_color_image(vy,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
-!                        NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,2)
-    call create_color_image(pressure,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
-                         NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,3)
+    call create_color_image(vx,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+                         NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,1)
+    call create_color_image(vy,NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
+                         NPOINTS_PML,USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX,2)
 
 ! save the part of the seismograms that has been computed so far, so that users can monitor the progress of the simulation
     call write_seismograms(sisvx,sisvy,sispressure,NSTEP,NREC,DELTAT,t0)
@@ -935,7 +1127,7 @@
   print *,'End of the simulation'
   print *
 
-  end program seismic_CPML_2D_viscoacoust_second
+  end program seismic_CPML_2D_viscoelast_fourth
 
 !----
 !----  save the seismograms in ASCII text format
@@ -981,7 +1173,7 @@
 
 ! Y component of velocity
   do irec=1,nrec
-    write(file_name,"('Vy_file_',i3.3,'.dat')") irec
+    write(file_name,"('Vy_file_half_a_grid_cell_away_from_Vx_',i3.3,'.dat')") irec
     open(unit=11,file=file_name,status='unknown')
     do it=1,nt
       write(11,*) sngl(dble(it-1)*DELTAT - t0),' ',sngl(sisvy(it,irec))
@@ -1016,7 +1208,9 @@
   integer NX,NY,it,field_number,ISOURCE,JSOURCE,NPOINTS_PML,nrec
   logical USE_PML_XMIN,USE_PML_XMAX,USE_PML_YMIN,USE_PML_YMAX
 
-  double precision, dimension(NX,NY) :: image_data_2D
+! in order to be able to use a fourth-order spatial operator on the edges of the model
+! here we define the array with size (0:NX+1,0:NY+1) instead of size (NX,NY) as in the second-order case
+  double precision, dimension(0:NX+1,0:NY+1) :: image_data_2D
 
   integer, dimension(nrec) :: ix_rec,iy_rec
 
