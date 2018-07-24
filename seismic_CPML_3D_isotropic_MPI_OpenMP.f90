@@ -166,7 +166,10 @@
   integer, parameter :: NPOINTS_PML = 10
 
 ! source
-! here in this demo code we put the source in the middle of the model in the Z direction,
+! Since we cut the domain into slices along the Z direction in order to implement MPI,
+! we have to tell the code in which MPI slice of the mesh the source is,
+! and inside that mesh slice we need to tell it at which iz grid point it is, in the slice, thus between 1 and NZ_LOCAL.
+! Here in this demo code we put the source in the middle of the model in the Z direction,
 ! i.e. in NZ/2, which means putting it in the cut plane (i.e. only the processor for which
 ! rank == rank_cut_plane will do it, and it will put it in its last point along Z, in NZ_LOCAL.
 ! if one wants to put the source at another location, one can invert the formulas below
