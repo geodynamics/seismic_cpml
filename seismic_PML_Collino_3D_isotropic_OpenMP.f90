@@ -108,6 +108,15 @@
   double precision, parameter :: factor = 1.d7
 
 ! source
+! if one wants to put the source at another location, one can invert the formulas below
+! and define the grid point (ISOURCE, JSOURCE, KSOURCE) to use as:
+! double precision, parameter :: xsource = ...put here the coordinate you want...
+! double precision, parameter :: ysource = ...put here the coordinate you want...
+! double precision, parameter :: zsource = ...put here the coordinate you want...
+! integer, parameter :: ISOURCE = xsource / h + 1
+! integer, parameter :: JSOURCE = ysource / h + 1
+! integer, parameter :: KSOURCE = zsource / h + 1
+! (h is the size of mesh cells)
   integer, parameter :: ISOURCE = NX - 2*NPOINTS_PML - 1
   integer, parameter :: JSOURCE = 2 * NY / 3 + 1
   integer, parameter :: KSOURCE = NZ / 2
@@ -651,14 +660,9 @@ do k = 1,NZ-1
   force_y = cos(ANGLE_FORCE * DEGREES_TO_RADIANS) * source_term
   force_z = 0.d0
 
-! define location of the source
-  i = ISOURCE
-  j = JSOURCE
-  k = NZ / 2
-
 ! add the source to one of the two components of the split field
-  vx_1(i,j,k) = vx_1(i,j,k) + force_x * DELTAT / rho
-  vy_1(i,j,k) = vy_1(i,j,k) + force_y * DELTAT / rho
+  vx_1(ISOURCE,JSOURCE,KSOURCE) = vx_1(ISOURCE,JSOURCE,KSOURCE) + force_x * DELTAT / rho
+  vy_1(ISOURCE,JSOURCE,KSOURCE) = vy_1(ISOURCE,JSOURCE,KSOURCE) + force_y * DELTAT / rho
 
 ! implement Dirichlet boundary conditions on the six edges of the grid
 
@@ -859,6 +863,7 @@ do k = 1,NZ-1
     print *
     call write_seismograms(sisvx,sisvy,NSTEP,NREC,DELTAT)
 
+! here we represent the cut plane that is in the middle of the model along the Z direction, in NZ/2
     call create_color_image(vx_1(:,:,NZ/2) + vx_2(:,:,NZ/2) + vx_3(:,:,NZ/2),NX,NY,it,ISOURCE,JSOURCE,ix_rec,iy_rec,nrec, &
                          NPOINTS_PML,.true.,.true.,.true.,.true.,1)
 
