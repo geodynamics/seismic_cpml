@@ -33,6 +33,7 @@ O = obj
 # GNU gfortran
 F90 = gfortran
 MPIF90 = mpif90
+MPIF90 = /home/cluster_software/openmpi_gfortran/bin/mpif90
 FLAGS = -std=gnu -fimplicit-none -frange-check -O3 -fmax-errors=10 -pedantic -pedantic-errors -Waliasing -Wampersand -Wcharacter-truncation -Wline-truncation -Wsurprising -Wno-tabs -Wunderflow
 MEDIUM_MEMORY = -mcmodel=medium
 #OPEN_MP = -fopenmp

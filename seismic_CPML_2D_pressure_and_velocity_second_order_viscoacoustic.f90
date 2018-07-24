@@ -281,11 +281,10 @@
 
 ! attenuation constants
   double precision, dimension(N_SLS) :: tau_epsilon_kappa,tau_sigma_kappa,one_over_tau_sigma_kappa, &
-                           HALF_DELTAT_over_tau_sigma_kappa,multiplication_factor_tau_sigma_kappa
+                  HALF_DELTAT_over_tau_sigma_kappa,multiplication_factor_tau_sigma_kappa,DELTAT_delta_over_tau_sigma_without_Kappa
 
-! memory variable and other arrays for attenuation
+! memory variable for attenuation
   double precision, dimension(NX,NY,N_SLS) :: memory_variable_R_dot,memory_variable_R_dot_old
-  double precision, dimension(NX,NY,N_SLS) :: DELTAT_deltaKappa_over_tau_sigma
   integer :: i_sls
   double precision :: sum_of_memory_variables_kappa
 
@@ -339,6 +338,14 @@
   one_over_tau_sigma_kappa(:) = 1.d0 / tau_sigma_kappa(:)
   HALF_DELTAT_over_tau_sigma_kappa(:) = 0.5d0 * DELTAT / tau_sigma_kappa(:)
   multiplication_factor_tau_sigma_kappa(:) = 1.d0 / (1.d0 + 0.5d0 * DELTAT * one_over_tau_sigma_kappa(:))
+
+! compute DELTAT_delta_over_tau_sigma_without_Kappa, which is a term needed to compute the evolution of the viscoacoustic memory variables
+  if (VISCOACOUSTIC_ATTENUATION) then
+    DELTAT_delta_over_tau_sigma_without_Kappa(:) = DELTAT * &
+                (tau_epsilon_kappa(:)/tau_sigma_kappa(:) - 1.d0) / dble(N_SLS * tau_sigma_kappa(:))
+  else
+    DELTAT_delta_over_tau_sigma_without_Kappa(:) = ZERO
+  endif
 
 !--- define profile of absorption in PML region
 
@@ -544,20 +551,6 @@
     enddo
   enddo
 
-! compute DELTAT_deltaKappa_over_tau_sigma, which is a term needed to compute the evolution of the viscoacoustic memory variables
-  if (VISCOACOUSTIC_ATTENUATION) then
-    do j = 1,NY
-      do i = 1,NX
-        do i_sls = 1,N_SLS
-          DELTAT_deltaKappa_over_tau_sigma(i,j,i_sls) = DELTAT * kappa_relaxed(i,j) * &
-                      (tau_epsilon_kappa(i_sls)/tau_sigma_kappa(i_sls) - 1.d0) / dble(N_SLS * tau_sigma_kappa(i_sls))
-        enddo
-      enddo
-    enddo
-  else
-    DELTAT_deltaKappa_over_tau_sigma(:,:,:) = ZERO
-  endif
-
 ! print position of the source
   print *,'Position of the source:'
   print *
@@ -709,7 +702,7 @@
         do i_sls = 1,N_SLS
 ! this average of the two terms comes from eq (14) of Robertsson, Blanch and Symes, Geophysics, vol. 59(9), pp 1444-1456 (1994)
           memory_variable_R_dot(i,j,i_sls) = (memory_variable_R_dot_old(i,j,i_sls) + &
-                  (value_dvx_dx + value_dvy_dy) * DELTAT_deltaKappa_over_tau_sigma(i,j,i_sls) - &
+                  (value_dvx_dx + value_dvy_dy) * kappa_relaxed(i,j) * DELTAT_delta_over_tau_sigma_without_Kappa(i_sls) - &
                   memory_variable_R_dot_old(i,j,i_sls) * HALF_DELTAT_over_tau_sigma_kappa(i_sls)) &
                      * multiplication_factor_tau_sigma_kappa(i_sls)
 
