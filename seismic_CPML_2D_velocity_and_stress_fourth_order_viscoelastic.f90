@@ -53,8 +53,8 @@
 !            +---------+---------+  ---> x
 !           v_x    sigma_xx
 !                  sigma_yy
-!                  e1
-!                  e11
+!                  e1 (viscoelastic memory variable)
+!                  e11 (viscoelastic memory variable)
 !
 
 ! The C-PML implementation is based in part on formulas given in Roden and Gedney (2000).
@@ -284,6 +284,15 @@
   double precision :: a,t,force_x,force_y,force_source_term
 
 ! for receivers
+! Please note something important: the two components of the velocity vector are not defined at the same location,
+! Vy is half a grid cell away from Vx (see ASCII figure at the beginning of this program).
+! Thus this means there are "two receivers" rather than one, one recording Vx and another one, half a grid cell away, recording Vy.
+! If you need to use both components in real applications (and of course we will),
+! you will need to interpolate Vy to the location of Vx using:
+!
+! interpolate vy back at the location of vx, to be able to use both at the same location
+!       vy_interpolated = 0.25d0 * (vy(i,j) + vy(i-1,j) + vy(i-1,j-1) + vy(i,j-1))
+!
   double precision xspacerec,yspacerec,distval,dist
   integer, dimension(NREC) :: ix_rec,iy_rec
   double precision, dimension(NREC) :: xrec,yrec
